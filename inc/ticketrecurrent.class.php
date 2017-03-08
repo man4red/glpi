@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -57,7 +56,7 @@ class TicketRecurrent extends CommonDropdown {
 
    static $rightname              = 'ticketrecurrent';
 
-   var $can_be_translated         = false;
+   public $can_be_translated      = false;
 
 
 
@@ -182,19 +181,19 @@ class TicketRecurrent extends CommonDropdown {
       switch ($field['name']) {
          case 'periodicity' :
             $possible_values = array();
-            for ($i=1 ; $i<24 ; $i++) {
-               $possible_values[$i*HOUR_TIMESTAMP] = sprintf(_n('%d hour','%d hours',$i), $i);
+            for ($i=1; $i<24; $i++) {
+               $possible_values[$i*HOUR_TIMESTAMP] = sprintf(_n('%d hour', '%d hours', $i), $i);
             }
-            for ($i=1 ; $i<=30 ; $i++) {
-               $possible_values[$i*DAY_TIMESTAMP] = sprintf(_n('%d day','%d days',$i), $i);
-            }
-
-            for ($i=1 ; $i<12 ; $i++) {
-               $possible_values[$i.'MONTH'] = sprintf(_n('%d month','%d months',$i), $i);
+            for ($i=1; $i<=30; $i++) {
+               $possible_values[$i*DAY_TIMESTAMP] = sprintf(_n('%d day', '%d days', $i), $i);
             }
 
-            for ($i=1 ; $i<5 ; $i++) {
-               $possible_values[$i.'YEAR'] = sprintf(_n('%d year','%d years',$i), $i);
+            for ($i=1; $i<12; $i++) {
+               $possible_values[$i.'MONTH'] = sprintf(_n('%d month', '%d months', $i), $i);
+            }
+
+            for ($i=1; $i<5; $i++) {
+               $possible_values[$i.'YEAR'] = sprintf(_n('%d year', '%d years', $i), $i);
             }
 
             Dropdown::showFromArray($field['name'], $possible_values,
@@ -218,11 +217,11 @@ class TicketRecurrent extends CommonDropdown {
 
       switch ($field) {
          case 'periodicity' :
-            if (preg_match('/([0-9]+)MONTH/',$values[$field], $matches)) {
-               return sprintf(_n('%d month','%d months',$matches[1]), $matches[1]);
+            if (preg_match('/([0-9]+)MONTH/', $values[$field], $matches)) {
+               return sprintf(_n('%d month', '%d months', $matches[1]), $matches[1]);
             }
-            if (preg_match('/([0-9]+)YEAR/',$values[$field], $matches)) {
-               return sprintf(_n('%d year','%d years',$matches[1]), $matches[1]);
+            if (preg_match('/([0-9]+)YEAR/', $values[$field], $matches)) {
+               return sprintf(_n('%d year', '%d years', $matches[1]), $matches[1]);
             }
             return Html::timestampToString($values[$field], false);
          break;
@@ -231,49 +230,64 @@ class TicketRecurrent extends CommonDropdown {
    }
 
 
-   /**
-    * Get search function for the class
-    *
-    * @return array of search option
-   **/
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                 = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '11',
+         'table'              => $this->getTable(),
+         'field'              => 'is_active',
+         'name'               => __('Active'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[11]['table']    = $this->getTable();
-      $tab[11]['field']    = 'is_active';
-      $tab[11]['name']     = __('Active');
-      $tab[11]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => 'glpi_tickettemplates',
+         'field'              => 'name',
+         'name'               => _n('Ticket template', 'Ticket templates', 1),
+         'datatype'           => 'itemlink'
+      ];
 
-      $tab[12]['table']    = 'glpi_tickettemplates';
-      $tab[12]['field']    = 'name';
-      $tab[12]['name']     = _n('Ticket template', 'Ticket templates', 1);
-      $tab[12]['datatype'] = 'itemlink';
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => $this->getTable(),
+         'field'              => 'begin_date',
+         'name'               => __('Start date'),
+         'datatype'           => 'datetime'
+      ];
 
-      $tab[13]['table']    = $this->getTable();
-      $tab[13]['field']    = 'begin_date';
-      $tab[13]['name']     = __('Start date');
-      $tab[13]['datatype'] = 'datetime';
+      $tab[] = [
+         'id'                 => '17',
+         'table'              => $this->getTable(),
+         'field'              => 'end_date',
+         'name'               => __('End date'),
+         'datatype'           => 'datetime'
+      ];
 
-      $tab[17]['table']    = $this->getTable();
-      $tab[17]['field']    = 'end_date';
-      $tab[17]['name']     = __('End date');
-      $tab[17]['datatype'] = 'datetime';
+      $tab[] = [
+         'id'                 => '15',
+         'table'              => $this->getTable(),
+         'field'              => 'periodicity',
+         'name'               => __('Periodicity'),
+         'datatype'           => 'specific'
+      ];
 
-      $tab[15]['table']    = $this->getTable();
-      $tab[15]['field']    = 'periodicity';
-      $tab[15]['name']     = __('Periodicity');
-      $tab[15]['datatype'] = 'specific';
+      $tab[] = [
+         'id'                 => '14',
+         'table'              => $this->getTable(),
+         'field'              => 'create_before',
+         'name'               => __('Preliminary creation'),
+         'datatype'           => 'timestamp'
+      ];
 
-      $tab[14]['table']    = $this->getTable();
-      $tab[14]['field']    = 'create_before';
-      $tab[14]['name']     = __('Preliminary creation');
-      $tab[14]['datatype'] = 'timestamp';
-
-      $tab[16]['table']    = 'glpi_calendars';
-      $tab[16]['field']    = 'name';
-      $tab[16]['name']     = _n('Calendar', 'Calendars', 1);
-      $tab[16]['datatype'] = 'itemlink';
+      $tab[] = [
+         'id'                 => '18',
+         'table'              => 'glpi_calendars',
+         'field'              => 'name',
+         'name'               => _n('Calendar', 'Calendars', 1),
+         'datatype'           => 'itemlink'
+      ];
 
       return $tab;
    }
@@ -321,8 +335,8 @@ class TicketRecurrent extends CommonDropdown {
          }
       }
       $check = true;
-      if (preg_match('/([0-9]+)MONTH/',$periodicity)
-          || preg_match('/([0-9]+)YEAR/',$periodicity)) {
+      if (preg_match('/([0-9]+)MONTH/', $periodicity)
+          || preg_match('/([0-9]+)YEAR/', $periodicity)) {
          $check = false;
       }
 
@@ -340,10 +354,10 @@ class TicketRecurrent extends CommonDropdown {
          if ($now > $timestart) {
             $value = $periodicity;
             $step  = "second";
-            if (preg_match('/([0-9]+)MONTH/',$periodicity, $matches)) {
+            if (preg_match('/([0-9]+)MONTH/', $periodicity, $matches)) {
                $value = $matches[1];
                $step  = 'MONTH';
-            } else if (preg_match('/([0-9]+)YEAR/',$periodicity, $matches)) {
+            } else if (preg_match('/([0-9]+)YEAR/', $periodicity, $matches)) {
                $value = $matches[1];
                $step  = 'YEAR';
             } else {
@@ -357,7 +371,7 @@ class TicketRecurrent extends CommonDropdown {
             }
 
             while ($timestart < $now) {
-               $timestart = strtotime("+ $value $step",$timestart);
+               $timestart = strtotime("+ $value $step", $timestart);
             }
          }
          // Time start over end date
@@ -373,7 +387,7 @@ class TicketRecurrent extends CommonDropdown {
             $durations = $calendar->getDurationsCache();
             if (array_sum($durations) > 0) { // working days exists
                while (!$calendar->isAWorkingDay($timestart)) {
-                  $timestart = strtotime("+ 1 day",$timestart);
+                  $timestart = strtotime("+ 1 day", $timestart);
                }
             }
          }
@@ -510,4 +524,3 @@ class TicketRecurrent extends CommonDropdown {
    }
 
 }
-?>

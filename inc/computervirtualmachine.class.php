@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -68,7 +67,7 @@ class ComputerVirtualMachine extends CommonDBChild {
          $nb = 0;
          if ($_SESSION['glpishow_count_on_tabs']) {
             $nb = countElementsInTable('glpi_computervirtualmachines',
-                                       "computers_id = '".$item->getID()."' AND `is_deleted`='0'");
+                                      ['computers_id' => $item->getID(), 'is_deleted' => 0 ]);
          }
          return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
       }
@@ -124,7 +123,7 @@ class ComputerVirtualMachine extends CommonDBChild {
       global $CFG_GLPI;
 
       if (!Session::haveRight("computer", UPDATE)) {
-        return false;
+         return false;
       }
 
       $comp = new Computer();
@@ -153,14 +152,13 @@ class ComputerVirtualMachine extends CommonDBChild {
          if ($ID && $this->fields['is_dynamic']) {
             Plugin::doHook("autoinventory_information", $this);
          } else {
-            _e('No');
+            echo __('No');
          }
          echo "</td>";
       } else {
          echo "<td colspan='2'></td>";
       }
       echo "</tr>\n";
-
 
       echo "<tr class='tab_bg_1'>";
       echo "<td>".__('Name')."</td>";
@@ -206,7 +204,7 @@ class ComputerVirtualMachine extends CommonDBChild {
       echo "</tr>";
 
       echo "<tr class='tab_bg_1'>";
-      echo "<td>".sprintf(__('%1$s (%2$s)'),__('Memory'),__('Mio'))."</td>";
+      echo "<td>".sprintf(__('%1$s (%2$s)'), __('Memory'), __('Mio'))."</td>";
       echo "<td>";
       Html::autocompletionTextField($this, "ram");
       echo "</td>";
@@ -215,7 +213,6 @@ class ComputerVirtualMachine extends CommonDBChild {
       echo "<td>";
       Html::autocompletionTextField($this, "vcpu");
       echo "</td></tr>";
-
 
       $this->showFormButtons($options);
 
@@ -312,14 +309,14 @@ class ComputerVirtualMachine extends CommonDBChild {
       if ($canedit) {
          echo "<div class='center firstbloc'>".
                 "<a class='vsubmit' href='computervirtualmachine.form.php?computers_id=$ID'>";
-         _e('Add a virtual machine');
+         echo __('Add a virtual machine');
          echo "</a></div>\n";
       }
 
       echo "<div class='center'>";
 
       $virtualmachines = getAllDatasFromTable('glpi_computervirtualmachines',
-                                              "`computers_id` = '$ID' AND `is_deleted` = '0'");
+                                              "`computers_id` = '$ID' AND `is_deleted` = '0'", false, 'name');
 
       echo "<table class='tab_cadre_fixehov'>";
 
@@ -342,7 +339,7 @@ class ComputerVirtualMachine extends CommonDBChild {
          $header .= "<th>".__('State of the virtual machine')."</th>";
          $header .= "<th>".__('UUID')."</th>";
          $header .= "<th>"._x('quantity', 'Processors number')."</th>";
-         $header .= "<th>".sprintf(__('%1$s (%2$s)'), __('Memory'),__('Mio'))."</th>";
+         $header .= "<th>".sprintf(__('%1$s (%2$s)'), __('Memory'), __('Mio'))."</th>";
          $header .= "<th>".__('Machine')."</th>";
          $header .= "</tr>";
          echo $header;
@@ -397,9 +394,6 @@ class ComputerVirtualMachine extends CommonDBChild {
          }
          echo $header;
       }
-
-
-
       echo "</table>";
       echo "</div>";
    }
@@ -469,11 +463,10 @@ class ComputerVirtualMachine extends CommonDBChild {
 
       //Virtual machine found, return ID
       if ($DB->numrows($result)) {
-         return $DB->result($result,0,'id');
+         return $DB->result($result, 0, 'id');
       }
 
       return false;
    }
 
 }
-?>

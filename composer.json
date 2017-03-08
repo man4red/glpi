@@ -1,0 +1,56 @@
+{
+    "name": "glpi/glpi",
+    "description": "GLPI dependencies",
+    "license": "GPL-2.0",
+    "type": "project",
+    "homepage": "http://www.glpi-project.org/",
+    "support": {
+        "irc": "irc://irc.freenode.org/glpi",
+        "forum": "http://forum.glpi-project.org/",
+        "issues": "https://github.com/glpi-project/glpi/issues",
+        "docs": "https://github.com/glpi-project/doc"
+    },
+    "require": {
+        "php": ">=5.6.0",
+        "ext-mysqli": "*",
+        "ext-fileinfo": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-gd": "*",
+        "ext-zlib": "*",
+        "ext-curl": "*",
+        "jasig/phpcas": "~1.3.0",
+        "iamcal/lib_autolink": "~1.7",
+        "phpmailer/phpmailer": "~5.2",
+        "sabre/vobject": "~4.1",
+        "simplepie/simplepie": "~1.4.0",
+        "tecnickcom/tcpdf": "~6.2",
+        "zendframework/zend-cache": "^2.7",
+        "zendframework/zend-i18n": "^2.7",
+        "michelf/php-markdown": "^1.6",
+        "true/punycode": "^2.1",
+        "ircmaxell/random-lib": "^1.2"
+    },
+    "require-dev": {
+        "guzzlehttp/guzzle": "~6",
+        "glpi-project/coding-standard": "0.5",
+        "consolidation/robo": "^1.0",
+        "natxet/CssMin": "^3.0",
+        "patchwork/jsqueeze": "^2.0",
+        "phpunit/phpunit": "^5.7 || ^6.0"
+    },
+    "suggest": {
+        "ext-ldap": "Used ot provide LDAP authentication and synchronization",
+        "ext-imap": "Used for collection from IMAP"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "5.6.0"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": "@php -r \"file_put_contents('.composer.hash', sha1_file('composer.lock'));\"",
+        "post-update-cmd": "@php -r \"file_put_contents('.composer.hash', sha1_file('composer.lock'));\""
+    }
+}

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class Computer_SoftwareVersion extends CommonDBRelation {
@@ -111,7 +110,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
          case 'add' :
             Software::dropdownSoftwareToInstall('peer_softwareversions_id',
                                                 $_SESSION["glpiactive_entity"]);
-            echo Html::submit(_x('button','Post'), array('name' => 'massiveaction'))."</span>";
+            echo Html::submit(_x('button', 'Post'), array('name' => 'massiveaction'))."</span>";
             return true;
 
          case 'move_version' :
@@ -122,8 +121,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                   if (isset($input['options']['move']['used'])) {
                      $options['used'] = $input['options']['move']['used'];
                   }
-                  SoftwareVersion::dropdown($options);
-                  echo Html::submit(_x('button','Post'), array('name' => 'massiveaction'));
+                  SoftwareVersion::dropdownForOneSoftware($options);
+                  echo Html::submit(_x('button', 'Post'), array('name' => 'massiveaction'));
                   return true;
                }
             }
@@ -330,7 +329,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                           'state,compname'    => __('Status'),
                           'groupe,compname'   => __('Group'),
                           'username,compname' => __('User'),
-                          'lname'             => _n('License', 'Licenses', Session::getPluralNumber()));
+                          'lname'             => _n('License', 'Licenses', Session::getPluralNumber()),
+                          'date_instal'       => __('Installation date'));
       if ($crit != "softwares_id") {
          unset($refcolumns['vername']);
       }
@@ -349,8 +349,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
 
       if (isset($_GET["sort"]) && !empty($_GET["sort"]) && isset($refcolumns[$_GET["sort"]])) {
          // manage several param like location,compname :  order first
-         $tmp  = explode(",",$_GET["sort"]);
-         $sort = "`".implode("` $order,`",$tmp)."`";
+         $tmp  = explode(",", $_GET["sort"]);
+         $sort = "`".implode("` $order,`", $tmp)."`";
 
       } else {
          if ($crit == "softwares_id") {
@@ -394,9 +394,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
 
       $number = 0;
       if ($result =$DB->query($query_number)) {
-         $number = $DB->result($result,0,0);
+         $number = $DB->result($result, 0, 0);
       }
-
 
       echo "<div class='center'>";
       if ($number < 1) {
@@ -466,11 +465,9 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                                            sprintf(__('%1$s = %2$s'),
                                                   Software::getTypeName(1), $title));
 
-
             $sort_img = "<img src='".$CFG_GLPI["root_doc"]."/pics/".
                           ($order == "DESC" ? "puce-down.png" : "puce-up.png") . "' alt=''
                           title=''>";
-
 
             if ($canedit) {
                $rand = mt_rand();
@@ -530,7 +527,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
             echo $header_begin.$header_top.$header_end;
 
             do {
-               Session::addToNavigateListItems('Computer',$data["cID"]);
+               Session::addToNavigateListItems('Computer', $data["cID"]);
 
                echo "<tr class='tab_bg_2'>";
                if ($canedit) {
@@ -571,20 +568,22 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                echo "<td>";
 
                if (count($lics)) {
-                  foreach ($lics as $data) {
-                     $serial = $data['serial'];
+                  foreach ($lics as $lic) {
+                     $serial = $lic['serial'];
 
-                     if (!empty($data['type'])) {
-                        $serial = sprintf(__('%1$s (%2$s)'), $serial, $data['type']);
+                     if (!empty($lic['type'])) {
+                        $serial = sprintf(__('%1$s (%2$s)'), $serial, $lic['type']);
                      }
 
-                     echo "<a href='softwarelicense.form.php?id=".$data['id']."'>".$data['name'];
+                     echo "<a href='softwarelicense.form.php?id=".$lic['id']."'>".$lic['name'];
                      echo "</a> - ".$serial;
 
                      echo "<br>";
                   }
                }
                echo "</td>";
+
+               echo "<td>".Html::convDate($data['date_install'])."</td>";
                echo "</tr>\n";
 
             } while ($data = $DB->fetch_assoc($result));
@@ -599,7 +598,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
             }
 
          } else { // Not found
-            _e('No item found');
+            echo __('No item found');
          }
       } // Query
       Html::printAjaxPager(self::getTypeName(Session::getPluralNumber()), $start, $number);
@@ -638,7 +637,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
               ORDER BY `completename`";
 
       foreach ($DB->request($sql) as $ID => $data) {
-         $nb = self::countForVersion($softwareversions_id,$ID);
+         $nb = self::countForVersion($softwareversions_id, $ID);
          if ($nb > 0) {
             echo "<tr class='tab_bg_2'><td>" . $data["completename"] . "</td>";
             echo "<td class='numeric'>".$nb."</td></tr>\n";
@@ -696,7 +695,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                        `glpi_softwareversions`.`id` AS verid,
                        `glpi_softwareversions`.`softwares_id`,
                        `glpi_softwareversions`.`name` AS version,
-                       `glpi_softwares`.`is_valid` AS softvalid
+                       `glpi_softwares`.`is_valid` AS softvalid,
+                       `glpi_computers_softwareversions`.`date_install` AS dateinstall
                 FROM `glpi_computers_softwareversions`
                 LEFT JOIN `glpi_softwareversions`
                      ON (`glpi_computers_softwareversions`.`softwareversions_id`
@@ -711,7 +711,6 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                 ORDER BY `softname`, `version`";
       $result = $DB->query($query);
       $i      = 0;
-
 
       if ((empty($withtemplate) || ($withtemplate != 2))
           && $canedit) {
@@ -765,7 +764,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
 
       if ($number) {
          echo "<div class='spaced'>";
-         Html::printAjaxPager('',  $start, $number);
+         Html::printAjaxPager('', $start, $number);
 
          if ($canedit) {
             $rand = mt_rand();
@@ -782,7 +781,6 @@ class Computer_SoftwareVersion extends CommonDBRelation {
          }
          echo "<table class='tab_cadre_fixehov'>";
 
-
          $header_begin  = "<tr>";
          $header_top    = '';
          $header_bottom = '';
@@ -795,6 +793,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
          }
          $header_end .= "<th>" . __('Name') . "</th><th>" . __('Status') . "</th>";
          $header_end .= "<th>" .__('Version')."</th><th>" . __('License') . "</th>";
+         $header_end .="<th>" . __('Installation date') . "</th>";
          if (Plugin::haveImport()) {
             $header_end .= "<th>".__('Automatic inventory')."</th>";
          }
@@ -803,7 +802,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
          $header_end .= "</tr>\n";
          echo $header_begin.$header_top.$header_end;
 
-         for ($row=0 ; $data=$DB->fetch_assoc($result) ; $row++) {
+         for ($row=0; $data=$DB->fetch_assoc($result); $row++) {
 
             if (($row >= $start) && ($row < ($start + $_SESSION['glpilist_limit']))) {
                $licids = self::softsByCategory($data, $computers_id, $withtemplate,
@@ -836,6 +835,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
          echo "<form method='post' action='".$CFG_GLPI["root_doc"].
                 "/front/computer_softwarelicense.form.php'>";
          echo "<div class='spaced'><table class='tab_cadre_fixe'>";
+         echo "<tr class='tab_bg_1'><th colspan='2'>".SoftwareLicense::getTypeName(Session::getPluralNumber())."</th></tr>";
          echo "<tr class='tab_bg_1'>";
          echo "<td class='center'>";
          echo _n('License', 'Licenses', Session::getPluralNumber())."&nbsp;&nbsp;";
@@ -873,7 +873,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
                       $where";
 
       if (count($installed)) {
-         $query .= " AND `glpi_softwarelicenses`.`id` NOT IN (".implode(',',$installed).")";
+         $query .= " AND `glpi_softwarelicenses`.`id` NOT IN (".implode(',', $installed).")";
       }
       $query .= " ORDER BY `softname`, `version`;";
 
@@ -909,6 +909,7 @@ class Computer_SoftwareVersion extends CommonDBRelation {
          }
          $header_end .= "<th>" . __('Name') . "</th><th>" . __('Status') . "</th>";
          $header_end .= "<th>" .__('Version')."</th><th>" . __('License') . "</th>";
+         $header_end .= "<th>" .__('Installation date')."</th>";
          $header_end .= "</tr>\n";
          echo $header_begin.$header_top.$header_end;
 
@@ -926,6 +927,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
             Html::showMassiveActions($massiveactionparams);
             Html::closeForm();
          }
+      } else {
+         echo "<p class='center b'>".__('No item found')."</p>";
       }
 
       echo "</div>\n";
@@ -1017,6 +1020,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
 
          echo "</td>";
 
+         echo "<td>".Html::convDate($data['dateinstall'])."</td>";
+
          if (isset($data['is_dynamic'])) {
             echo "<td class='center'>".Dropdown::getYesNo($data['is_dynamic'])."</td>";
          }
@@ -1044,7 +1049,6 @@ class Computer_SoftwareVersion extends CommonDBRelation {
    */
    private static function displaySoftsByLicense($data, $computers_id, $withtemplate, $canedit) {
       global $CFG_GLPI;
-
 
       $ID = $data['linkID'];
 
@@ -1136,9 +1140,9 @@ class Computer_SoftwareVersion extends CommonDBRelation {
    /**
     * @see CommonGLPI::getTabNameForItem()
    **/
-  function getTabNameForItem(CommonGLPI $item, $withtemplate=0) {
+   function getTabNameForItem(CommonGLPI $item, $withtemplate=0) {
 
-     $nb = 0;
+      $nb = 0;
       switch ($item->getType()) {
          case 'Software' :
             if (!$withtemplate) {
@@ -1165,8 +1169,8 @@ class Computer_SoftwareVersion extends CommonDBRelation {
             if (Software::canView()) {
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable('glpi_computers_softwareversions',
-                                             "computers_id = '".$item->getID()."'
-                                                  AND `is_deleted`='0'");
+                                            ['computers_id' => $item->getID(),
+                                             'is_deleted'   => 0 ]);
                }
                return self::createTabEntry(Software::getTypeName(Session::getPluralNumber()), $nb);
             }
@@ -1204,4 +1208,3 @@ class Computer_SoftwareVersion extends CommonDBRelation {
    }
 
 }
-?>

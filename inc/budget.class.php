@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -50,7 +49,7 @@ class Budget extends CommonDropdown{
    static $rightname           = 'budget';
    protected $usenotepad       = true;
 
-   var $can_be_translated = false;
+   public $can_be_translated = false;
 
 
    static function getTypeName($nb=0) {
@@ -62,11 +61,12 @@ class Budget extends CommonDropdown{
 
       $ong = array();
       $this->addDefaultFormTab($ong);
-      $this->addStandardTab(__CLASS__,$ong, $options);
-      $this->addStandardTab('Document_Item',$ong, $options);
-      $this->addStandardTab('Link',$ong, $options);
-      $this->addStandardTab('Notepad',$ong, $options);
-      $this->addStandardTab('Log',$ong, $options);
+      $this->addStandardTab(__CLASS__, $ong, $options);
+      $this->addStandardTab('Document_Item', $ong, $options);
+      $this->addStandardTab('KnowbaseItem_Item', $ong, $options);
+      $this->addStandardTab('Link', $ong, $options);
+      $this->addStandardTab('Notepad', $ong, $options);
+      $this->addStandardTab('Log', $ong, $options);
 
       return $ong;
    }
@@ -114,7 +114,7 @@ class Budget extends CommonDropdown{
     **/
    function showForm($ID, $options=array()) {
 
-      $rowspan = 4;
+      $rowspan = 3;
       if ($ID > 0) {
          $rowspan++;
       }
@@ -128,15 +128,20 @@ class Budget extends CommonDropdown{
       Html::autocompletionTextField($this, "name");
       echo "</td>";
 
-      echo "<td rowspan='$rowspan' class='middle right'>".__('Comments')."</td>";
-      echo "<td class='center middle' rowspan='$rowspan'>".
-           "<textarea cols='45' rows='4' name='comment' >".$this->fields["comment"]."</textarea>".
-           "</td></tr>";
+      echo "<td>".__('Type')."</td>";
+      echo "<td>";
+      Dropdown::show('BudgetType', array('value' => $this->fields['budgettypes_id']));
+      echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
       echo "<td>"._x('price', 'Value')."</td>";
       echo "<td><input type='text' name='value' size='14'
-                 value='".Html::formatNumber($this->fields["value"], true)."'></td></tr>";
+                 value='".Html::formatNumber($this->fields["value"], true)."'></td>";
+
+                 echo "<td rowspan='$rowspan' class='middle right'>".__('Comments')."</td>";
+                 echo "<td class='center middle' rowspan='$rowspan'>".
+                      "<textarea cols='45' rows='4' name='comment' >".$this->fields["comment"]."</textarea>".
+                      "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
       echo "<td>".__('Start date')."</td>";
@@ -150,14 +155,12 @@ class Budget extends CommonDropdown{
       Html::showDateField("end_date", array('value' => $this->fields["end_date"]));
       echo "</td></tr>";
 
-      if ($ID > 0) {
-         echo "<tr class='tab_bg_1'>";
-         echo "<td>".__('Last update')."</td>";
-         echo "<td>";
-         echo ($this->fields["date_mod"]? Html::convDateTime($this->fields["date_mod"])
-                                        : __('Never'));
-         echo "</td></tr>";
-      }
+      echo "<tr class='tab_bg_1'>";
+      echo "<td>".__('Location')."</td>";
+      echo "<td>";
+      Location::dropdown(array('value'  => $this->fields["locations_id"],
+                               'entity' => $this->fields["entities_id"]));
+      echo "</td></tr>";
 
       $this->showFormButtons($options);
       return true;
@@ -187,59 +190,107 @@ class Budget extends CommonDropdown{
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab = array();
-      $tab[1]['table']           = $this->getTable();
-      $tab[1]['field']           = 'name';
-      $tab[1]['name']            = __('Name');
-      $tab[1]['datatype']        = 'itemlink';
-      $tab[1]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[2]['table']           = $this->getTable();
-      $tab[2]['field']           = 'id';
-      $tab[2]['name']            = __('ID');
-      $tab[2]['massiveaction']   = false;
-      $tab[2]['datatype']        = 'number';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[19]['table']          = $this->getTable();
-      $tab[19]['field']          = 'date_mod';
-      $tab[19]['name']           = __('Last update');
-      $tab[19]['datatype']       = 'datetime';
-      $tab[19]['massiveaction']  = false;
+      $tab[] = [
+         'id'                 => '19',
+         'table'              => $this->getTable(),
+         'field'              => 'date_mod',
+         'name'               => __('Last update'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
 
-      $tab[5]['table']           = $this->getTable();
-      $tab[5]['field']           = 'begin_date';
-      $tab[5]['name']            = __('Start date');
-      $tab[5]['datatype']        = 'date';
+      $tab[] = [
+         'id'                 => '121',
+         'table'              => $this->getTable(),
+         'field'              => 'date_creation',
+         'name'               => __('Creation date'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
 
-      $tab[3]['table']           = $this->getTable();
-      $tab[3]['field']           = 'end_date';
-      $tab[3]['name']            = __('End date');
-      $tab[3]['datatype']        = 'date';
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => 'glpi_budgettypes',
+         'field'              => 'name',
+         'name'               => __('Type'),
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[4]['table']           = $this->getTable();
-      $tab[4]['field']           = 'value';
-      $tab[4]['name']            = _x('price', 'Value');
-      $tab[4]['datatype']        = 'decimal';
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => $this->getTable(),
+         'field'              => 'begin_date',
+         'name'               => __('Start date'),
+         'datatype'           => 'date'
+      ];
 
-      $tab[16]['table']          = $this->getTable();
-      $tab[16]['field']          = 'comment';
-      $tab[16]['name']           = __('Comments');
-      $tab[16]['datatype']       = 'text';
+      $tab[] = [
+         'id'                 => '6',
+         'table'              => $this->getTable(),
+         'field'              => 'end_date',
+         'name'               => __('End date'),
+         'datatype'           => 'date'
+      ];
 
-      $tab[80]['table']          = 'glpi_entities';
-      $tab[80]['field']          = 'completename';
-      $tab[80]['name']           = __('Entity');
-      $tab[80]['massiveaction']  = false;
-      $tab[80]['datatype']       = 'dropdown';
+      $tab[] = [
+         'id'                 => '7',
+         'table'              => $this->getTable(),
+         'field'              => 'value',
+         'name'               => _x('price', 'Value'),
+         'datatype'           => 'decimal'
+      ];
 
-      $tab[86]['table']          = $this->getTable();
-      $tab[86]['field']          = 'is_recursive';
-      $tab[86]['name']           = __('Child entities');
-      $tab[86]['datatype']       = 'bool';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
-      $tab += Notepad::getSearchOptionsToAdd();
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
+
+      $tab[] = [
+         'id'                 => '86',
+         'table'              => $this->getTable(),
+         'field'              => 'is_recursive',
+         'name'               => __('Child entities'),
+         'datatype'           => 'bool'
+      ];
+
+      // add objectlock search options
+      $tab = array_merge($tab, ObjectLock::getSearchOptionsToAddNew(get_class($this)));
+      $tab = array_merge($tab, Location::getSearchOptionsToAddNew());
+
+      $tab = array_merge($tab, Notepad::getSearchOptionsToAddNew());
 
       return $tab;
    }
@@ -273,7 +324,7 @@ class Budget extends CommonDropdown{
       Html::printPagerForm();
       echo "</th><th colspan='4'>";
       if ($DB->numrows($result) == 0) {
-         _e('No associated item');
+         echo __('No associated item');
       } else {
          echo _n('Associated item', 'Associated items', $DB->numrows($result));
       }
@@ -289,7 +340,7 @@ class Budget extends CommonDropdown{
 
       $num       = 0;
       $itemtypes = array();
-      for ($i = 0; $i < $number ; $i++) {
+      for ($i = 0; $i < $number; $i++) {
          $itemtypes[] = $DB->result($result, $i, "itemtype");
       }
       $itemtypes[] = 'Contract';
@@ -399,14 +450,12 @@ class Budget extends CommonDropdown{
                                   getEntitiesRestrictRequest(" AND", $item->getTable())."
                                   ".($item->maybeTemplate()?" AND NOT `".$item->getTable()."`.`is_template`":'')."
                             ORDER BY `".$item->getTable()."`.`entities_id`,";
-                if ($item instanceof Item_Devices) {
-                   $query .= " `".$item->getTable()."`.`itemtype`";
-                } else {
-                   $query .= " `".$item->getTable()."`.`name`";
-                }
-
-
-               break;
+                  if ($item instanceof Item_Devices) {
+                     $query .= " `".$item->getTable()."`.`itemtype`";
+                  } else {
+                     $query .= " `".$item->getTable()."`.`name`";
+                  }
+                  break;
             }
 
             if ($result_linked = $DB->query($query)) {
@@ -433,7 +482,7 @@ class Budget extends CommonDropdown{
                        "</td></tr>";
 
                } else if ($nb) {
-                  for ($prem=true ; $data=$DB->fetch_assoc($result_linked) ; $prem=false) {
+                  for ($prem=true; $data=$DB->fetch_assoc($result_linked); $prem=false) {
                      $name = NOT_AVAILABLE;
                      if ($item->getFromDB($data["id"])) {
                         if ($item instanceof Item_Devices) {
@@ -467,7 +516,7 @@ class Budget extends CommonDropdown{
                      echo "</td></tr>";
                   }
                }
-            $num += $nb;
+               $num += $nb;
             }
          }
       }
@@ -501,7 +550,7 @@ class Budget extends CommonDropdown{
       $query = "SELECT DISTINCT `itemtype`
                 FROM `glpi_infocoms`
                 WHERE `budgets_id` = '$budgets_id'
-                      AND `itemtype` NOT IN ('".implode("','",$ignore)."')".
+                      AND `itemtype` NOT IN ('".implode("','", $ignore)."')".
                       getEntitiesRestrictRequest(" AND", 'glpi_infocoms', "entities_id")."
                 GROUP BY `itemtype`";
 
@@ -631,7 +680,7 @@ class Budget extends CommonDropdown{
       echo "</tr>";
 
       // get all entities ordered by names
-      $allentities = getAllDatasFromTable('glpi_entities','',true, 'completename');
+      $allentities = getAllDatasFromTable('glpi_entities', '', true, 'completename');
 
       foreach ($allentities as $entity => $data) {
          if (isset($entities_values[$entity])) {
@@ -679,4 +728,3 @@ class Budget extends CommonDropdown{
    }
 
 }
-?>

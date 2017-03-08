@@ -1,38 +1,37 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -96,7 +95,7 @@ class MassiveAction {
                      $POST['actions'] = $POST['specific_actions'];
                      $specific_action = 1;
                      $dont_filter_for = array_keys($POST['actions']);
-                  } else{
+                  } else {
                      $specific_action = 0;
                      if (isset($POST['add_actions'])) {
                         $POST['actions'] = $POST['add_actions'];
@@ -420,7 +419,7 @@ class MassiveAction {
             $common_fields = array_merge($common_fields, $this->POST['massive_action_fields']);
          }
 
-        foreach ($common_fields as $field) {
+         foreach ($common_fields as $field) {
             if (isset($this->POST[$field])) {
                echo Html::hidden($field, array('value' => $this->POST[$field]));
             }
@@ -453,7 +452,7 @@ class MassiveAction {
             foreach ($keys as $itemtype) {
                $itemtypes[$itemtype] = $itemtype::getTypeName(Session::getPluralNumber());
             }
-            _e('Select the type of the item on which applying this action')."<br>\n";
+            echo __('Select the type of the item on which applying this action')."<br>\n";
 
             $rand = Dropdown::showFromArray('specialize_itemtype', $itemtypes);
             echo "<br><br>";
@@ -467,8 +466,7 @@ class MassiveAction {
             exit();
          }
       }
-
-     return false;
+      return false;
    }
 
 
@@ -512,7 +510,6 @@ class MassiveAction {
          return false;
       }
 
-
       if (!is_null($checkitem)) {
          $canupdate = $checkitem->canUpdate();
          $candelete = $checkitem->canDelete();
@@ -531,7 +528,7 @@ class MassiveAction {
             if (in_array($itemtype, Item_Devices::getConcernedItems())) {
                $actions[$self_pref.'purge_item_but_devices']
                                              = _x('button', 'Delete permanently but keep devices');
-               $actions[$self_pref.'purge']  = _x('button',  'Delete permanently and remove devices');
+               $actions[$self_pref.'purge']  = _x('button', 'Delete permanently and remove devices');
             } else {
                $actions[$self_pref.'purge']  = _x('button', 'Delete permanently');
             }
@@ -560,7 +557,11 @@ class MassiveAction {
                $actions[$self_pref.'delete'] = _x('button', 'Put in dustbin');
             }
          } else if ($canpurge) {
-            $actions[$self_pref.'purge'] = _x('button', 'Delete permanently');
+            if ($item instanceof CommonDBRelation) {
+               $actions[$self_pref.'purge'] = _x('button', 'Delete permanently the relation with selected elements');
+            } else {
+               $actions[$self_pref.'purge'] = _x('button', 'Delete permanently');
+            }
             if ($item instanceof CommonDropdown) {
                $actions[$self_pref.'purge_but_item_linked']
                      = _x('button', 'Delete permanently even if linked items');
@@ -630,7 +631,7 @@ class MassiveAction {
     * @return nothing (display only)
    **/
    function showDefaultSubForm() {
-      echo Html::submit(_x('button','Post'), array('name' => 'massiveaction'));
+      echo Html::submit(_x('button', 'Post'), array('name' => 'massiveaction'));
    }
 
 
@@ -703,7 +704,6 @@ class MassiveAction {
                }
 
                if (count($itemtypes) > 1) {
-                  $options        = array(0 => Dropdown::EMPTY_VALUE);
                   $common_options = array();
                   foreach ($options_count as $field => $users) {
                      if (count($users) > 1) {
@@ -730,12 +730,11 @@ class MassiveAction {
                      $itemtype_choices[$itemtype] = $itemtype::getTypeName(Session::getPluralNumber());
                   }
                } else {
-                  $options         = array(0 => Dropdown::EMPTY_VALUE);
-                  $options        += $options_per_type[$itemtypes[0]];
+                  $options        = $options_per_type[$itemtypes[0]];
                   $common_options  = false;
                   $choose_itemtype = false;
                }
-               $choose_field = (count($options) > 1);
+               $choose_field = (count($options) >= 1);
 
                // Beware: "class='tab_cadre_fixe'" induce side effects ...
                echo "<table width='100%'><tr>";
@@ -764,7 +763,8 @@ class MassiveAction {
                echo "</tr><tr>";
                if ($choose_field) {
                   echo "<td>";
-                  $field_rand = Dropdown::showFromArray('id_field', $options);
+                  $field_rand = Dropdown::showFromArray('id_field', $options,
+                                                        array('display_emptychoice' => true));
                   echo "</td>";
                }
                if ($choose_itemtype) {
@@ -890,7 +890,7 @@ class MassiveAction {
             echo Html::hidden('field', array('value' => $fieldname));
             echo "<br>\n";
 
-            $submitname = _sx('button','Post');
+            $submitname = _sx('button', 'Post');
             if (isset($ma->POST['submitname']) && $ma->POST['submitname']) {
                $submitname= stripslashes($ma->POST['submitname']);
             }
@@ -1121,7 +1121,7 @@ class MassiveAction {
 
                            if ($ic->can(-1, CREATE, $input2)) {
                               // Add infocom if not exists
-                              if (!$ic->getFromDBforDevice($item->getType(),$key)) {
+                              if (!$ic->getFromDBforDevice($item->getType(), $key)) {
                                  $input2["items_id"] = $key;
                                  $input2["itemtype"] = $item->getType();
                                  unset($ic->fields);
@@ -1304,4 +1304,3 @@ class MassiveAction {
       $this->updateProgressBars();
    }
 }
-?>

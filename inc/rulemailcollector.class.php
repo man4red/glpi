@@ -1,41 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Rule class for Rights management
@@ -134,7 +133,7 @@ class RuleMailCollector extends Rule {
 
       $criterias['GROUPS']['table']                   = 'glpi_groups';
       $criterias['GROUPS']['field']                   = 'completename';
-      $criterias['GROUPS']['name']                    = sprintf(__('%1$s: %2$s'),__('User'),
+      $criterias['GROUPS']['name']                    = sprintf(__('%1$s: %2$s'), __('User'),
                                                                 __('Group'));
       $criterias['GROUPS']['linkfield']               = '';
       $criterias['GROUPS']['type']                    = 'dropdown';
@@ -246,11 +245,13 @@ class RuleMailCollector extends Rule {
                         //Case 2:
                         if (isset($this->criterias_results['ONE_PROFILE'])) {
                            $profile = $this->criterias_results['ONE_PROFILE'];
-                        //Case 3
+
                         } else if (isset($this->criterias_results['UNIQUE_PROFILE'])) {
+                           //Case 3
                            $profile = $this->criterias_results['UNIQUE_PROFILE'];
-                        //Case 1
+
                         } else if (isset($this->criterias_results['PROFILES'])) {
+                           //Case 1
                            $profile = $this->criterias_results['PROFILES'];
                         }
 
@@ -319,9 +320,14 @@ class RuleMailCollector extends Rule {
                         if ($entity_found > -1) {
                            $output['entities_id'] = $entity_found;
                            break;
-                         }
-                      }
+                        }
+                     }
                   } // switch (field)
+               break;
+               default:
+                  //Allow plugins actions
+                  $executeaction = clone $this;
+                  $output = $executeaction->executePluginsActions($action, $output, $params);
                break;
             }
          }
@@ -330,4 +336,3 @@ class RuleMailCollector extends Rule {
    }
 
 }
-?>

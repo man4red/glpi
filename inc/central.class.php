@@ -1,42 +1,43 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 
+use Glpi\Event;
+
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -114,6 +115,8 @@ class Central extends CommonGLPI {
       echo "<tr class='noHover'><td>";
       if ($showticket) {
          Ticket::showCentralCount();
+      } else {
+         Ticket::showCentralCount(true);
       }
       if ($showproblem) {
          Problem::showCentralCount();
@@ -146,8 +149,8 @@ class Central extends CommonGLPI {
    static function showMyView() {
       global $DB, $CFG_GLPI;
 
-      $showticket = Session::haveRightsOr("ticket",
-                                          array(Ticket::READMY, Ticket::READALL, Ticket::READASSIGN));
+      $showticket  = Session::haveRightsOr("ticket",
+                                           array(Ticket::READMY, Ticket::READALL, Ticket::READASSIGN));
 
       $showproblem = Session::haveRightsOr('problem', array(Problem::READALL, Problem::READMY));
 
@@ -159,7 +162,7 @@ class Central extends CommonGLPI {
          $logins = User::checkDefaultPasswords();
          $user   = new User();
          if (!empty($logins)) {
-            $accouts = array();
+            $accounts = array();
             foreach ($logins as $login) {
                $user->getFromDBbyName($login);
                $accounts[] = $user->getLink();
@@ -181,9 +184,24 @@ class Central extends CommonGLPI {
       }
 
       if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
-         if (!DBMysql::isMySQLStrictMode()) {
+         if (!DBMysql::isMySQLStrictMode($comment)) {
             echo "<tr><th colspan='2'>";
-            $message = __('MySQL strict mode is not enabled');
+            $message = sprintf(__('SQL strict mode is not fully enabled, recommended for development: %s'), $comment);
+            Html::displayTitle($CFG_GLPI['root_doc']."/pics/warning.png", $message, $message);
+            echo "</th></tr>";
+         }
+      }
+
+      if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
+         $crashedtables = DBMysql::checkForCrashedTables();
+         if (!empty($crashedtables)) {
+            $tables = array();
+            foreach ($crashedtables as $crashedtable) {
+               $tables[] = $crashedtable['table'];
+            }
+            echo "<tr><th colspan='2'>";
+            $message = __('The following SQL tables are marked as crashed:');
+            $message.= implode(',', $tables);
             Html::displayTitle($CFG_GLPI['root_doc']."/pics/warning.png", $message, $message);
             echo "</th></tr>";
          }
@@ -192,14 +210,14 @@ class Central extends CommonGLPI {
       if ($DB->isSlave()
           && !$DB->first_connection) {
          echo "<tr><th colspan='2'>";
-         Html::displayTitle($CFG_GLPI['root_doc']."/pics/warning.png", __('MySQL replica: read only'),
-                            __('MySQL replica: read only'));
+         Html::displayTitle($CFG_GLPI['root_doc']."/pics/warning.png", __('SQL replica: read only'),
+                            __('SQL replica: read only'));
          echo "</th></tr>";
       }
       echo "<tr class='noHover'><td class='top' width='50%'><table class='central'>";
       echo "<tr class='noHover'><td>";
       if (Session::haveRightsOr('ticketvalidation', TicketValidation::getValidateRights())) {
-         Ticket::showCentralList(0,"tovalidate",false);
+         Ticket::showCentralList(0, "tovalidate", false);
       }
       if ($showticket) {
 
@@ -293,4 +311,3 @@ class Central extends CommonGLPI {
    }
 
 }
-?>

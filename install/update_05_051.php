@@ -1,38 +1,37 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
-* @brief 
+* @brief
 */
 
 /// Update from 0.5 to 0.51
@@ -43,26 +42,23 @@ function update05to051() {
 
    /*******************************GLPI 0.51***********************************************/
 
-   if (!FieldExists("glpi_infocoms","facture", false)) {
+   if (!FieldExists("glpi_infocoms", "facture", false)) {
       $query = "ALTER TABLE `glpi_infocoms`
                 ADD `facture` char(255) NOT NULL default ''";
       $DB->queryOrDie($query, "0.51 add field facture");
    }
 
-
-   if (!FieldExists("glpi_enterprises","fax", false)) {
+   if (!FieldExists("glpi_enterprises", "fax", false)) {
       $query = "ALTER TABLE `glpi_enterprises`
                 ADD `fax` char(255) NOT NULL default ''";
       $DB->queryOrDie($query, "0.51 add field fax");
    }
 
-
-   if (!FieldExists("glpi_docs","link", false)) {
+   if (!FieldExists("glpi_docs", "link", false)) {
       $query = "ALTER TABLE `glpi_docs`
                 ADD `link` char(255) NOT NULL default ''";
       $DB->queryOrDie($query, "0.51 add field fax");
    }
-
 
    if (!TableExists("glpi_dropdown_contact_type")) {
       $query = "CREATE TABLE `glpi_dropdown_contact_type` (
@@ -83,13 +79,11 @@ function update05to051() {
       $DB->queryOrDie($query, "0.51 add entries to dropdown_contact_type");
    }
 
-
-   if (!FieldExists("glpi_config","cartridges_alarm", false)) {
+   if (!FieldExists("glpi_config", "cartridges_alarm", false)) {
       $query = "ALTER TABLE `glpi_config`
                 ADD `cartridges_alarm` int(11) NOT NULL default '10'";
       $DB->queryOrDie($query, "0.51 add field cartridges_alarm");
    }
-
 
    if (!TableExists("glpi_state_item")) {
       $query = "ALTER TABLE `glpi_repair_item`
@@ -100,7 +94,6 @@ function update05to051() {
                 ADD `state` INT DEFAULT '1'";
       $DB->queryOrDie($query, "0.51 add state field");
    }
-
 
    if (!TableExists("glpi_dropdown_state")) {
       $query = "CREATE TABLE `glpi_dropdown_state` (
@@ -113,4 +106,3 @@ function update05to051() {
 
 }
 
-?>

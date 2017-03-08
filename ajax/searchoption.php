@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,14 +35,12 @@
 */
 
 // Direct access to file
-if (strpos($_SERVER['PHP_SELF'],"searchoption.php")) {
+if (strpos($_SERVER['PHP_SELF'], "searchoption.php")) {
    include ('../inc/includes.php');
    header("Content-Type: text/html; charset=UTF-8");
    Html::header_nocache();
-}
-
-if (!defined('GLPI_ROOT')) {
-   die("Can not acces directly to this file");
+} else if (!defined('GLPI_ROOT')) {
+   die("Sorry. You can't access this file directly");
 }
 
 Session::checkLoginUser();
@@ -52,6 +49,12 @@ Session::checkLoginUser();
 if (isset($_POST["itemtype"])
     && isset($_POST["field"])
     && isset($_POST["num"]) ) {
+
+   if (!is_subclass_of($_POST['itemtype'], 'CommonDBTM')) {
+      throw new \RuntimeException('Invalid itemtype provided!');
+   }
+
+   $_POST['num'] = intval($_POST['num']);
 
    if (isset($_POST['meta']) && $_POST['meta']) {
       $fieldname = 'metacriteria';
@@ -75,13 +78,13 @@ if (isset($_POST["itemtype"])
    $dropdownname = "searchtype$fieldname".$_POST["itemtype"].$_POST["num"];
    $searchopt    = array();
 
-   echo "<table width='100%'><tr><td width='20%'>";
+   echo "<table><tr><td>";
    if (count($actions)>0) {
 
       // get already get search options
       if (isset($actions['searchopt'])) {
          $searchopt = $actions['searchopt'];
-         // No name for clean array whith quotes
+         // No name for clean array with quotes
          unset($searchopt['name']);
          unset($actions['searchopt']);
       }
@@ -90,7 +93,7 @@ if (isset($_POST["itemtype"])
                                             array('value'  => $_POST["searchtype"]));
       $fieldsearch_id = Html::cleanId("dropdown_".$fieldname."[".$_POST["num"]."][searchtype]$randsearch");
    }
-   echo "</td><td width='80%'>";
+   echo "</td><td>";
    echo "<span id='span$dropdownname'>\n";
 
    $_POST['value']      = stripslashes($_POST['value']);
@@ -113,4 +116,3 @@ if (isset($_POST["itemtype"])
                                  $CFG_GLPI["root_doc"]."/ajax/searchoptionvalue.php",
                                  $paramsaction);
 }
-?>

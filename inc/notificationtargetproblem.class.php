@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -45,9 +44,9 @@ if (!defined('GLPI_ROOT')) {
 **/
 class NotificationTargetProblem extends NotificationTargetCommonITILObject {
 
-   var $private_profiles = array();
+   public $private_profiles = array();
 
-   public $html_tags     = array('##problem.solution.description##');
+   public $html_tags        = array('##problem.solution.description##');
 
 
    /**
@@ -63,6 +62,8 @@ class NotificationTargetProblem extends NotificationTargetCommonITILObject {
                       'delete_task'    => __('Deletion of a task'),
                       'closed'         => __('Closure of a problem'),
                       'delete'         => __('Deleting a problem'));
+
+      $events = array_merge($events, parent::getEvents());
       asort($events);
       return $events;
    }
@@ -112,7 +113,6 @@ class NotificationTargetProblem extends NotificationTargetCommonITILObject {
 
          $datas['##problem.numberoftickets##'] = count($datas['tickets']);
 
-
          $restrict = "`problems_id`='".$item->getField('id')."'";
          $changes  = getAllDatasFromTable('glpi_changes_problems', $restrict);
 
@@ -142,7 +142,7 @@ class NotificationTargetProblem extends NotificationTargetCommonITILObject {
          $datas['##problem.numberofchanges##'] = count($datas['changes']);
 
          $restrict = "`problems_id` = '".$item->getField('id')."'";
-         $items    = getAllDatasFromTable('glpi_items_problems',$restrict);
+         $items    = getAllDatasFromTable('glpi_items_problems', $restrict);
 
          $datas['items'] = array();
          if (count($items)) {
@@ -276,6 +276,4 @@ class NotificationTargetProblem extends NotificationTargetCommonITILObject {
       asort($this->tag_descriptions);
    }
 
-
 }
-?>

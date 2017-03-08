@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class TicketSatisfaction extends CommonDBTM {
@@ -86,8 +85,8 @@ class TicketSatisfaction extends CommonDBTM {
          return false;
       }
 
-      if ($ticket->isUser(CommonITILActor::REQUESTER,Session::getLoginUserID())
-          || ($ticket->fields["users_id_recipient"] === Session::getLoginUserID())
+      if ($ticket->isUser(CommonITILActor::REQUESTER, Session::getLoginUserID())
+          || ($ticket->fields["users_id_recipient"] === Session::getLoginUserID() && Session::haveRight('ticket', Ticket::SURVEY))
           || (isset($_SESSION["glpigroups"])
               && $ticket->haveAGroup(CommonITILActor::REQUESTER, $_SESSION["glpigroups"]))) {
          return true;
@@ -113,8 +112,7 @@ class TicketSatisfaction extends CommonDBTM {
          echo "<div class='center spaced'>".
               "<a href='$url'>".__('External survey')."</a><br>($url)</div>";
 
-      // for internal inquest => form
-      } else {
+      } else { // for internal inquest => form
          $this->showFormHeader($options);
 
          // Set default satisfaction to 3 if not set
@@ -128,13 +126,14 @@ class TicketSatisfaction extends CommonDBTM {
 
          echo "<select id='satisfaction_data' name='satisfaction'>";
 
-         for ($i=0 ; $i<=5 ; $i++) {
+         for ($i=0; $i<=5; $i++) {
             echo "<option value='$i' ".(($i == $this->fields["satisfaction"])?'selected':'').
                   ">$i</option>";
          }
          echo "</select>";
          echo "<div class='rateit' id='stars'></div>";
          echo  "<script type='text/javascript'>\n";
+         echo "$(function() {";
          echo "$('#stars').rateit({value: ".$this->fields["satisfaction"].",
                                    min : 0,
                                    max : 5,
@@ -142,7 +141,7 @@ class TicketSatisfaction extends CommonDBTM {
                                    backingfld: '#satisfaction_data',
                                    ispreset: true,
                                    resetable: false});";
-         echo "</script>";
+         echo "});</script>";
 
          echo "</td></tr>";
 
@@ -290,4 +289,3 @@ class TicketSatisfaction extends CommonDBTM {
    }
 
 }
-?>

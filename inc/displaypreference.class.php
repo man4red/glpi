@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class DisplayPreference extends CommonDBTM {
@@ -46,7 +45,7 @@ class DisplayPreference extends CommonDBTM {
    public $get_item_to_display_tab = false;
 
    // From CommonDBTM
-   var $auto_message_on_action     = false;
+   public $auto_message_on_action  = false;
 
    protected $displaylist          = false;
 
@@ -70,7 +69,7 @@ class DisplayPreference extends CommonDBTM {
                       AND `users_id` = '".$input["users_id"]."'";
       $result = $DB->query($query);
 
-      $input["rank"] = $DB->result($result,0,0)+1;
+      $input["rank"] = $DB->result($result, 0, 0)+1;
 
       return $input;
    }
@@ -122,31 +121,25 @@ class DisplayPreference extends CommonDBTM {
    static function getForTypeUser($itemtype, $user_id) {
       global $DB;
 
-      // Add default items for user
       $query = "SELECT *
                 FROM `glpi_displaypreferences`
                 WHERE `itemtype` = '$itemtype'
-                      AND `users_id` = '$user_id'
-                ORDER BY `rank`";
+                      AND (`users_id` = '$user_id' OR `users_id` = '0')
+                ORDER BY `users_id`, `rank`";
       $result = $DB->query($query);
 
-      // GET default serach options
-      if ($DB->numrows($result) == 0) {
-         $query = "SELECT *
-                   FROM `glpi_displaypreferences`
-                   WHERE `itemtype` = '$itemtype'
-                         AND `users_id` = '0'
-                   ORDER BY `rank`";
-         $result = $DB->query($query);
-      }
+      $default_prefs = array();
+      $user_prefs = array();
 
-      $prefs = array();
-      if ($DB->numrows($result) > 0) {
-         while ($data = $DB->fetch_assoc($result)) {
-            array_push($prefs, $data["num"]);
+      while ($data = $DB->fetch_assoc($result)) {
+         if ($data["users_id"] != 0) {
+            $user_prefs[] = $data["num"];
+         } else {
+            $default_prefs[] = $data["num"];
          }
       }
-      return $prefs;
+
+      return count($user_prefs) ? $user_prefs : $default_prefs;
    }
 
 
@@ -314,7 +307,7 @@ class DisplayPreference extends CommonDBTM {
                 class='submit'>";
          echo "</span>";
          Html::closeForm();
-         
+
          echo "</th></tr>";
          echo "<tr class='tab_bg_1'><td colspan='4' class='center'>";
          echo "<form method='post' action=\"$target\">";
@@ -327,7 +320,7 @@ class DisplayPreference extends CommonDBTM {
                $group = $val;
 
             } else if (($key != 1)
-                       && !in_array($key,$already_added)
+                       && !in_array($key, $already_added)
                        && (!isset($val['nodisplay']) || !$val['nodisplay'])) {
                $values[$group][$key] = $val["name"];
             }
@@ -346,7 +339,6 @@ class DisplayPreference extends CommonDBTM {
          echo "<td class='center' width='50%'>".$searchopt[1]["name"]."</td>";
          echo "<td colspan='3'>&nbsp;</td>";
          echo "</tr>";
-
 
          // print entity
          if (Session::isMultiEntitiesMode()
@@ -475,7 +467,7 @@ class DisplayPreference extends CommonDBTM {
             if (!is_array($val)) {
                $group = $val;
             } else if (($key != 1)
-                       && !in_array($key,$already_added)
+                       && !in_array($key, $already_added)
                        && (!isset($val['nodisplay']) || !$val['nodisplay'])) {
                $values[$group][$key] = $val["name"];
             }
@@ -725,4 +717,3 @@ class DisplayPreference extends CommonDBTM {
    }
 
 }
-?>

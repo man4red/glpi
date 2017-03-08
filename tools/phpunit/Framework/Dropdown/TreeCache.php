@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
 
@@ -47,7 +46,7 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertEquals(1, count($parent));
       $this->assertArrayHasKey(0, $parent);
 
-      $sons = getSonsOf('glpi_entities',$ent0);
+      $sons = getSonsOf('glpi_entities', $ent0);
       $this->assertEquals(5, count($sons));
       $this->assertArrayHasKey($ent0, $sons);
       $this->assertArrayHasKey($ent1, $sons);
@@ -60,11 +59,11 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertArrayHasKey(0, $parent);
       $this->assertArrayHasKey($ent0, $parent);
 
-      $sons = getSonsOf('glpi_entities',$ent1);
+      $sons = getSonsOf('glpi_entities', $ent1);
       $this->assertEquals(1, count($sons));
       $this->assertArrayHasKey($ent1, $sons);
 
-      $sons = getSonsOf('glpi_entities',$ent2);
+      $sons = getSonsOf('glpi_entities', $ent2);
       $this->assertEquals(3, count($sons));
       $this->assertArrayHasKey($ent2, $sons);
       $this->assertArrayHasKey($ent3, $sons);
@@ -109,7 +108,7 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertEquals('A > BB', $loc->fields['completename']);
 
       // Sons of A (A, AA, BB)
-      $sons = getSonsOf('glpi_locations',$id[0]);
+      $sons = getSonsOf('glpi_locations', $id[0]);
       $this->assertEquals(3, count($sons));
       $this->assertArrayHasKey($id[0], $sons);
       $this->assertArrayHasKey($id[1], $sons);
@@ -143,7 +142,7 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertTrue($loc->getFromDB($id[4]));
       $this->assertEquals('B > CC', $loc->fields['completename']);
 
-      $sons = getSonsOf('glpi_locations',$id[3]);
+      $sons = getSonsOf('glpi_locations', $id[3]);
       $this->assertEquals(2, count($sons));
       $this->assertArrayHasKey($id[4], $sons);
 
@@ -172,12 +171,12 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertArrayHasKey($id[0], $parent);
 
       // New sons of B (only B)
-      $sons = getSonsOf('glpi_locations',$id[3]);
+      $sons = getSonsOf('glpi_locations', $id[3]);
       $this->assertEquals(1, count($sons));
       $this->assertArrayHasKey($id[3], $sons);
 
       // New sons of A (A, AA, BB, CC)
-      $sons = getSonsOf('glpi_locations',$id[0]);
+      $sons = getSonsOf('glpi_locations', $id[0]);
       $this->assertEquals(5, count($sons));
       $this->assertArrayHasKey($id[4], $sons);
       $this->assertArrayHasKey($id[5], $sons);
@@ -201,7 +200,7 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertTrue($res);
 
       // Sons of B (B and XXX)
-      $sons = getSonsOf('glpi_locations',$id[3]);
+      $sons = getSonsOf('glpi_locations', $id[3]);
       $this->assertEquals(2, count($sons));
       $this->assertArrayHasKey($id[5], $sons);
 
@@ -210,4 +209,3 @@ class Framework_Dropdown_TreeCache extends PHPUnit_Framework_TestCase {
       $this->assertEquals(2, $loc->fields['level']);
    }
 }
-?>

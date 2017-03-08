@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -37,28 +36,28 @@
 
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class Transfer extends CommonDBTM {
 
    // Specific ones
    /// Already transfer item
-   var $already_transfer      = array();
+   public $already_transfer      = array();
    /// Items simulate to move - non recursive item or recursive item not visible in destination entity
-   var $needtobe_transfer     = array();
+   public $needtobe_transfer     = array();
    /// Items simulate to move - recursive item visible in destination entity
-   var $noneedtobe_transfer   = array();
+   public $noneedtobe_transfer   = array();
    /// Search in need to be transfer items
-   var $item_search           = array();
+   public $item_search           = array();
    /// Search in need to be exclude from transfer
-   var $item_recurs           = array();
+   public $item_recurs           = array();
    /// Options used to transfer
-   var $options               = array();
+   public $options               = array();
    /// Destination entity id
-   var $to                    = -1;
+   public $to                    = -1;
    /// type of initial item transfered
-   var $inittype              = 0;
+   public $inittype              = 0;
 
    static $rightname = 'transfer';
 
@@ -77,27 +76,39 @@ class Transfer extends CommonDBTM {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                       = array();
-      $tab['common']             = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']           = $this->getTable();
-      $tab[1]['field']           = 'name';
-      $tab[1]['name']            = __('Name');
-      $tab[1]['datatype']        = 'itemlink';
-      $tab[1]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[19]['table']          = $this->getTable();
-      $tab[19]['field']          = 'date_mod';
-      $tab[19]['name']           = __('Last update');
-      $tab[19]['datatype']       = 'datetime';
-      $tab[19]['massiveaction']  = false;
+      $tab[] = [
+         'id'                 => '19',
+         'table'              => $this->getTable(),
+         'field'              => 'date_mod',
+         'name'               => __('Last update'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
 
-      $tab[16]['table']          = $this->getTable();
-      $tab[16]['field']          = 'comment';
-      $tab[16]['name']           = __('Comments');
-      $tab[16]['datatype']       = 'text';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
       return $tab;
    }
@@ -304,7 +315,7 @@ class Transfer extends CommonDBTM {
       foreach ($items as $key => $tab) {
          if (count($tab)) {
             foreach ($tab as $ID) {
-               $this->addToBeTransfer($key,$ID);
+               $this->addToBeTransfer($key, $ID);
             }
          }
       }
@@ -507,7 +518,6 @@ class Transfer extends CommonDBTM {
       $this->item_search['NetworkEquipment']
             = $this->createSearchConditionUsingArray($this->needtobe_transfer['NetworkEquipment']);
 
-
       // Devices
       if ($this->options['keep_device']) {
          foreach (Item_Devices::getConcernedItems() as $itemtype) {
@@ -565,7 +575,6 @@ class Transfer extends CommonDBTM {
                = $this->createSearchConditionUsingArray($this->noneedtobe_transfer[$itemtype]);
       }
 
-
       // Tickets
       if ($this->options['keep_ticket']) {
          foreach ($CFG_GLPI["ticket_types"] as $itemtype) {
@@ -597,7 +606,7 @@ class Transfer extends CommonDBTM {
                $itemtable = getTableForItemType($itemtype);
                $this->item_search[$itemtype]
                      = $this->createSearchConditionUsingArray($this->needtobe_transfer[$itemtype]);
-                     
+
                // Clean DB
                $query = "SELECT `glpi_contracts_items`.`id`
                          FROM `glpi_contracts_items`
@@ -983,7 +992,7 @@ class Transfer extends CommonDBTM {
             if ($result = $DB->query($query)) {
                if ($DB->numrows($result) > 0) {
                   while ($data = $DB->fetch_assoc($result)) {
-                     $this->addToBeTransfer('CartridgeItem',$data['cartridgeitems_id']);
+                     $this->addToBeTransfer('CartridgeItem', $data['cartridgeitems_id']);
                   }
                }
             }
@@ -1013,7 +1022,7 @@ class Transfer extends CommonDBTM {
    function createSearchConditionUsingArray($array) {
 
       if (is_array($array) && count($array)) {
-         return "('".implode("','",$array)."')";
+         return "('".implode("','", $array)."')";
       }
       return "(-1)";
    }
@@ -1084,7 +1093,7 @@ class Transfer extends CommonDBTM {
             }
 
             // Contract : keep / delete + clean unused / keep unused
-            if (in_array($itemtype,$CFG_GLPI["contract_types"])) {
+            if (in_array($itemtype, $CFG_GLPI["contract_types"])) {
                $this->transferContracts($itemtype, $ID, $newID);
             }
 
@@ -1125,7 +1134,7 @@ class Transfer extends CommonDBTM {
             }
 
             $item->update($input);
-            $this->addToAlreadyTransfer($itemtype,$ID,$newID);
+            $this->addToAlreadyTransfer($itemtype, $ID, $newID);
 
             // Do it after item transfer for entity checks
             if ($itemtype == 'Computer') {
@@ -1235,7 +1244,7 @@ class Transfer extends CommonDBTM {
             if ($result_search = $DB->query($query)) {
                // Found : -> use it
                if ($DB->numrows($result_search) > 0) {
-                  $newID = $DB->result($result_search,0,'id');
+                  $newID = $DB->result($result_search, 0, 'id');
                   $this->addToAlreadyTransfer('netpoints_id', $netpoints_id, $newID);
                   return $newID;
                }
@@ -1321,7 +1330,7 @@ class Transfer extends CommonDBTM {
 
                         if ($result_search = $DB->query($query)) {
                            if ($DB->numrows($result_search) > 0) {
-                              $newcarttypeID = $DB->result($result_search,0,'id');
+                              $newcarttypeID = $DB->result($result_search, 0, 'id');
                            }
                         }
 
@@ -1376,7 +1385,7 @@ class Transfer extends CommonDBTM {
                         $carttype->delete(array('id' => $data['cartridgeitems_id']));
                      }
                      if ($this->options['clean_cartridgeitem'] == 2) { // purge
-                        $carttype->delete(array('id' => $data['cartridgeitems_id']),1);
+                        $carttype->delete(array('id' => $data['cartridgeitems_id']), 1);
                      }
                   }
                }
@@ -1412,10 +1421,16 @@ class Transfer extends CommonDBTM {
             $newsoftID = $ID;
 
          } else {
+            $manufacturer = '';
+            if (isset($soft->fields['manufacturers_id'])
+                && ($soft->fields['manufacturers_id'] > 0)) {
+               $manufacturer = "AND `manufacturers_id` = '".$soft->fields['manufacturers_id']."'";
+            }
             $query = "SELECT *
                       FROM `glpi_softwares`
                       WHERE `entities_id` = ".$this->to."
-                            AND `name` = '".addslashes($soft->fields['name'])."'";
+                            AND `name` = '".addslashes($soft->fields['name'])."'
+                            $manufacturer";
 
             if ($data = $DB->request($query)->next()) {
                $newsoftID = $data["id"];
@@ -1668,10 +1683,10 @@ class Transfer extends CommonDBTM {
 
       $vers = new SoftwareVersion();
       foreach ($this->already_transfer['SoftwareVersion'] AS $old => $new) {
-         if ((countElementsInTable("glpi_softwarelicenses", "softwareversions_id_buy=$old") == 0)
-             && (countElementsInTable("glpi_softwarelicenses", "softwareversions_id_use=$old") == 0)
+         if ((countElementsInTable("glpi_softwarelicenses", ['softwareversions_id_buy'=>$old]) == 0)
+             && (countElementsInTable("glpi_softwarelicenses", ['softwareversions_id_use'=>$old]) == 0)
              && (countElementsInTable("glpi_computers_softwareversions",
-                                      "softwareversions_id=$old") == 0)) {
+                                      ['softwareversions_id'=>$old]) == 0)) {
 
             $vers->delete(array('id' => $old));
          }
@@ -1687,14 +1702,14 @@ class Transfer extends CommonDBTM {
 
       $soft = new Software();
       foreach ($this->already_transfer['Software'] AS $old => $new) {
-         if ((countElementsInTable("glpi_softwarelicenses", "softwares_id=$old") == 0)
-             && (countElementsInTable("glpi_softwareversions", "softwares_id=$old") == 0)) {
+         if ((countElementsInTable("glpi_softwarelicenses", ['softwares_id'=>$old]) == 0)
+             && (countElementsInTable("glpi_softwareversions", ['softwares_id'=>$old]) == 0)) {
 
             if ($this->options['clean_software'] == 1) { // delete
                $soft->delete(array('id' => $old), 0);
 
             } else if ($this->options['clean_software'] ==  2) { // purge
-               $soft->delete(array('id' => $old),1);
+               $soft->delete(array('id' => $old), 1);
             }
          }
       }
@@ -1821,8 +1836,7 @@ class Transfer extends CommonDBTM {
                         $DB->query($query);
                      }
 
-                  // Same Item -> update links
-                  } else {
+                  } else { // Same Item -> update links
                      // Copy Item -> copy links
                      if ($item_ID != $newcontractID) {
                         $query = "INSERT INTO `glpi_contracts_items`
@@ -1896,7 +1910,7 @@ class Transfer extends CommonDBTM {
 
          if ($result = $DB->query($query)) {
             if ($DB->numrows($result) > 0) {
-            // Foreach get item
+               // Foreach get item
                while ($data = $DB->fetch_assoc($result)) {
                   $need_clean_process = false;
                   $item_ID            = $data['documents_id'];
@@ -1963,7 +1977,7 @@ class Transfer extends CommonDBTM {
 
                         if ($result_search = $DB->query($query)) {
                            if ($DB->numrows($result_search) > 0) {
-                              $newdocID = $DB->result($result_search,0,'id');
+                              $newdocID = $DB->result($result_search, 0, 'id');
                               $this->addToAlreadyTransfer('Document', $item_ID, $newdocID);
                            }
                         }
@@ -1992,8 +2006,7 @@ class Transfer extends CommonDBTM {
                         $DB->query($query);
                      }
 
-                  // Same Item -> update links
-                  } else {
+                  } else { // Same Item -> update links
                      // Copy Item -> copy links
                      if ($item_ID != $newdocID) {
                         $query = "INSERT INTO `glpi_documents_items`
@@ -2018,7 +2031,7 @@ class Transfer extends CommonDBTM {
                                WHERE `documents_id` = '$item_ID'";
 
                      if ($result_remaining = $DB->query($query)) {
-                        if ($DB->result($result_remaining,0,'cpt') == 0) {
+                        if ($DB->result($result_remaining, 0, 'cpt') == 0) {
                            if ($this->options['clean_document'] == 1) {
                               $document->delete(array('id' => $item_ID));
                            }
@@ -2159,7 +2172,7 @@ class Transfer extends CommonDBTM {
                                  unset($link_item->fields);
                                  $newID = $link_item->add(toolbox::addslashes_deep($input));
                                  // 2 - transfer as copy
-                                 $this->transferItem($link_type,$item_ID,$newID);
+                                 $this->transferItem($link_type, $item_ID, $newID);
                               }
 
                               // Founded -> use to link : nothing to do
@@ -2310,7 +2323,9 @@ class Transfer extends CommonDBTM {
       global $DB;
 
       $job   = new Ticket();
-      $query = "SELECT *
+      $rel   = new Item_Ticket();
+
+      $query = "SELECT `glpi_tickets`.*, `glpi_items_tickets`.`id` as _relid
                 FROM `glpi_tickets`
                 LEFT JOIN `glpi_items_tickets`
                    ON `glpi_items_tickets`.`tickets_id` = `glpi_tickets`.`id`
@@ -2327,12 +2342,18 @@ class Transfer extends CommonDBTM {
                      $input                = $this->transferHelpdeskAdditionalInformations($data);
                      $input['id']          = $data['id'];
                      $input['entities_id'] = $this->to;
+
+                     $job->update($input);
+
+                     $input = array();
+                     $input['id']          = $data['_relid'];
                      $input['items_id']    = $newID;
                      $input['itemtype']    = $itemtype;
 
-                     $job->update($input);
+                     $rel->update($input);
+
                      $this->addToAlreadyTransfer('Ticket', $data['id'], $data['id']);
-                     $this->transferTaskCategory('Ticket', $input['id'], $input['id']);
+                     $this->transferTaskCategory('Ticket', $data['id'], $data['id']);
                   }
                   break;
 
@@ -2340,9 +2361,7 @@ class Transfer extends CommonDBTM {
                case 1 :
                   // Same Item / Copy Item : keep and clean ref
                   while ($data = $DB->fetch_assoc($result)) {
-                     $job->update(array('id'       => $data['id'],
-                                        'itemtype' => 0,
-                                        'items_id' => 0));
+                     $rel->delete(array('id'       => $data['relid']));
                      $this->addToAlreadyTransfer('Ticket', $data['id'], $data['id']);
                   }
                   break;
@@ -2416,7 +2435,7 @@ class Transfer extends CommonDBTM {
 
                      if ($result_search = $DB->query($query)) {
                         if ($DB->numrows($result_search) > 0) {
-                           $newID = $DB->result($result_search,0,'id');
+                           $newID = $DB->result($result_search, 0, 'id');
                         }
                      }
                      if ($newID < 0) {
@@ -2522,9 +2541,9 @@ class Transfer extends CommonDBTM {
       $input               = array();
       $suppliers_id_assign = 0;
 
-//       if ($data['suppliers_id_assign'] > 0) {
-//          $suppliers_id_assign = $this->transferSingleSupplier($data['suppliers_id_assign']);
-//       }
+      // if ($data['suppliers_id_assign'] > 0) {
+      //   $suppliers_id_assign = $this->transferSingleSupplier($data['suppliers_id_assign']);
+      // }
 
       // Transfer ticket category
       $catid = 0;
@@ -2647,7 +2666,7 @@ class Transfer extends CommonDBTM {
       global $DB;
 
       $ic = new Infocom();
-      if ($ic->getFromDBforDevice($itemtype,$ID)) {
+      if ($ic->getFromDBforDevice($itemtype, $ID)) {
          switch ($this->options['keep_infocom']) {
             // delete
             case 0 :
@@ -2742,7 +2761,7 @@ class Transfer extends CommonDBTM {
                                      AND `items_id` NOT IN ".$this->item_search[$itemtype];
 
                      if ($result_search = $DB->query($query)) {
-                        $links_remaining += $DB->result($result_search, 0,' cpt');
+                        $links_remaining += $DB->result($result_search, 0, ' cpt');
                      }
                   }
                }
@@ -2777,7 +2796,7 @@ class Transfer extends CommonDBTM {
                unset($ent->fields);
                $newID                = $ent->add(toolbox::addslashes_deep($input));
                // 2 - transfer as copy
-               $this->transferItem('Supplier',$ID,$newID);
+               $this->transferItem('Supplier', $ID, $newID);
             }
 
             // Founded -> use to link : nothing to do
@@ -2841,7 +2860,7 @@ class Transfer extends CommonDBTM {
 
                      // Yes : transfer
                      if ($canbetransfer) {
-                        $this->transferItem('Contact',$item_ID,$item_ID);
+                        $this->transferItem('Contact', $item_ID, $item_ID);
                         $newcontactID = $item_ID;
 
                      } else {
@@ -2872,7 +2891,7 @@ class Transfer extends CommonDBTM {
                            unset($contact->fields);
                            $newcontactID         = $contact->add(toolbox::addslashes_deep($input));
                            // 2 - transfer as copy
-                           $this->transferItem('Contact',$item_ID,$newcontactID);
+                           $this->transferItem('Contact', $item_ID, $newcontactID);
                         }
 
                      }
@@ -2887,8 +2906,7 @@ class Transfer extends CommonDBTM {
                         $DB->query($query);
                      }
 
-                  // Same Item -> update links
-                  } else {
+                  } else { // Same Item -> update links
                      // Copy Item -> copy links
                      if ($item_ID != $newcontactID) {
                         $query = "INSERT INTO `glpi_contacts_suppliers`
@@ -2912,7 +2930,7 @@ class Transfer extends CommonDBTM {
                                WHERE `contacts_id` = '$item_ID'";
 
                      if ($result_remaining = $DB->query($query)) {
-                        if ($DB->result($result_remaining,0,'cpt') == 0) {
+                        if ($DB->result($result_remaining, 0, 'cpt') == 0) {
                            if ($this->options['clean_contact'] == 1) {
                               $contact->delete(array('id' => $item_ID));
                            }
@@ -2949,7 +2967,7 @@ class Transfer extends CommonDBTM {
 
       $ri = new ReservationItem();
 
-      if ($ri->getFromDBbyItem($itemtype,$ID)) {
+      if ($ri->getFromDBbyItem($itemtype, $ID)) {
          switch ($this->options['keep_reservation']) {
             // delete
             case 0 :
@@ -3000,8 +3018,7 @@ class Transfer extends CommonDBTM {
                $result = $DB->query($query);
             }
 
-         // Keep devices
-         default :
+         default : // Keep devices
             foreach (Item_Devices::getItemAffinities($itemtype) as $itemdevicetype) {
                $itemdevicetable = getTableForItemType($itemdevicetype);
                $devicetype      = $itemdevicetype::getDeviceType();
@@ -3211,8 +3228,8 @@ class Transfer extends CommonDBTM {
                         }
                      }
                   }
-               }
 
+            }
          }
       }
    }
@@ -3232,7 +3249,7 @@ class Transfer extends CommonDBTM {
       global $CFG_GLPI;
 
       $edit_form = true;
-      if (!strpos($_SERVER['HTTP_REFERER'],"transfer.form.php")) {
+      if (strpos($_SERVER['HTTP_REFERER'], "transfer.form.php") === false) {
          $edit_form = false;
       }
 
@@ -3286,7 +3303,7 @@ class Transfer extends CommonDBTM {
       echo "<tr class='tab_bg_1'>";
       echo "<td>".__('Historical')."</td><td>";
       $params['value'] = $this->fields['keep_history'];
-      Dropdown::showFromArray('keep_history', $keep,$params);
+      Dropdown::showFromArray('keep_history', $keep, $params);
       echo "</td>";
       if (!$edit_form) {
          echo "<td colspan='2'>&nbsp;</td>";
@@ -3302,34 +3319,34 @@ class Transfer extends CommonDBTM {
                        1 => _x('button', 'Disconnect') ,
                        2 => __('Keep') );
       $params['value'] = $this->fields['keep_networklink'];
-      Dropdown::showFromArray('keep_networklink',$options,$params);
+      Dropdown::showFromArray('keep_networklink', $options, $params);
       echo "</td>";
       echo "<td>"._n('Ticket', 'Tickets', Session::getPluralNumber())."</td><td>";
       $options = array(0 => _x('button', 'Delete permanently'),
                        1 => _x('button', 'Disconnect') ,
                        2 => __('Keep') );
       $params['value'] = $this->fields['keep_ticket'];
-      Dropdown::showFromArray('keep_ticket',$options,$params);
+      Dropdown::showFromArray('keep_ticket', $options, $params);
       echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
       echo "<td>".__('Software of computers')."</td><td>";
       $params['value'] = $this->fields['keep_software'];
-      Dropdown::showFromArray('keep_software', $keep,$params);
+      Dropdown::showFromArray('keep_software', $keep, $params);
       echo "</td>";
       echo "<td>".__('If software are no longer used')."</td><td>";
       $params['value'] = $this->fields['clean_software'];
-      Dropdown::showFromArray('clean_software', $clean,$params);
+      Dropdown::showFromArray('clean_software', $clean, $params);
       echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
       echo "<td>"._n('Reservation', 'Reservations', Session::getPluralNumber())."</td><td>";
       $params['value'] = $this->fields['keep_reservation'];
-      Dropdown::showFromArray('keep_reservation',$keep, $params);
+      Dropdown::showFromArray('keep_reservation', $keep, $params);
       echo "</td>";
       echo "<td>"._n('Component', 'Components', Session::getPluralNumber())."</td><td>";
       $params['value'] = $this->fields['keep_device'];
-      Dropdown::showFromArray('keep_device',$keep, $params);
+      Dropdown::showFromArray('keep_device', $keep, $params);
       echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
@@ -3458,7 +3475,7 @@ class Transfer extends CommonDBTM {
    }
 
 
-/// Display items to transfers
+   // Display items to transfers
    function showTransferList() {
       global $DB, $CFG_GLPI;
 
@@ -3517,7 +3534,7 @@ class Transfer extends CommonDBTM {
          echo "</td><td class='tab_bg_2 top'>";
 
          if (countElementsInTable('glpi_transfers') == 0) {
-            _e('No item found');
+            echo __('No item found');
          } else {
             $params = array('id' => '__VALUE__');
             Ajax::updateItemOnSelectEvent("dropdown_id$rand", "transfer_form",
@@ -3532,10 +3549,9 @@ class Transfer extends CommonDBTM {
          echo '</table>';
 
       } else {
-         _e('No selected element or badly defined operation');
+         echo __('No selected element or badly defined operation');
       }
    }
 
 
 }
-?>

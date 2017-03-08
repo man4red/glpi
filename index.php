@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 
@@ -36,16 +35,21 @@
 * @brief
 */
 
+use Glpi\Event;
+
+//Load GLPI constants
+define('GLPI_ROOT', __DIR__);
+include (GLPI_ROOT . "/inc/based_config.php");
+include_once (GLPI_ROOT . "/inc/define.php");
+
 // Check PHP version not to have trouble
-if (version_compare(PHP_VERSION, "5.4.0") < 0) {
-   die("PHP >= 5.4.0 required");
+if (version_compare(PHP_VERSION, GLPI_MIN_PHP) < 0) {
+   die(sprintf("PHP >= %s required", GLPI_MIN_PHP));
 }
 
 define('DO_NOT_CHECK_HTTP_REFERER', 1);
-// If config_db doesn't exist -> start installation
-define('GLPI_ROOT', dirname(__FILE__));
-include (GLPI_ROOT . "/config/based_config.php");
 
+// If config_db doesn't exist -> start installation
 if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
    include_once (GLPI_ROOT . "/inc/autoload.function.php");
    Html::redirect("install/install.php");
@@ -61,36 +65,35 @@ if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
       $_GET["noAUTO"] = $_GET["noCAS"];
    }
 
+   if (!isset($_GET["noAUTO"])) {
+      Auth::redirectIfAuthenticated();
+   }
    Auth::checkAlternateAuthSystems(true, isset($_GET["redirect"])?$_GET["redirect"]:"");
 
    // Send UTF8 Headers
    header("Content-Type: text/html; charset=UTF-8");
 
    // Start the page
-   echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" '.
-         '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'."\n";
-   echo '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">';
+   echo "<!DOCTYPE html>\n";
+   echo "<html lang=\"{$CFG_GLPI["languages"][$_SESSION['glpilanguage']][3]}\">";
    echo '<head><title>'.__('GLPI - Authentication').'</title>'."\n";
-   echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>'."\n";
-   echo '<meta http-equiv="Content-Script-Type" content="text/javascript"/>'."\n";
+   echo '<meta charset="utf-8"/>'."\n";
+   echo "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n";
    echo '<link rel="shortcut icon" type="images/x-icon" href="'.$CFG_GLPI["root_doc"].
           '/pics/favicon.ico" />';
 
    // auto desktop / mobile viewport
-   echo "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+   echo "<meta name='viewport' content='width=device-width, initial-scale=1'/>";
 
    // Appel CSS
    echo '<link rel="stylesheet" href="'.$CFG_GLPI["root_doc"].'/css/styles.css" type="text/css" '.
          'media="screen" />';
    // CSS theme link
-      echo Html::css($CFG_GLPI["root_doc"]."/css/palettes/".$CFG_GLPI["palette"].".css");
+      echo Html::css("css/palettes/".$CFG_GLPI["palette"].".css");
    // surcharge CSS hack for IE
-   echo "<!--[if lte IE 6]>" ;
-   echo "<link rel='stylesheet' href='".$CFG_GLPI["root_doc"]."/css/styles_ie.css' type='text/css' ".
-         "media='screen' >\n";
+   echo "<!--[if lte IE 6]>";
+   echo Html::css("css/styles_ie.css");
    echo "<![endif]-->";
-//    echo "<script type='text/javascript'><!--document.getElementById('var_login_name').focus();-->".
-//          "</script>";
 
    echo "</head>";
 
@@ -104,6 +107,9 @@ if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
    echo "<div id='boxlogin'>";
    echo "<form action='".$CFG_GLPI["root_doc"]."/front/login.php' method='post'>";
 
+   $_SESSION['namfield'] = $namfield = uniqid('fielda');
+   $_SESSION['pwdfield'] = $pwdfield = uniqid('fieldb');
+   $_SESSION['rmbfield'] = $rmbfield = uniqid('fieldc');
 
    // Other CAS
    if (isset($_GET["noAUTO"])) {
@@ -115,17 +121,25 @@ if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
       echo '<input type="hidden" name="redirect" value="'.$_GET['redirect'].'"/>';
    }
    echo '<p class="login_input">
-         <input type="text" name="login_name" id="login_name" required="required" 
-                placeholder="'.__('Login').'" />
+         <input type="text" name="'.$namfield.'" id="login_name" required="required"
+                placeholder="'.__('Login').'" autofocus="autofocus" />
          <span class="login_img"></span>
          </p>';
    echo '<p class="login_input">
-         <input type="password" name="login_password" id="login_password" required="required" 
+         <input type="password" name="'.$pwdfield.'" id="login_password" required="required"
                 placeholder="'.__('Password').'"  />
          <span class="login_img"></span>
          </p>';
+   if ($CFG_GLPI["login_remember_time"]) {
+      echo '<p class="login_input">
+            <label for="login_remember">
+                   <input type="checkbox" name="'.$rmbfield.'" id="login_remember"
+                   '.($CFG_GLPI['login_remember_default']?'checked="checked"':'').' />
+            '.__('Remember me').'</label>
+            </p>';
+   }
    echo '<p class="login_input">
-         <input type="submit" name="submit" value="'._sx('button','Post').'" class="submit" />
+         <input type="submit" name="submit" value="'._sx('button', 'Post').'" class="submit" />
          </p>';
 
    if ($CFG_GLPI["use_mailing"]
@@ -147,22 +161,21 @@ if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
 
    echo "<div class='error'>";
    echo "<noscript><p>";
-   _e('You must activate the JavaScript function of your browser');
+   echo __('You must activate the JavaScript function of your browser');
    echo "</p></noscript>";
 
-   if (isset($_GET['error'])) {
+   if (isset($_GET['error']) && isset($_GET['redirect'])) {
       switch ($_GET['error']) {
          case 1 : // cookie error
-            _e('You must accept cookies to reach this application');
+            echo __('You must accept cookies to reach this application');
             break;
 
          case 2 : // GLPI_SESSION_DIR not writable
-            _e('Checking write permissions for session files');
-            echo "<br>".GLPI_SESSION_DIR;
+            echo __('Checking write permissions for session files');
             break;
 
          case 3 :
-            _e('Invalid use of session ID');
+            echo __('Invalid use of session ID');
             break;
       }
    }
@@ -178,7 +191,7 @@ if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
    echo "<div id='display-login'>";
    Plugin::doHook('display_login');
    echo "</div>";
-   
+
 
    echo "</div>"; // end contenu login
 
@@ -187,14 +200,7 @@ if (!file_exists(GLPI_CONFIG_DIR . "/config_db.php")) {
       Event::getCountLogin();
       echo "</div>";
    }
-   echo "<div id='footer-login'>";
-   echo "<a href='http://glpi-project.org/' title='Powered By Teclib'>";
-   echo "GLPI version ".(isset($CFG_GLPI["version"])?$CFG_GLPI["version"]:"")." Copyright (C) ".
-        "2015".
-        //"-".date("Y"). // TODO, decomment this in 2016
-        " By Teclib'. <br />".
-        "Copyright (C) 2003-2015 INDEPNET Development Team";
-   echo "</a></div>";
+   echo "<div id='footer-login'>" . Html::getCopyrightMessage() . "</div>";
 
 }
 // call cron
@@ -203,4 +209,3 @@ if (!GLPI_DEMO_MODE) {
 }
 
 echo "</body></html>";
-?>

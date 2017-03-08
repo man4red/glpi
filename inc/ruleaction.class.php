@@ -1,41 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class RuleAction extends CommonDBChild {
@@ -149,30 +148,38 @@ class RuleAction extends CommonDBChild {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                        = array();
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'action_type',
+         'name'               => self::getTypeName(1),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'additionalfields'   => ['rules_id']
+      ];
 
-      $tab[1]['table']            = $this->getTable();
-      $tab[1]['field']            = 'action_type';
-      $tab[1]['name']             = self::getTypeName(1);
-      $tab[1]['massiveaction']    = false;
-      $tab[1]['datatype']         = 'specific';
-      $tab[1]['additionalfields'] = array('rules_id');
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'field',
+         'name'               => _n('Field', 'Fields', Session::getPluralNumber()),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'additionalfields'   => ['rules_id']
+      ];
 
-      $tab[2]['table']            = $this->getTable();
-      $tab[2]['field']            = 'field';
-      $tab[2]['name']             = _n('Field', 'Fields', Session::getPluralNumber());
-      $tab[2]['massiveaction']    = false;
-      $tab[2]['datatype']         = 'specific';
-      $tab[2]['additionalfields'] = array('rules_id');
-
-      $tab[3]['table']            = $this->getTable();
-      $tab[3]['field']            = 'value';
-      $tab[3]['name']             = __('Value');
-      $tab[3]['massiveaction']    = false;
-      $tab[3]['datatype']         = 'specific';
-      $tab[3]['additionalfields'] = array('rules_id');
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'value',
+         'name'               => __('Value'),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'additionalfields'   => ['rules_id']
+      ];
 
       return $tab;
    }
@@ -276,7 +283,7 @@ class RuleAction extends CommonDBChild {
                 && $generic_rule->getFromDB($values['rules_id'])) {
                if ($rule = getItemForItemtype($generic_rule->fields["sub_type"])) {
                   /// TODO review it : need to pass display param and others...
-                  return $this->displayActionSelectPattern($values);
+                  return $rule->displayActionSelectPattern($values);
                }
             }
             break;
@@ -452,7 +459,8 @@ class RuleAction extends CommonDBChild {
          while ($action = $DB->fetch_assoc($res)) {
             if (isset($actions_options[$action["field"]])
                  && ($action["field"] != 'groups_id_validate')
-                 && ($action["field"] != 'users_id_validate')) {
+                 && ($action["field"] != 'users_id_validate')
+                 && ($action["field"] != 'affectobject')) {
                $actions[$action["field"]] = $action["field"];
             }
          }
@@ -490,7 +498,7 @@ class RuleAction extends CommonDBChild {
             $actions = Rule::getActionsByType($options["sub_type"]);
             if (isset($actions[$options["field"]]['type'])) {
 
-               switch($actions[$options["field"]]['type']) {
+               switch ($actions[$options["field"]]['type']) {
                   case "dropdown" :
                      $table   = $actions[$options["field"]]['table'];
                      $param['name'] = "value";
@@ -547,7 +555,7 @@ class RuleAction extends CommonDBChild {
                      break;
 
                   case "yesonly" :
-                     Dropdown::showYesNo("value",$param['value'],0);
+                     Dropdown::showYesNo("value", $param['value'], 0);
                      $display = true;
                      break;
 
@@ -681,10 +689,11 @@ class RuleAction extends CommonDBChild {
          $params['action_type'] = $this->fields['action_type'];
          $params['value']       = $this->fields['value'];
          echo "<script type='text/javascript' >\n";
+         echo "$(function() {";
          Ajax::updateItemJsCode("action_span",
                                  $CFG_GLPI["root_doc"]."/ajax/ruleaction.php",
                                  $params);
-         echo '</script>';
+         echo '});</script>';
       }
       echo "</td></tr>";
       echo "<tr><td colspan='4'><span id='action_span'>\n";
@@ -694,4 +703,3 @@ class RuleAction extends CommonDBChild {
    }
 
 }
-?>

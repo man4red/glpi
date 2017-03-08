@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
 */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -105,7 +104,7 @@ class NetworkName extends FQDNLabel {
          $options['entities_id'] = $lastItem->getField('entities_id');
       }
 
-     $this->showFormHeader($options);
+      $this->showFormHeader($options);
 
       echo "<tr class='tab_bg_1'><td>";
       if (count($recursiveItems) > 0) {
@@ -153,12 +152,11 @@ class NetworkName extends FQDNLabel {
 
       echo "<tr class='tab_bg_1'>";
       echo "<td>".IPNetwork::getTypeName(Session::getPluralNumber())."</td><td>";
-      _e('IP network is not included in the database. However, you can see current available networks.');
+      echo __('IP network is not included in the database. However, you can see current available networks.');
       echo "</td></tr>";
       echo "<tr class='tab_bg_1'><td>&nbsp;</td><td>";
       IPNetwork::showIPNetworkProperties($this->getEntityID());
       echo "</td></tr>\n";
-
 
       $this->showFormButtons($options);
 
@@ -166,34 +164,47 @@ class NetworkName extends FQDNLabel {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                      = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => 'glpi_fqdns',
+         'field'              => 'fqdn',
+         'name'               => FQDN::getTypeName(1),
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[12]['table']         = 'glpi_fqdns';
-      $tab[12]['field']         = 'fqdn';
-      $tab[12]['name']          = FQDN::getTypeName(1);
-      $tab[12]['datatype']      = 'dropdown';
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => 'glpi_ipaddresses',
+         'field'              => 'name',
+         'name'               => IPAddress::getTypeName(1),
+         'joinparams'         => [
+            'jointype'           => 'itemtype_item'
+         ],
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[13]['table']         = 'glpi_ipaddresses';
-      $tab[13]['field']         = 'name';
-      $tab[13]['name']          = IPAddress::getTypeName(1);
-      $tab[13]['joinparams']    = array('jointype' => 'itemtype_item');
-      $tab[13]['forcegroupby']  = true;
-      $tab[13]['massiveaction'] = false;
-      $tab[13]['datatype']      = 'dropdown';
+      $tab[] = [
+         'id'                 => '20',
+         'table'              => $this->getTable(),
+         'field'              => 'itemtype',
+         'name'               => __('Type'),
+         'datatype'           => 'itemtype',
+         'massiveaction'      => false
+      ];
 
-      $tab[20]['table']         = $this->getTable();
-      $tab[20]['field']         = 'itemtype';
-      $tab[20]['name']          = __('Type');
-      $tab[20]['datatype']      = 'itemtype';
-      $tab[20]['massiveaction'] = false;
-
-      $tab[21]['table']         = $this->getTable();
-      $tab[21]['field']         = 'items_id';
-      $tab[21]['name']          = __('ID');
-      $tab[21]['datatype']      = 'integer';
-      $tab[21]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '21',
+         'table'              => $this->getTable(),
+         'field'              => 'items_id',
+         'name'               => __('ID'),
+         'datatype'           => 'integer',
+         'massiveaction'      => false
+      ];
 
       return $tab;
    }
@@ -202,33 +213,46 @@ class NetworkName extends FQDNLabel {
    /**
     * @param $tab          array   the array to fill
     * @param $joinparams   array
-    * @param $itemtype
    **/
-   static function getSearchOptionsToAdd(array &$tab, array $joinparams, $itemtype) {
+   static function getSearchOptionsToAddNew(array &$tab, array $joinparams) {
+      $tab[] = [
+         'id'                 => '126',
+         'table'              => 'glpi_ipaddresses',
+         'field'              => 'name',
+         'name'               => __('IP'),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'joinparams'         => [
+            'jointype'  => 'mainitemtype_mainitem',
+            'condition' => 'AND NEWTABLE.`is_deleted` = 0'
+         ]
+      ];
 
-      $tab[126]['table']         = 'glpi_ipaddresses';
-      $tab[126]['field']         = 'name';
-      $tab[126]['name']          = __('IP');
-      $tab[126]['forcegroupby']  = true;
-      $tab[126]['massiveaction'] = false;
-      $tab[126]['joinparams']    = array('jointype'  => 'mainitemtype_mainitem',
-                                         'condition' => 'AND NEWTABLE.`is_deleted` = 0');
+      $tab[] = [
+         'id'                 => '127',
+         'table'              => 'glpi_networknames',
+         'field'              => 'name',
+         'name'               => self::getTypeName(Session::getPluralNumber()),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'joinparams'         => $joinparams
+      ];
 
-      $tab[127]['table']         = 'glpi_networknames';
-      $tab[127]['field']         = 'name';
-      $tab[127]['name']          = self::getTypeName(Session::getPluralNumber());
-      $tab[127]['forcegroupby']  = true;
-      $tab[127]['massiveaction'] = false;
-      $tab[127]['joinparams']    = $joinparams;
-
-      $tab[128]['table']         = 'glpi_networkaliases';
-      $tab[128]['field']         = 'name';
-      $tab[128]['name']          = NetworkAlias::getTypeName(Session::getPluralNumber());
-      $tab[128]['forcegroupby']  = true;
-      $tab[128]['massiveaction'] = false;
-      $tab[128]['joinparams']    = array('jointype'   => 'child',
-                                         'beforejoin' => array('table'      => 'glpi_networknames',
-                                                               'joinparams' => $joinparams));
+      $tab[] = [
+         'id'                 => '128',
+         'table'              => 'glpi_networkaliases',
+         'field'              => 'name',
+         'name'               => NetworkAlias::getTypeName(Session::getPluralNumber()),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'joinparams'         => [
+            'jointype'   => 'child',
+            'beforejoin' => [
+               'table'      => 'glpi_networknames',
+               'joinparams' => $joinparams
+            ]
+         ]
+      ];
    }
 
 
@@ -365,8 +389,9 @@ class NetworkName extends FQDNLabel {
       $networkName = new self();
 
       if ($networkName->can($ID, READ)) {
-         return FQDNLabel::getInternetNameFromLabelAndDomainID($this->fields["name"],
-                                                               $this->fields["fqdns_id"]);
+         return FQDNLabel::getInternetNameFromLabelAndDomainID(
+                 $networkName->fields["name"],
+                 $networkName->fields["fqdns_id"]);
       }
       return "";
    }
@@ -397,7 +422,7 @@ class NetworkName extends FQDNLabel {
             return;
          }
 
-        switch ($DB->numrows($result)) {
+         switch ($DB->numrows($result)) {
             case 1 :
                $nameID = $DB->fetch_assoc($result);
                $name->getFromDB($nameID['id']);
@@ -450,11 +475,11 @@ class NetworkName extends FQDNLabel {
 
       // MoYo : really need to display it here ?
       // make confure because not updatable
-//       echo "<td>".IPNetwork::getTypeName(Session::getPluralNumber())."&nbsp;";
-//       Html::showToolTip(__('IP network is not included in the database. However, you can see current available networks.'));
-//       echo "</td><td>";
-//       IPNetwork::showIPNetworkProperties($name->getEntityID());
-//       echo "</td>\n";
+      // echo "<td>".IPNetwork::getTypeName(Session::getPluralNumber())."&nbsp;";
+      // Html::showToolTip(__('IP network is not included in the database. However, you can see current available networks.'));
+      // echo "</td><td>";
+      // IPNetwork::showIPNetworkProperties($name->getEntityID());
+      // echo "</td>\n";
       echo "<td colspan='2'>&nbsp;</td>";
 
       echo "</tr>\n";
@@ -562,7 +587,7 @@ class NetworkName extends FQDNLabel {
                       ORDER BY $ORDER";
             break;
 
-        case 'NetworkPort' :
+         case 'NetworkPort' :
             $query = "SELECT `id`
                       FROM `glpi_networknames`
                       WHERE `itemtype` = '".$item->getType()."'
@@ -570,7 +595,7 @@ class NetworkName extends FQDNLabel {
                             AND `glpi_networknames`.`is_deleted` = '0'";
             break;
 
-        case 'NetworkEquipment' :
+         case 'NetworkEquipment' :
             $query = "SELECT `glpi_networknames`.`id`
                       FROM `glpi_networknames`, `glpi_networkports`
                       WHERE `glpi_networkports`.`itemtype` = '".$item->getType()."'
@@ -627,7 +652,7 @@ class NetworkName extends FQDNLabel {
                } else {
                   $father_for_children = $name_cell;
                }
-           } else {
+            } else {
                $father_for_children = $father;
             }
 
@@ -673,12 +698,12 @@ class NetworkName extends FQDNLabel {
          echo "<tr class='tab_bg_1'><td class='right'>";
          echo "<input type='hidden' name='items_id' value='$items_id'>\n";
          echo "<input type='hidden' name='itemtype' value='$itemtype'>\n";
-         _e('Not associated');
+         echo __('Not associated');
          echo "</td><td class='left'>";
          self::dropdown(array('name'      => 'addressID',
                               'condition' => '`items_id`=0'));
          echo "</td><td class='left'>";
-         echo "<input type='submit' name='assign_address' value='"._sx('button','Associate').
+         echo "<input type='submit' name='assign_address' value='"._sx('button', 'Associate').
                 "' class='submit'>";
          echo "</td>";
          if (static::canCreate()) {
@@ -802,14 +827,14 @@ class NetworkName extends FQDNLabel {
       switch ($item->getType()) {
          case 'FQDN' :
             return countElementsInTable('glpi_networknames',
-                                        "`fqdns_id` = '".$item->fields["id"]."'
-                                             AND `is_deleted` = '0'");
+                                        ['fqdns_id'   => $item->fields["id"],
+                                         'is_deleted' => 0 ]);
 
          case 'NetworkPort' :
             return countElementsInTable('glpi_networknames',
-                                        "itemtype = '".$item->getType()."'
-                                             AND items_id = '".$item->getID()."'
-                                             AND `is_deleted` = '0'");
+                                       ['itemtype'   => $item->getType(),
+                                        'items_id'   => $item->getID(),
+                                        'is_deleted' => 0 ]);
 
          case 'NetworkEquipment' :
             $query = "SELECT DISTINCT COUNT(*) AS cpt
@@ -841,4 +866,3 @@ class NetworkName extends FQDNLabel {
    }
 
 }
-?>

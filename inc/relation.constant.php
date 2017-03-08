@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -37,7 +36,7 @@
 
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 // _ before the link table name => no clean cache on this relation
@@ -156,6 +155,15 @@ $RELATION = array("glpi_authldaps"
                   "glpi_devicesoundcards"
                         => array('glpi_items_devicesoundcards' => 'devicesoundcards_id'),
 
+                  "glpi_devicebatteries"
+                        => array('glpi_items_devicebatteries' => 'devicebatteries_id'),
+
+                  "glpi_devicefirmwares"
+                        => array('glpi_items_devicefirmwares' => 'devicefirmwares_id'),
+
+                  "glpi_devicemotherboards"
+                        => array('glpi_items_devicegenerics' => 'devicegenerics_id'),
+
                   "glpi_documentcategories"
                         => array('glpi_configs'             => 'documentcategories_id_forticket',
                                  'glpi_documents'           => 'documentcategories_id',
@@ -229,6 +237,8 @@ $RELATION = array("glpi_authldaps"
                                  'glpi_softwares'                       => 'entities_id',
                                  'glpi_solutiontemplates'               => 'entities_id',
                                  'glpi_solutiontypes'                   => 'entities_id',
+                                 'glpi_taskcategories'                  => 'entities_id',
+                                 'glpi_tasktemplates'                   => 'entities_id',
                                  'glpi_suppliers'                       => 'entities_id',
                                  'glpi_taskcategories'                  => 'entities_id',
                                  'glpi_ticketrecurrents'                => 'entities_id',
@@ -325,6 +335,9 @@ $RELATION = array("glpi_authldaps"
                                  'glpi_deviceprocessors'    => 'manufacturers_id',
                                  'glpi_devicememories'      => 'manufacturers_id',
                                  'glpi_devicesoundcards'    => 'manufacturers_id',
+                                 'glpi_devicefiremwares'    => 'manufacturers_id',
+                                 'glpi_devicebatteries'     => 'manufacturers_id',
+                                 'glpi_devicegenerics'      => 'manufacturers_id',
                                  'glpi_monitors'            => 'manufacturers_id',
                                  'glpi_networkequipments'   => 'manufacturers_id',
                                  'glpi_peripherals'         => 'manufacturers_id',
@@ -467,12 +480,14 @@ $RELATION = array("glpi_authldaps"
 
                   "glpi_slalevels"
                         => array('glpi_slalevelactions'   => 'slalevels_id',
-                                 'glpi_tickets'           => 'slalevels_id',
+                                 'glpi_slalevelcriterias' => 'slalevels_id',
+                                 'glpi_tickets'           => 'ttr_slalevels_id',
                                  'glpi_slalevels_tickets' => 'slalevels_id'),
 
-                  "glpi_slas"
-                        => array('glpi_slalevels' => 'slas_id',
-                                 'glpi_tickets'   => 'slas_id'),
+                  "glpi_slts"
+                        => array('glpi_slalevels' => 'slts_id',
+                                 'glpi_tickets'   => array('slts_ttr_id',
+                                                           'slts_tto_id')),
 
                   "glpi_softwarecategories"
                         => array('glpi_softwares' => 'softwarecategories_id',
@@ -529,7 +544,8 @@ $RELATION = array("glpi_authldaps"
                                  'glpi_changetasks'    => 'taskcategories_id',
                                  'glpi_problemtasks'   => 'taskcategories_id',
                                  'glpi_taskcategories' => 'taskcategories_id',
-                                 'glpi_tickettasks'    => 'taskcategories_id'),
+                                 'glpi_tickettasks'    => 'taskcategories_id',
+                                 'glpi_tasktemplates'  => 'taskcategories_id'),
 
                   "glpi_itilcategories"
                         => array(
@@ -651,5 +667,3 @@ $RELATION = array("glpi_authldaps"
 //                                            'glpi_networknames'    => array('items_id', 'itemtype'),
                                            ),
                 );
-
-?>

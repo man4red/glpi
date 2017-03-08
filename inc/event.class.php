@@ -1,42 +1,50 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
+
+namespace Glpi;
+
+use \Ajax;
+use \CommonDBTM;
+use \Html;
+use \Session;
+use \Toolbox;
 
 /** @file
 * @brief
 */
 
+
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -63,7 +71,7 @@ class Event extends CommonDBTM {
    }
 
    function post_addItem() {
-      //only log in file, important events (connections and critical events; TODO : we need to add a general option to filter this in 0.91)
+      //only log in file, important events (connections and critical events; TODO : we need to add a general option to filter this in 9.1)
       if (isset($this->fields['level']) && $this->fields['level'] <= 3) {
          $message_type = "";
          if (isset($this->fields['type']) && $this->fields['type'] != 'system') {
@@ -405,30 +413,34 @@ class Event extends CommonDBTM {
    }
 
 
-    /** Display how many logins since
-     *
-     * @return  nothing
-    **/
-    static function getCountLogin() {
-       global $DB;
+   /** Display how many logins since
+    *
+    * @return  nothing
+   **/
+   static function getCountLogin() {
+      global $DB;
 
-       $query = "SELECT COUNT(*)
+      $query = "SELECT COUNT(*)
+                FROM `glpi_events`
+                WHERE `message` LIKE '%logged in%'";
+
+      $query2 = "SELECT `date`
                  FROM `glpi_events`
-                 WHERE `message` LIKE '%logged in%'";
+                 ORDER BY `date` ASC
+                 LIMIT 1";
 
-       $query2 = "SELECT `date`
-                  FROM `glpi_events`
-                  ORDER BY `date` ASC
-                  LIMIT 1";
-
-       $result   = $DB->query($query);
-       $result2  = $DB->query($query2);
-       $nb_login = $DB->result($result, 0, 0);
-       $date     = $DB->result($result2, 0, 0);
-       // Only for DEMO mode (not need to be translated)
-       printf(_n('%1$s login since %2$s', '%1$s logins since %2$s', $nb_login),
-              '<span class="b">'.$nb_login.'</span>', $date);
-    }
+      $result   = $DB->query($query);
+      $result2  = $DB->query($query2);
+      $nb_login = $DB->result($result, 0, 0);
+      $date     = $DB->result($result2, 0, 0);
+      // Only for DEMO mode (not need to be translated)
+      printf(_n('%1$s login since %2$s', '%1$s logins since %2$s', $nb_login),
+             '<span class="b">'.$nb_login.'</span>', $date);
+   }
 
 }
-?>
+
+// For compatibility
+if (!class_exists('Event', false)) {
+   class_alias('Glpi\\Event', 'Event');
+}

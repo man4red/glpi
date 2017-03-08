@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -73,6 +72,9 @@ class DeviceNetworkCard extends CommonDevice {
                                array('name'  => 'bandwidth',
                                      'label' => __('Flow'),
                                      'type'  => 'text'),
+                               array('name'  => 'devicenetworkcardmodels_id',
+                                     'label' => __('Model'),
+                                     'type'  => 'dropdownValue'),
                                array('name'  => 'none',
                                      'label' => RegisteredID::getTypeName(Session::getPluralNumber()).
                                         RegisteredID::showAddChildButtonForItemForm($this,
@@ -82,19 +84,32 @@ class DeviceNetworkCard extends CommonDevice {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                 = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '11',
+         'table'              => $this->getTable(),
+         'field'              => 'mac_default',
+         'name'               => __('MAC address by default'),
+         'datatype'           => 'mac'
+      ];
 
-      $tab[11]['table']    = $this->getTable();
-      $tab[11]['field']    = 'mac_default';
-      $tab[11]['name']     = __('MAC address by default');
-      $tab[11]['datatype'] = 'mac';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'bandwidth',
+         'name'               => __('Flow'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[12]['table']    = $this->getTable();
-      $tab[12]['field']    = 'bandwidth';
-      $tab[12]['name']     = __('Flow');
-      $tab[12]['datatype'] = 'string';
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => 'glpi_devicenetworkcardmodels',
+         'field'              => 'name',
+         'name'               => __('Model'),
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -150,7 +165,7 @@ class DeviceNetworkCard extends CommonDevice {
          $base->addHeader($column_name, __('Interface'), $super, $father);
       } else {
          $column = parent::getHTMLTableHeader($itemtype, $base, $super, $father, $options);
-         if ($column == $father)  {
+         if ($column == $father) {
             return $father;
          }
          Manufacturer::getHTMLTableHeader(__CLASS__, $base, $super, $father, $options);
@@ -213,4 +228,3 @@ class DeviceNetworkCard extends CommonDevice {
    }
 
 }
-?>

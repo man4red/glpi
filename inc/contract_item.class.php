@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -83,7 +82,7 @@ class Contract_Item extends CommonDBRelation{
       }
       if (($contract->fields['max_links_allowed'] > 0)
           && (countElementsInTable($this->getTable(),
-                                   "`contracts_id`='".$this->input['contracts_id']."'")
+                                  ['contracts_id'=> $this->input['contracts_id']])
                 >= $contract->fields['max_links_allowed'])) {
          return false;
       }
@@ -93,7 +92,7 @@ class Contract_Item extends CommonDBRelation{
 
 
    static function getTypeName($nb=0) {
-      return _n('Link Contract/Item','Links Contract/Item',$nb);
+      return _n('Link Contract/Item', 'Links Contract/Item', $nb);
    }
 
    static function getSpecificValueToDisplay($field, $values, array $options=array()) {
@@ -147,29 +146,37 @@ class Contract_Item extends CommonDBRelation{
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                        = array();
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[2]['table']            = $this->getTable();
-      $tab[2]['field']            = 'id';
-      $tab[2]['name']             = __('ID');
-      $tab[2]['massiveaction']    = false;
-      $tab[2]['datatype']         = 'number';
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'items_id',
+         'name'               => __('Associated item ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'additionalfields'   => ['itemtype']
+      ];
 
-      $tab[3]['table']            = $this->getTable();
-      $tab[3]['field']            = 'items_id';
-      $tab[3]['name']             = __('Associated item ID');
-      $tab[3]['massiveaction']    = false;
-      $tab[3]['datatype']         = 'specific';
-      $tab[3]['additionalfields'] = array('itemtype');
-
-      $tab[4]['table']            = $this->getTable();
-      $tab[4]['field']            = 'itemtype';
-      $tab[4]['name']             = __('Type');
-      $tab[4]['massiveaction']    = false;
-      $tab[4]['datatype']         = 'itemtypename';
-      $tab[4]['itemtype_list']    = 'contract_types';
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'itemtype',
+         'name'               => __('Type'),
+         'massiveaction'      => false,
+         'datatype'           => 'itemtypename',
+         'itemtype_list'      => 'contract_types'
+      ];
 
       return $tab;
    }
@@ -181,8 +188,8 @@ class Contract_Item extends CommonDBRelation{
    static function countForItem(CommonDBTM $item) {
 
       return countElementsInTable('glpi_contracts_items',
-                                  "`itemtype` = '".$item->getType()."'
-                                   AND `items_id` ='".$item->getField('id')."'");
+                                  ['itemtype' => $item->getType(),
+                                   'items_id' => $item->getField('id')]);
    }
 
 
@@ -192,13 +199,12 @@ class Contract_Item extends CommonDBRelation{
    static function countForContract(Contract $item) {
       global $DB;
 
-         $sql = "SELECT  DISTINCT `itemtype`
-              FROM `glpi_contracts_items`
-              WHERE `glpi_contracts_items`.`contracts_id` = '".$item->getField('id')."'";
-
       $nb = 0;
 
-      foreach ($DB->request($sql) as $data) {
+      foreach ($DB->request('glpi_contracts_items',
+                            array('DISTINCT FIELDS' => "itemtype",
+                                  'WHERE'           => "`glpi_contracts_items`.`contracts_id`
+                                                         = '".$item->getField('id')."'")) as $data) {
          $itemt = getItemForItemtype($data['itemtype']);
 
          $query = "SELECT COUNT(*) AS cpt
@@ -211,7 +217,7 @@ class Contract_Item extends CommonDBRelation{
             $query .= " AND NOT `".$itemt->getTable()."`.`is_template`";
          }
 
-         foreach($DB->request($query) as $row) {
+         foreach ($DB->request($query) as $row) {
             $nb += $row['cpt'];
          }
       }
@@ -242,7 +248,7 @@ class Contract_Item extends CommonDBRelation{
 
       $data    = array();
       $totalnb = 0;
-      for ($i=0 ; $i<$number ; $i++) {
+      for ($i=0; $i<$number; $i++) {
          $itemtype = $DB->result($result, $i, "itemtype");
          if (!($item = getItemForItemtype($itemtype))) {
             continue;
@@ -264,7 +270,7 @@ class Contract_Item extends CommonDBRelation{
          if ($item->maybeTemplate()) {
             $query .= " AND `$itemtable`.`is_template` = '0'";
          }
-         $query .= getEntitiesRestrictRequest(" AND",$itemtable, '', $entities_id,
+         $query .= getEntitiesRestrictRequest(" AND", $itemtable, '', $entities_id,
                                                 $item->maybeRecursive())."
                      ORDER BY `glpi_entities`.`completename`, `$itemtable`.`name`";
 
@@ -345,12 +351,10 @@ class Contract_Item extends CommonDBRelation{
          $newitemtype = $itemtype;
       }
 
-      $query  = "SELECT `contracts_id`
-                 FROM `glpi_contracts_items`
-                 WHERE `items_id` = '$oldid'
-                        AND `itemtype` = '$itemtype';";
-
-      foreach ($DB->request($query) as $data) {
+      foreach ($DB->request('glpi_contracts_items',
+                            array('FIELDS' => 'contracts_id',
+                                  'WHERE'  => "`items_id` = '$oldid'
+                                                AND `itemtype` = '$itemtype'")) as $data) {
          $contractitem = new self();
          $contractitem->add(array('contracts_id' => $data["contracts_id"],
                                   'itemtype'     => $newitemtype,
@@ -390,7 +394,7 @@ class Contract_Item extends CommonDBRelation{
                 WHERE `glpi_contracts`.`id`=`glpi_contracts_items`.`contracts_id`
                       AND `glpi_contracts_items`.`items_id` = '$ID'
                       AND `glpi_contracts_items`.`itemtype` = '$itemtype'".
-                      getEntitiesRestrictRequest(" AND","glpi_contracts",'','',true)."
+                      getEntitiesRestrictRequest(" AND", "glpi_contracts", '', '', true)."
                 ORDER BY `glpi_contracts`.`name`";
 
       $result = $DB->query($query);
@@ -415,8 +419,9 @@ class Contract_Item extends CommonDBRelation{
          echo "<tr class='tab_bg_2'><th colspan='2'>".__('Add a contract')."</th></tr>";
 
          echo "<tr class='tab_bg_1'><td>";
-         Contract::dropdown(array('entity' => $item->getEntityID(),
-                                  'used'   => $used));
+         Contract::dropdown(array('entity'  => $item->getEntityID(),
+                                  'used'    => $used,
+                                  'expired' => false));
 
          echo "</td><td class='center'>";
          echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
@@ -456,9 +461,9 @@ class Contract_Item extends CommonDBRelation{
       $header_end .= "<th>".__('Start date')."</th>";
       $header_end .= "<th>".__('Initial contract period')."</th>";
       $header_end .= "</tr>";
-      echo $header_begin.$header_top.$header_end;
 
       if ($number > 0) {
+         echo $header_begin.$header_top.$header_end;
          Session::initNavigateListItems(__CLASS__,
                               //TRANS : %1$s is the itemtype name,
                               //         %2$s is the name of the item (used for headings of a list)
@@ -466,7 +471,7 @@ class Contract_Item extends CommonDBRelation{
                                                 $item->getTypeName(1), $item->getName()));
          foreach ($contracts as $data) {
             $cID         = $data["contracts_id"];
-            Session::addToNavigateListItems(__CLASS__,$cID);
+            Session::addToNavigateListItems(__CLASS__, $cID);
             $contracts[] = $cID;
             $assocID     = $data["id"];
             $con         = new Contract();
@@ -505,6 +510,10 @@ class Contract_Item extends CommonDBRelation{
             echo "</tr>";
          }
          echo $header_begin.$header_bottom.$header_end;
+         echo "</table>";
+      } else {
+         echo "<table class='tab_cadre_fixe'>";
+         echo "<tr><th>".__('No item found')."</th></tr></table>";
       }
 
       echo "</table>";
@@ -548,22 +557,45 @@ class Contract_Item extends CommonDBRelation{
       $data    = array();
       $totalnb = 0;
       $used    = array();
-      for ($i=0 ; $i<$number ; $i++) {
+      for ($i=0; $i<$number; $i++) {
          $itemtype = $DB->result($result, $i, "itemtype");
          if (!($item = getItemForItemtype($itemtype))) {
             continue;
          }
          if ($item->canView()) {
             $itemtable = getTableForItemType($itemtype);
+            $itemtype_2 = null;
+            $itemtable_2 = null;
+
             $query     = "SELECT `$itemtable`.*,
                                  `glpi_contracts_items`.`id` AS IDD,
-                                 `glpi_entities`.`id` AS entity
-                          FROM `glpi_contracts_items`,
+                                 `glpi_entities`.`id` AS entity";
+
+            if ($item instanceof Item_Devices) {
+               $itemtype_2 = $itemtype::$itemtype_2;
+               $itemtable_2 = $itemtype_2::getTable();
+               $namefield = 'name_device';
+               $query .= ", `$itemtable_2`.`designation` AS $namefield";
+            } else {
+               $namefield = $item->getNameField();
+               $namefield = "`$itemtable`.`$namefield`";
+            }
+
+            $query .= " FROM `glpi_contracts_items`,
                                `$itemtable`";
             if ($itemtype != 'Entity') {
                $query .= " LEFT JOIN `glpi_entities`
                                  ON (`$itemtable`.`entities_id`=`glpi_entities`.`id`) ";
             }
+
+            if ($item instanceof Item_Devices) {
+               $id_2 = $itemtype_2::getIndexName();
+               $fid_2 = $itemtype::$items_id_2;
+
+               $query .= " LEFT JOIN `$itemtable_2`
+                           ON (`$itemtable`.`$fid_2` = `$itemtable_2`.`$id_2`)";
+            }
+
             $query .= " WHERE `$itemtable`.`id` = `glpi_contracts_items`.`items_id`
                               AND `glpi_contracts_items`.`itemtype` = '$itemtype'
                               AND `glpi_contracts_items`.`contracts_id` = '$instID'";
@@ -571,9 +603,9 @@ class Contract_Item extends CommonDBRelation{
             if ($item->maybeTemplate()) {
                $query .= " AND `$itemtable`.`is_template` = '0'";
             }
-            $query .= getEntitiesRestrictRequest(" AND",$itemtable, '', '',
-                                                 $item->maybeRecursive())."
-                      ORDER BY `glpi_entities`.`completename`, `$itemtable`.`name`";
+            $query .= getEntitiesRestrictRequest(" AND", $itemtable, '', '',
+                                                 $item->maybeRecursive()) ."
+                      ORDER BY `glpi_entities`.`completename`, $namefield";
 
             $result_linked = $DB->query($query);
             $nb            = $DB->numrows($result_linked);
@@ -590,7 +622,7 @@ class Contract_Item extends CommonDBRelation{
                                                              'field'      => 29)));
 
                $url  = $item::getSearchURL();
-               $url .= (strpos($url,'?') ? '&':'?');
+               $url .= (strpos($url, '?') ? '&':'?');
                $url .= Toolbox::append_params($opt);
                $link = "<a href='$url'>" . __('Device list')."</a>";
 
@@ -683,7 +715,12 @@ class Contract_Item extends CommonDBRelation{
             $prem = true;
             $nb   = count($datas);
             foreach ($datas as $id => $objdata) {
-               $name = $objdata["name"];
+               $item = new $itemtype();
+               if ($item instanceof Item_Devices) {
+                  $name = $objdata["name_device"];
+               } else {
+                  $name = $objdata["name"];
+               }
                if ($_SESSION["glpiis_ids_visible"]
                    || empty($data["name"])) {
                   $name = sprintf(__('%1$s (%2$s)'), $name, $objdata["id"]);
@@ -698,14 +735,13 @@ class Contract_Item extends CommonDBRelation{
                   echo "</td>";
                }
                if ($prem) {
-                  $item     = new $itemtype();
                   $typename = $item->getTypeName($nb);
                   echo "<td class='center top' rowspan='$nb'>".
                          ($nb  >1 ? sprintf(__('%1$s: %2$s'), $typename, $nb): $typename)."</td>";
                   $prem = false;
                }
                echo "<td class='center'>";
-               echo Dropdown::getDropdownName("glpi_entities",$objdata['entity'])."</td>";
+               echo Dropdown::getDropdownName("glpi_entities", $objdata['entity'])."</td>";
                echo "<td class='center".
                       (isset($objdata['is_deleted']) && $objdata['is_deleted'] ? " tab_bg_2_2'" : "'");
                echo ">".$name."</td>";
@@ -753,4 +789,3 @@ class Contract_Item extends CommonDBRelation{
    }
 
 }
-?>

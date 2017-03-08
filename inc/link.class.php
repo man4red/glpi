@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,19 +35,37 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /** Link Class
 **/
 class Link extends CommonDBTM {
 
-   static $rightname = 'link';
+   // From CommonDBTM
+   public $dohistory                   = true;
 
+   static $rightname = 'link';
+   static $tags      = array('[LOGIN]', '[ID]', '[NAME]', '[LOCATION]', '[LOCATIONID]', '[IP]',
+                             '[MAC]', '[NETWORK]', '[DOMAIN]', '[SERIAL]', '[OTHERSERIAL]',
+                             '[USER]', '[GROUP]', '[REALNAME]', '[FIRSTNAME]');
 
 
    static function getTypeName($nb=0) {
-      return _n('External link', 'External links',$nb);
+      return _n('External link', 'External links', $nb);
+   }
+
+
+   /**
+    * For plugins, add a tag to the links tags
+    *
+    * @param $tag    string    class name
+   **/
+   static function registerTag($tag) {
+
+      if (!in_array($tag, self::$tags)) {
+         self::$tags[] = $tag;
+      }
    }
 
 
@@ -62,7 +79,7 @@ class Link extends CommonDBTM {
                           getEntitiesRestrictRequest(" AND ", "glpi_links", '', '', false);
             $nb = countElementsInTable(array('glpi_links_itemtypes','glpi_links'), $restrict);
          }
-         return self::createTabEntry(self::getTypeName(),Session::getPluralNumber(), $nb);
+         return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
       }
       return '';
    }
@@ -80,6 +97,7 @@ class Link extends CommonDBTM {
       $ong = array();
       $this->addDefaultFormTab($ong);
       $this->addStandardTab('Link_ItemType', $ong, $options);
+      $this->addStandardTab('Log', $ong, $options);
 
       return $ong;
    }
@@ -122,9 +140,19 @@ class Link extends CommonDBTM {
       $this->showFormHeader($options);
 
       echo "<tr class='tab_bg_1'><td height='23'>".__('Valid tags')."</td>";
-      echo "<td colspan='3'>[LOGIN], [ID], [NAME], [LOCATION], [LOCATIONID], [IP], [MAC], [NETWORK],
-                            [DOMAIN], [SERIAL], [OTHERSERIAL], [USER], [GROUP], [REALNAME],
-                            [FIRSTNAME]</td></tr>";
+      echo "<td colspan='3'>";
+
+      $count = count(self::$tags);
+      $i     = 0;
+      foreach (self::$tags as $tag) {
+         echo $tag;
+         echo "&nbsp;";
+         $i++;
+         if (($i%8 == 0) && ($count > 1)) {
+            echo "<br>";
+         }
+      }
+      echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'><td>".__('Name')."</td>";
       echo "<td colspan='3'>";
@@ -167,33 +195,66 @@ class Link extends CommonDBTM {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                      = array();
-      $tab['common']            = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']          = $this->getTable();
-      $tab[1]['field']          = 'name';
-      $tab[1]['name']           = __('Name');
-      $tab[1]['datatype']       = 'itemlink';
-      $tab[1]['massiveaction']  = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[2]['table']          = $this->getTable();
-      $tab[2]['field']          = 'id';
-      $tab[2]['name']           = __('ID');
-      $tab[2]['massiveaction']  = false;
-      $tab[2]['datatype']       = 'number';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[3]['table']          = $this->getTable();
-      $tab[3]['field']          = 'link';
-      $tab[3]['name']           = __('Link or filename');
-      $tab[3]['datatype']       = 'string';
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'link',
+         'name'               => __('Link or filename'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[80]['table']         = 'glpi_entities';
-      $tab[80]['field']         = 'completename';
-      $tab[80]['name']          = __('Entity');
-      $tab[80]['massiveaction'] = false;
-      $tab[80]['datatype']      = 'dropdown';
+      $tab[] = [
+         'id'                 => '19',
+         'table'              => $this->getTable(),
+         'field'              => 'date_mod',
+         'name'               => __('Last update'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
+
+      $tab[] = [
+         'id'                 => '121',
+         'table'              => $this->getTable(),
+         'field'              => 'date_creation',
+         'name'               => __('Creation date'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
+
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -210,71 +271,70 @@ class Link extends CommonDBTM {
    static function generateLinkContents($link, CommonDBTM $item) {
       global $DB;
 
-      if (strstr($link,"[ID]")) {
-         $link = str_replace("[ID]", $item->fields['id'],$link);
+      if (strstr($link, "[ID]")) {
+         $link = str_replace("[ID]", $item->fields['id'], $link);
       }
-      if (strstr($link,"[LOGIN]")
+      if (strstr($link, "[LOGIN]")
           && isset($_SESSION["glpiname"])) {
          $link = str_replace("[LOGIN]", $_SESSION["glpiname"], $link);
       }
 
-      if (strstr($link,"[NAME]")) {
+      if (strstr($link, "[NAME]")) {
          $link = str_replace("[NAME]", $item->getName(), $link);
       }
-      if (strstr($link,"[SERIAL]")
+      if (strstr($link, "[SERIAL]")
           && $item->isField('serial')) {
             $link = str_replace("[SERIAL]", $item->getField('serial'), $link);
       }
-      if (strstr($link,"[OTHERSERIAL]")
+      if (strstr($link, "[OTHERSERIAL]")
           && $item->isField('otherserial')) {
-            $link=str_replace("[OTHERSERIAL]",$item->getField('otherserial'),$link);
+            $link=str_replace("[OTHERSERIAL]", $item->getField('otherserial'), $link);
       }
-      if (strstr($link,"[LOCATIONID]")
+      if (strstr($link, "[LOCATIONID]")
           && $item->isField('locations_id')) {
             $link = str_replace("[LOCATIONID]", $item->getField('locations_id'), $link);
       }
-      if (strstr($link,"[LOCATION]")
+      if (strstr($link, "[LOCATION]")
           && $item->isField('locations_id')) {
             $link = str_replace("[LOCATION]",
                                 Dropdown::getDropdownName("glpi_locations",
                                                           $item->getField('locations_id')), $link);
       }
-      if (strstr($link,"[NETWORK]")
+      if (strstr($link, "[NETWORK]")
           && $item->isField('networks_id')) {
             $link = str_replace("[NETWORK]",
                                 Dropdown::getDropdownName("glpi_networks",
                                                           $item->getField('networks_id')), $link);
       }
-      if (strstr($link,"[DOMAIN]")
+      if (strstr($link, "[DOMAIN]")
           && $item->isField('domains_id')) {
             $link = str_replace("[DOMAIN]",
                                 Dropdown::getDropdownName("glpi_domains",
                                                           $item->getField('domains_id')), $link);
       }
-      if (strstr($link,"[USER]")
+      if (strstr($link, "[USER]")
           && $item->isField('users_id')) {
             $link = str_replace("[USER]",
                                 Dropdown::getDropdownName("glpi_users",
                                                           $item->getField('users_id')), $link);
       }
-      if (strstr($link,"[GROUP]")
+      if (strstr($link, "[GROUP]")
           && $item->isField('groups_id')) {
             $link = str_replace("[GROUP]",
                                 Dropdown::getDropdownName("glpi_groups",
                                                           $item->getField('groups_id')), $link);
       }
-      if (strstr($link,"[REALNAME]")
+      if (strstr($link, "[REALNAME]")
             && $item->isField('realname')) {
-         $link = str_replace("[REALNAME]",$item->getField('realname'),$link);
+         $link = str_replace("[REALNAME]", $item->getField('realname'), $link);
       }
-      if (strstr($link,"[FIRSTNAME]")
+      if (strstr($link, "[FIRSTNAME]")
             && $item->isField('firstname')) {
-         $link = str_replace("[FIRSTNAME]",$item->getField('firstname'),$link);
+         $link = str_replace("[FIRSTNAME]", $item->getField('firstname'), $link);
       }
 
-
-      $replace_IP  = strstr($link,"[IP]");
-      $replace_MAC = strstr($link,"[MAC]");
+      $replace_IP  = strstr($link, "[IP]");
+      $replace_MAC = strstr($link, "[MAC]");
 
       if (!$replace_IP && !$replace_MAC) {
          return array($link);
@@ -353,14 +413,14 @@ class Link extends CommonDBTM {
          foreach ($ipmac as $key => $val) {
             $tmplink = $link;
             $disp    = 1;
-            if (strstr($link,"[IP]")) {
+            if (strstr($link, "[IP]")) {
                if (empty($val['ip'])) {
                   $disp = 0;
                } else {
                   $tmplink = str_replace("[IP]", $val['ip'], $tmplink);
                }
             }
-            if (strstr($link,"[MAC]")) {
+            if (strstr($link, "[MAC]")) {
                if (empty($val['mac'])) {
                   $disp = 0;
                } else {
@@ -466,12 +526,13 @@ class Link extends CommonDBTM {
       if (empty($params['name'])) {
          $params['name'] = $params['link'];
       }
-      $names = self::generateLinkContents($params['name'], $item);
+
+      $names = $item->generateLinkContents($params['name'], $item);
       $file  = trim($params['data']);
 
       if (empty($file)) {
          // Generate links
-         $links = self::generateLinkContents($params['link'], $item);
+         $links = $item->generateLinkContents($params['link'], $item);
          $i     = 1;
          foreach ($links as $key => $val) {
             $name    = (isset($names[$key]) ? $names[$key] : reset($names));
@@ -489,8 +550,8 @@ class Link extends CommonDBTM {
          }
       } else {
          // Generate files
-         $files = self::generateLinkContents($params['link'], $item);
-         $links = self::generateLinkContents($params['data'], $item);
+         $files = $item->generateLinkContents($params['link'], $item);
+         $links = $item->generateLinkContents($params['data'], $item);
          $i     = 1;
          foreach ($links as $key => $val) {
             $name = (isset($names[$key]) ? $names[$key] : reset($names));
@@ -516,32 +577,41 @@ class Link extends CommonDBTM {
       return $computedlinks;
    }
 
+   static function getSearchOptionsToAddNew($itemtype = null) {
+      $tab = [];
 
-   /**
-    * @since version 0.85
-   **/
-   static function getSearchOptionsToAdd() {
+      $newtab = [
+         'id'                 => '145',
+         'table'              => 'glpi_links',
+         'field'              => '_virtual',
+         'name'               => _n('External link', 'External links', Session::getPluralNumber()),
+         'datatype'           => 'specific',
+         'additionalfields'   => [
+            'id',
+            'link',
+            'name',
+            'data',
+            'open_window'
+         ],
+         'nosearch'           => true,
+         'forcegroupby'       => true,
+         'nosort'             => '1',
+         'joinparams'         => [
+            'beforejoin'         => [
+               'table'              => 'glpi_links_itemtypes',
+               'joinparams'         => [
+                  'jointype'           => 'itemtypeonly'
+               ]
+            ]
+         ]
+      ];
 
-      $tab                           = array();
-
-      $tab[145]['table']             = 'glpi_links';
-      $tab[145]['field']             = '_virtual';
-      $tab[145]['name']              = _n('External link', 'External links', Session::getPluralNumber());
-      $tab[145]['datatype']          = 'specific';
-      $tab[145]['additionalfields']  = array('id','link', 'name', 'data', 'open_window');
-      $tab[145]['nosearch']          = true;
-      $tab[145]['forcegroupby']      = true;
-      $tab[145]['nosort']            = true;
-      $tab[145]['joinparams']        = array('beforejoin'
-                                              => array('table'      => 'glpi_links_itemtypes',
-                                                       'joinparams' => array('jointype'
-                                                                              => 'itemtypeonly')));
       if (!Session::isCron()
-          && !isCommandLine()) {
-         $tab[145]['joinparams']['condition'] = getEntitiesRestrictRequest('AND', 'NEWTABLE');
+          && !isCommandLine() && isset($_SESSION['glpiactiveentities_string'])) {
+         $newtab['joinparams']['condition'] = getEntitiesRestrictRequest('AND', 'NEWTABLE');
       }
+      $tab[] = $newtab;
 
       return $tab;
    }
 }
-?>

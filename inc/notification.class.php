@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -44,7 +43,7 @@ if (!defined('GLPI_ROOT')) {
 **/
 class Notification extends CommonDBTM {
 
-// MAILING TYPE
+   // MAILING TYPE
    //Notification to a user (sse mailing users type below)
    const USER_TYPE             = 1;
    //Notification to users of a profile
@@ -132,6 +131,8 @@ class Notification extends CommonDBTM {
    const TEAM_CONTACT                        = 35;
    // Notification to team suppliers
    const TEAM_SUPPLIER                       = 36;
+   //Notification to the task assigned group
+   const TASK_ASSIGN_GROUP                   = 37;
 
    // From CommonDBTM
    public $dohistory = true;
@@ -278,7 +279,7 @@ class Notification extends CommonDBTM {
       switch ($field) {
          case 'event':
             if (isset($values['itemtype']) && !empty($values['itemtype'])) {
-               return NotificationEvent::getEventName($values['itemtype'],$values[$field]);
+               return NotificationEvent::getEventName($values['itemtype'], $values[$field]);
             }
             break;
 
@@ -310,7 +311,7 @@ class Notification extends CommonDBTM {
                 && !empty($values['itemtype'])) {
                $options['value'] = $values[$field];
                $options['name']  = $name;
-               return NotificationEvent::dropdownEvents($values['itemtype'],$options);
+               return NotificationEvent::dropdownEvents($values['itemtype'], $options);
             }
             break;
 
@@ -323,63 +324,98 @@ class Notification extends CommonDBTM {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                       = array();
-      $tab['common']             = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']           = $this->getTable();
-      $tab[1]['field']           = 'name';
-      $tab[1]['name']            = __('Name');
-      $tab[1]['datatype']        = 'itemlink';
-      $tab[1]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[2]['table']           = $this->getTable();
-      $tab[2]['field']           = 'event';
-      $tab[2]['name']            = _n('Event', 'Events', 1);
-      $tab[2]['massiveaction']   = false;
-      $tab[2]['datatype']        = 'specific';
-      $tab[2]['additionalfields'] = array('itemtype');
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'event',
+         'name'               => _n('Event', 'Events', 1),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'additionalfields'   => [
+            '0'                  => 'itemtype'
+         ]
+      ];
 
-      $tab[3]['table']           = $this->getTable();
-      $tab[3]['field']           = 'mode';
-      $tab[3]['name']            = __('Notification method');
-      $tab[3]['massiveaction']   = false;
-      $tab[3]['datatype']        = 'specific';
-      $tab[3]['searchtype']      = array('equals', 'notequals');
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'mode',
+         'name'               => __('Notification method'),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'searchtype'         => [
+            '0'                  => 'equals',
+            '1'                  => 'notequals'
+         ]
+      ];
 
-      $tab[4]['table']           = 'glpi_notificationtemplates';
-      $tab[4]['field']           = 'name';
-      $tab[4]['name']            = _n('Notification template', 'Notification templates', Session::getPluralNumber());
-      $tab[4]['datatype']        = 'itemlink';
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => 'glpi_notificationtemplates',
+         'field'              => 'name',
+         'name'               => _n('Notification template', 'Notification templates', Session::getPluralNumber()),
+         'datatype'           => 'itemlink'
+      ];
 
-      $tab[5]['table']           = $this->getTable();
-      $tab[5]['field']           = 'itemtype';
-      $tab[5]['name']            = __('Type');
-      $tab[5]['datatype']        = 'itemtypename';
-      $tab[5]['itemtype_list']   = 'notificationtemplates_types';
-      $tab[5]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => $this->getTable(),
+         'field'              => 'itemtype',
+         'name'               => __('Type'),
+         'datatype'           => 'itemtypename',
+         'itemtype_list'      => 'notificationtemplates_types',
+         'massiveaction'      => false
+      ];
 
-      $tab[6]['table']           = $this->getTable();
-      $tab[6]['field']           = 'is_active';
-      $tab[6]['name']            = __('Active');
-      $tab[6]['datatype']        = 'bool';
+      $tab[] = [
+         'id'                 => '6',
+         'table'              => $this->getTable(),
+         'field'              => 'is_active',
+         'name'               => __('Active'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[16]['table']          = $this->getTable();
-      $tab[16]['field']          = 'comment';
-      $tab[16]['name']           = __('Comments');
-      $tab[16]['datatype']       = 'text';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[80]['table']          = 'glpi_entities';
-      $tab[80]['field']          = 'completename';
-      $tab[80]['name']           = __('Entity');
-      $tab[80]['massiveaction']  = false;
-      $tab[80]['datatype']       = 'dropdown';
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[86]['table']          = $this->getTable();
-      $tab[86]['field']          = 'is_recursive';
-      $tab[86]['name']           = __('Child entities');
-      $tab[86]['datatype']       = 'bool';
+      $tab[] = [
+         'id'                 => '86',
+         'table'              => $this->getTable(),
+         'field'              => 'is_recursive',
+         'name'               => __('Child entities'),
+         'datatype'           => 'bool'
+      ];
 
       return $tab;
    }
@@ -478,7 +514,7 @@ class Notification extends CommonDBTM {
 
       $mail = new NotificationMail();
       $mail->sendNotification($mailing_options);
-//       $mail->ClearAddresses();
+      // $mail->ClearAddresses();
    }
 
 
@@ -522,5 +558,35 @@ class Notification extends CommonDBTM {
    }
 
 
+   /**
+    * @since version 0.90.4
+    * @see CommonDBTM::prepareInputForAdd()
+   **/
+   function prepareInputForAdd($input) {
+
+      if (isset($input["itemtype"]) && empty($input["itemtype"])) {
+         $message = __('Field itemtype is mandatory');
+         Session::addMessageAfterRedirect($message, false, ERROR);
+         return false;
+      }
+
+      return $input;
+   }
+
+
+   /**
+    * @since version 0.90.4
+    * @see CommonDBTM::prepareInputForUpdate()
+   **/
+   function prepareInputForUpdate($input) {
+
+      if (isset($input["itemtype"]) && empty($input["itemtype"])) {
+         $message = __('Field itemtype is mandatory');
+         Session::addMessageAfterRedirect($message, false, ERROR);
+         return false;
+      }
+
+      return $input;
+   }
+
 }
-?>

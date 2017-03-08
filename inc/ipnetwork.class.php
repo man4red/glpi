@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
 */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Class IPNetwork : Represent an IPv4 or an IPv6 network.
@@ -61,38 +60,52 @@ class IPNetwork extends CommonImplicitTreeDropdown {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                      = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '10',
+         'table'              => $this->getTable(),
+         'field'              => 'version',
+         'name'               => __('IP version'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[10]['table']         = $this->getTable();
-      $tab[10]['field']         = 'version';
-      $tab[10]['name']          = __('IP version');
-      $tab[10]['massiveaction'] = false;
-      $tab[10]['datatype']      = 'number';
+      $tab[] = [
+         'id'                 => '11',
+         'table'              => $this->getTable(),
+         'field'              => 'address',
+         'name'               => IPAddress::getTypeName(1),
+         'massiveaction'      => false,
+         'datatype'           => 'string'
+      ];
 
-      $tab[11]['table']         = $this->getTable();
-      $tab[11]['field']         = 'address';
-      $tab[11]['name']          = IPAddress::getTypeName(1);
-      $tab[11]['massiveaction'] = false;
-      $tab[11]['datatype']      = 'string';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'netmask',
+         'name'               => IPNetmask::getTypeName(1),
+         'massiveaction'      => false,
+         'datatype'           => 'string'
+      ];
 
-      $tab[12]['table']         = $this->getTable();
-      $tab[12]['field']         = 'netmask';
-      $tab[12]['name']          = IPNetmask::getTypeName(1);
-      $tab[12]['massiveaction'] = false;
-      $tab[12]['datatype']      = 'string';
+      $tab[] = [
+         'id'                 => '17',
+         'table'              => $this->getTable(),
+         'field'              => 'gateway',
+         'name'               => __('Gateway'),
+         'massiveaction'      => false,
+         'datatype'           => 'string'
+      ];
 
-      $tab[13]['table']         = $this->getTable();
-      $tab[13]['field']         = 'gateway';
-      $tab[13]['name']          = __('Gateway');
-      $tab[13]['massiveaction'] = false;
-      $tab[13]['datatype']      = 'string';
-
-      $tab[14]['table']         = $this->getTable();
-      $tab[14]['field']         = 'addressable';
-      $tab[14]['name']          = __('Addressable network');
-      $tab[14]['datatype']      = 'bool';
+      $tab[] = [
+         'id'                 => '18',
+         'table'              => $this->getTable(),
+         'field'              => 'addressable',
+         'name'               => __('Addressable network'),
+         'datatype'           => 'bool'
+      ];
 
       return $tab;
    }
@@ -531,16 +544,16 @@ class IPNetwork extends CommonImplicitTreeDropdown {
             return false;
          }
 
-        $startIndex = (($version == 4) ? 3 : 0);
+         $startIndex = (($version == 4) ? 3 : 0);
 
          if ($relation == "equals") {
-            for ($i = $startIndex ; $i < 4 ; ++$i) {
+            for ($i = $startIndex; $i < 4; ++$i) {
                $WHERE .= " AND (`".$addressDB[$i]."` & '".$netmaskPa[$i]."')=
                                ('".$addressPa[$i]."' & '".$netmaskPa[$i]."')
                            AND ('".$netmaskPa[$i]."' = `".$netmaskDB[$i]."`)";
             }
          } else {
-            for ($i = $startIndex ; $i < 4 ; ++$i) {
+            for ($i = $startIndex; $i < 4; ++$i) {
                if ($relation == "is contained by") {
                   $globalNetmask = "'".$netmaskPa[$i]."'";
                } else {
@@ -603,7 +616,7 @@ class IPNetwork extends CommonImplicitTreeDropdown {
       }
 
       $ORDER = array();
-      for ($i = $startIndex ; $i < 4 ; ++$i) {
+      for ($i = $startIndex; $i < 4; ++$i) {
          $ORDER[] = "BIT_COUNT(`".$netmaskDB[$i]."`) $ORDER_ORIENTATION";
       }
 
@@ -667,7 +680,7 @@ class IPNetwork extends CommonImplicitTreeDropdown {
       $this->computeNetworkRange($start);
 
       $result = array();
-      for ($i = ($version == 4 ? 3 : 0) ; $i < 4 ; ++$i) {
+      for ($i = ($version == 4 ? 3 : 0); $i < 4; ++$i) {
          $result[] = "(`$tableName`.`".$binaryFieldPrefix."_$i` & '".$this->fields["netmask_$i"]."')
                        = ('".$start[$i]."')";
       }
@@ -713,7 +726,7 @@ class IPNetwork extends CommonImplicitTreeDropdown {
     * @return string :
     *           - "different version" : there is different versions between elements
     *           - "?" : There is holes inside the netmask and both networks can partially intersect
-    *           - "different" : the networks are fully different ;
+    *           - "different" : the networks are fully different;
     *           - "equals" : both networks are equals
     *           - "first contains second" "second contains first" : one include the other
     */
@@ -754,7 +767,7 @@ class IPNetwork extends CommonImplicitTreeDropdown {
       $startIndex = (($version == 4) ? 3 : 0);
       $first      = true;
       $second     = true;
-      for ($i = $startIndex ; $i < 4 ; ++$i) {
+      for ($i = $startIndex; $i < 4; ++$i) {
          $and     = ($firstNetmask[$i] & $secondNetmask[$i]);
          // Be carefull : php integers are 32 bits SIGNED.
          // Thus, checking equality must be done by XOR ...
@@ -777,7 +790,7 @@ class IPNetwork extends CommonImplicitTreeDropdown {
          $mask   = &$secondNetmask;
       }
 
-      for ($i = $startIndex ; $i < 4 ; ++$i) {
+      for ($i = $startIndex; $i < 4; ++$i) {
          if ((($firstAddress[$i] & $mask[$i]) ^ ($secondAddress[$i] & $mask[$i])) != 0) {
             return "different";
          }
@@ -837,7 +850,7 @@ class IPNetwork extends CommonImplicitTreeDropdown {
       }
       $start = array();
       $end   = array();
-      for ($i = 0 ; $i < 4 ; ++$i) {
+      for ($i = 0; $i < 4; ++$i) {
          $start[$i] = IPAddress::convertNegativeIntegerToPositiveFloat($address[$i] & $netmask[$i]);
          $end[$i]   = IPAddress::convertNegativeIntegerToPositiveFloat($address[$i] | ~$netmask[$i]);
       }
@@ -1025,8 +1038,6 @@ class IPNetwork extends CommonImplicitTreeDropdown {
 
          echo "</table>";
          echo "</div>";
-
-     }
+      }
    }
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -58,15 +57,15 @@ class TicketTemplate extends CommonDropdown {
 
    static $rightname                 = 'tickettemplate';
 
-   var $can_be_translated            = false;
+   public $can_be_translated            = false;
 
    // Specific fields
    /// Mandatory Fields
-   var $mandatory  = array();
+   public $mandatory  = array();
    /// Hidden fields
-   var $hidden     = array();
+   public $hidden     = array();
    /// Predefined fields
-   var $predefined = array();
+   public $predefined = array();
 
 
    /**
@@ -111,6 +110,10 @@ class TicketTemplate extends CommonDropdown {
             $this->predefined['due_date']
                         = Html::computeGenericDateTimeSearch($this->predefined['due_date'], false);
          }
+         if (isset($this->predefined['time_to_own'])) {
+            $this->predefined['time_to_own']
+                        = Html::computeGenericDateTimeSearch($this->predefined['time_to_own'], false);
+         }
          // Compute date
          if (isset($this->predefined['date'])) {
             $this->predefined['date']
@@ -129,9 +132,9 @@ class TicketTemplate extends CommonDropdown {
 
    /**
     * @param $withtypeandcategory   (default 0)
-    * @param $with_items_id         (default 1)
+    * @param $withitemtype         (default 0)
    **/
-   static function getAllowedFields($withtypeandcategory=0, $with_items_id=1) {
+   static function getAllowedFields($withtypeandcategory=0, $withitemtype=0) {
 
       static $allowed_fields = array();
 
@@ -142,17 +145,17 @@ class TicketTemplate extends CommonDropdown {
          $withtypeandcategory = 0;
       }
 
-      if ($with_items_id) {
-         $with_items_id = 1;
+      if ($withitemtype) {
+         $withitemtype = 1;
       } else {
-         $with_items_id = 0;
+         $withitemtype = 0;
       }
 
-      if (!isset($allowed_fields[$withtypeandcategory][$with_items_id])) {
+      if (!isset($allowed_fields[$withtypeandcategory][$withitemtype])) {
          $ticket = new Ticket();
 
          // SearchOption ID => name used for options
-         $allowed_fields[$withtypeandcategory][$with_items_id]
+         $allowed_fields[$withtypeandcategory][$withitemtype]
              = array($ticket->getSearchOptionIDByField('field', 'name',
                                                        'glpi_tickets')   => 'name',
                      $ticket->getSearchOptionIDByField('field', 'content',
@@ -170,62 +173,74 @@ class TicketTemplate extends CommonDropdown {
                                                                          => 'requesttypes_id',
                      $ticket->getSearchOptionIDByField('field', 'completename',
                                                        'glpi_locations') => 'locations_id',
-                     $ticket->getSearchOptionIDByField('field', 'name',
-                                                       'glpi_slas')      => 'slas_id',
+                     $ticket->getSearchOptionIDByField('field', 'slts_tto_id',
+                                                       'glpi_slts')      => 'slts_tto_id',
+                     $ticket->getSearchOptionIDByField('field', 'slts_ttr_id',
+                                                       'glpi_slts')      => 'slts_ttr_id',
                      $ticket->getSearchOptionIDByField('field', 'due_date',
                                                        'glpi_tickets')   => 'due_date',
+                     $ticket->getSearchOptionIDByField('field', 'time_to_own',
+                                                       'glpi_tickets')   => 'time_to_own',
                      $ticket->getSearchOptionIDByField('field', 'date',
                                                        'glpi_tickets')   => 'date',
                      $ticket->getSearchOptionIDByField('field', 'actiontime',
                                                        'glpi_tickets')   => 'actiontime',
-                     $ticket->getSearchOptionIDByField('field', 'itemtype',
-                                                       'glpi_items_tickets')   => 'itemtype',
                      $ticket->getSearchOptionIDByField('field', 'global_validation',
                                                        'glpi_tickets')   => 'global_validation',
 
-                     4                                                   => '_users_id_requester',
-                     71                                                  => '_groups_id_requester',
-                     5                                                   => '_users_id_assign',
-                     8                                                   => '_groups_id_assign',
+                                                       4                 => '_users_id_requester',
+                                                       71                => '_groups_id_requester',
+                                                       5                 => '_users_id_assign',
+                                                       8                 => '_groups_id_assign',
                      $ticket->getSearchOptionIDByField('field', 'name',
                                                        'glpi_suppliers') => '_suppliers_id_assign',
 
-                     66                                                  => '_users_id_observer',
-                     65                                                  => '_groups_id_observer',
-            );
+                                                       66                => '_users_id_observer',
+                                                       65                => '_groups_id_observer',
+             );
 
          if ($withtypeandcategory) {
-            $allowed_fields[$withtypeandcategory][$with_items_id]
+            $allowed_fields[$withtypeandcategory][$withitemtype]
                [$ticket->getSearchOptionIDByField('field', 'completename',
                                                   'glpi_itilcategories')]  = 'itilcategories_id';
-            $allowed_fields[$withtypeandcategory][$with_items_id]
+            $allowed_fields[$withtypeandcategory][$withitemtype]
                [$ticket->getSearchOptionIDByField('field', 'type',
                                                   'glpi_tickets')]         = 'type';
          }
 
-         if ($with_items_id) {
-            $allowed_fields[$withtypeandcategory][$with_items_id]
-               [$ticket->getSearchOptionIDByField('field', 'items_id',
-                                                  'glpi_items_tickets')] = 'items_id';
+         if ($withitemtype) {
+            $allowed_fields[$withtypeandcategory][$withitemtype]
+               [$ticket->getSearchOptionIDByField('field', 'itemtype',
+                                                  'glpi_items_tickets')] = 'itemtype';
          }
+
+         $allowed_fields[$withtypeandcategory][$withitemtype]
+            [$ticket->getSearchOptionIDByField('field', 'items_id',
+                                               'glpi_items_tickets')] = 'items_id';
+
          // Add validation request
-         $allowed_fields[$withtypeandcategory][$with_items_id][-2] = '_add_validation';
+         $allowed_fields[$withtypeandcategory][$withitemtype][-2] = '_add_validation';
 
          // Add document
-         $allowed_fields[$withtypeandcategory][$with_items_id]
+         $allowed_fields[$withtypeandcategory][$withitemtype]
                [$ticket->getSearchOptionIDByField('field', 'name',
                                                   'glpi_documents')] = '_documents_id';
+
+         // Add TicketTask (from task templates)
+         $allowed_fields[$withtypeandcategory][$withitemtype]
+               [$ticket->getSearchOptionIDByField('field', 'name',
+                                                  TaskTemplate::getTable())] = '_tasktemplates_id';
       }
 
-      return $allowed_fields[$withtypeandcategory][$with_items_id];
+      return $allowed_fields[$withtypeandcategory][$withitemtype];
    }
 
 
    /**
     * @param $withtypeandcategory   (default 0)
-    * @param $with_items_id         (default 1)
+    * @param $with_items_id         (default 0)
    **/
-   function getAllowedFieldsNames($withtypeandcategory=0, $with_items_id=1) {
+   function getAllowedFieldsNames($withtypeandcategory=0, $with_items_id=0) {
 
       $searchOption = Search::getOptions('Ticket');
       $tab          = $this->getAllowedFields($withtypeandcategory, $with_items_id);
@@ -233,6 +248,10 @@ class TicketTemplate extends CommonDropdown {
          switch ($ID) {
             case -2 :
                $tab[-2] = __('Approval request');
+               break;
+
+            case 175 :
+               $tab[175] = CommonITILTask::getTypeName();
                break;
 
             default :
@@ -246,7 +265,7 @@ class TicketTemplate extends CommonDropdown {
 
 
    /**
-    *  àsince version 0.84
+    *  ??since version 0.84
    **/
    function getSimplifiedInterfaceFields() {
 
@@ -313,17 +332,6 @@ class TicketTemplate extends CommonDropdown {
          }
       }
       return '';
-   }
-
-
-
-   /**
-    * Get search function for the class
-    *
-    * @return array of search option
-   **/
-   function getSearchOptions() {
-      return parent::getSearchOptions();
    }
 
 
@@ -429,7 +437,7 @@ class TicketTemplate extends CommonDropdown {
                if ($field == 'itemtype') {
                   $output .= "<input type='hidden' name='items_id' value=\"".
                                $ticket->fields['items_id']."\">";
-                  if ($num = array_search('items_id',$this->getAllowedFields())) {
+                  if ($num = array_search('items_id', $this->getAllowedFields())) {
                      $output = sprintf(__('%1$s - %2$s'), $output,
                                        $ticket->getValueToDisplay($num, $ticket->fields,
                                                                   $display_options));
@@ -601,7 +609,7 @@ class TicketTemplate extends CommonDropdown {
                      $input2['is_recursive'] = 1;
                      $input2 = Toolbox::addslashes_deep($input2);
 
-                     if (!$item->import($input2)){
+                     if (!$item->import($input2)) {
                         $ma->itemDone($item->getType(), $key, MassiveAction::ACTION_KO);
                         $ma->addMessage($item->getErrorMessage(ERROR_ON_ACTION));
                      } else {
@@ -714,7 +722,7 @@ class TicketTemplate extends CommonDropdown {
    function formatFieldsToMerge($data) {
 
       $output = array();
-      foreach($data as $val){
+      foreach ($data as $val) {
          $output[$val['num']] = $val;
       }
 
@@ -722,7 +730,7 @@ class TicketTemplate extends CommonDropdown {
    }
 
 
-  /**
+   /**
     * Import a dropdown - check if already exists
     *
     * @since version 0.90
@@ -778,4 +786,3 @@ class TicketTemplate extends CommonDropdown {
       return $forbidden;
    }
 }
-?>

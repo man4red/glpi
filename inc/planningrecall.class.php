@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 // Class PlanningRecall
@@ -80,7 +79,7 @@ class PlanningRecall extends CommonDBChild {
       $_SESSION['glpiplanningreminder_isavailable'] = 0;
       if ($CFG_GLPI["use_mailing"]) {
          $task = new Crontask();
-         if ($task->getFromDBbyName('PlanningRecall','planningrecall')) {
+         if ($task->getFromDBbyName('PlanningRecall', 'planningrecall')) {
             // Only disabled by config
             if ($task->isDisabled() != 1) {
                if (Session::haveRightsOr("planning", array(Planning::READMY, Planning::READGROUP),
@@ -171,19 +170,19 @@ class PlanningRecall extends CommonDBChild {
       } else {
          // Recall does not exists : create it
          if ($pr->can(-1, CREATE, $data)) {
-               if ($item = getItemForItemtype($data['itemtype'])) {
-                  $item->getFromDB($data['items_id']);
-                  if ($item->getFromDB($data['items_id'])
-                      && isset($item->fields[$data['field']])
-                      && !empty($item->fields[$data['field']])) {
-                     $data['when'] = date("Y-m-d H:i:s",
-                                          strtotime($item->fields[$data['field']])
-                                                      - $data['before_time']);
-                     if ($data['before_time'] >= 0) {
-                        $pr->add($data);
-                     }
+            if ($item = getItemForItemtype($data['itemtype'])) {
+               $item->getFromDB($data['items_id']);
+               if ($item->getFromDB($data['items_id'])
+                       && isset($item->fields[$data['field']])
+                        && !empty($item->fields[$data['field']])) {
+                  $data['when'] = date("Y-m-d H:i:s",
+                                       strtotime($item->fields[$data['field']])
+                                                   - $data['before_time']);
+                  if ($data['before_time'] >= 0) {
+                     $pr->add($data);
                   }
                }
+            }
          }
       }
    }
@@ -253,21 +252,21 @@ class PlanningRecall extends CommonDBChild {
 
       $min_values = array(0, 15, 30, 45);
       foreach ($min_values as $val) {
-         $possible_values[$val*MINUTE_TIMESTAMP] = sprintf(_n('%d minute','%d minutes',$val),
+         $possible_values[$val*MINUTE_TIMESTAMP] = sprintf(_n('%d minute', '%d minutes', $val),
                                                            $val);
       }
 
       $h_values = array(1, 2, 3, 4, 12);
       foreach ($h_values as $val) {
-         $possible_values[$val*HOUR_TIMESTAMP] = sprintf(_n('%d hour','%d hours',$val), $val);
+         $possible_values[$val*HOUR_TIMESTAMP] = sprintf(_n('%d hour', '%d hours', $val), $val);
       }
       $d_values = array(1, 2);
       foreach ($d_values as $val) {
-         $possible_values[$val*DAY_TIMESTAMP] = sprintf(_n('%d day','%d days',$val), $val);
+         $possible_values[$val*DAY_TIMESTAMP] = sprintf(_n('%d day', '%d days', $val), $val);
       }
       $w_values = array(1);
       foreach ($w_values as $val) {
-         $possible_values[$val*7*DAY_TIMESTAMP] = sprintf(_n('%d week','%d weeks',$val), $val);
+         $possible_values[$val*7*DAY_TIMESTAMP] = sprintf(_n('%d week', '%d weeks', $val), $val);
       }
 
       ksort($possible_values);
@@ -388,4 +387,3 @@ class PlanningRecall extends CommonDBChild {
    }
 
 }
-?>

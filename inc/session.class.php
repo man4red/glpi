@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -78,7 +77,7 @@ class Session {
       global $CFG_GLPI;
 
       if ($auth->auth_succeded) {
-         // Restart GLPi session : complete destroy to prevent lost datas
+         // Restart GLPI session : complete destroy to prevent lost datas
          $tosave = array('glpi_plugins', 'glpicookietest', 'phpCAS', 'glpicsrftokens',
                          'glpiskipMaintenance');
          $save   = array();
@@ -117,9 +116,10 @@ class Session {
                $_SESSION["glpiauthtype"]        = $auth->user->fields['authtype'];
                $_SESSION["glpiroot"]            = $CFG_GLPI["root_doc"];
                $_SESSION["glpi_use_mode"]       = $auth->user->fields['use_mode'];
+               $_SESSION["glpi_plannings"]      = importArrayFromDB($auth->user->fields['plannings']);
                $_SESSION["glpicrontimer"]       = time();
                // Default tab
-//               $_SESSION['glpi_tab']=1;
+               // $_SESSION['glpi_tab']=1;
                $_SESSION['glpi_tabs']           = array();
                $auth->user->computePreferences();
                foreach ($CFG_GLPI['user_pref_field'] as $field) {
@@ -256,31 +256,31 @@ class Session {
    }
 
 
-    /** Initialise a list of items to use navigate through search results
-     *
-     * @param $itemtype    device type
-     * @param $title       list title (default '')
-    **/
-    static function initNavigateListItems($itemtype, $title="") {
+   /** Initialise a list of items to use navigate through search results
+    *
+    * @param $itemtype    device type
+    * @param $title       list title (default '')
+   **/
+   static function initNavigateListItems($itemtype, $title="") {
 
-       if (empty($title)) {
-          $title = __('List');
-       }
-       $url = '';
+      if (empty($title)) {
+         $title = __('List');
+      }
+      $url = '';
 
-       if (!isset($_SERVER['REQUEST_URI']) || (strpos($_SERVER['REQUEST_URI'],"tabs") > 0)) {
-          if (isset($_SERVER['HTTP_REFERER'])) {
-             $url = $_SERVER['HTTP_REFERER'];
-          }
+      if (!isset($_SERVER['REQUEST_URI']) || (strpos($_SERVER['REQUEST_URI'], "tabs") > 0)) {
+         if (isset($_SERVER['HTTP_REFERER'])) {
+            $url = $_SERVER['HTTP_REFERER'];
+         }
 
-       } else {
-          $url = $_SERVER['REQUEST_URI'];
-       }
+      } else {
+         $url = $_SERVER['REQUEST_URI'];
+      }
 
-       $_SESSION['glpilisttitle'][$itemtype] = $title;
-       $_SESSION['glpilistitems'][$itemtype] = array();
-       $_SESSION['glpilisturl'][$itemtype]   = $url;
-    }
+      $_SESSION['glpilisttitle'][$itemtype] = $title;
+      $_SESSION['glpilistitems'][$itemtype] = array();
+      $_SESSION['glpilisturl'][$itemtype]   = $url;
+   }
 
 
    /**
@@ -351,7 +351,7 @@ class Session {
          $_SESSION['glpiactiveentities_string']    = "'".implode("', '", $newentities)."'";
          $active                                   = reset($newentities);
          $_SESSION['glpiparententities']           = $ancestors;
-         $_SESSION['glpiparententities_string']    = implode("', '" ,$ancestors);
+         $_SESSION['glpiparententities_string']    = implode("', '", $ancestors);
          if (!empty($_SESSION['glpiparententities_string'])) {
             $_SESSION['glpiparententities_string'] = "'".$_SESSION['glpiparententities_string']."'";
          }
@@ -419,7 +419,7 @@ class Session {
             // Try to load default entity if it is a root entity
             foreach ($data['entities'] as $key => $val) {
                if ($val['id'] == $_SESSION["glpidefault_entity"]) {
-                  if (self::changeActiveEntities($val['id'],$val['is_recursive'])) {
+                  if (self::changeActiveEntities($val['id'], $val['is_recursive'])) {
                      $active_entity_done = true;
                   }
                }
@@ -513,8 +513,8 @@ class Session {
                    FROM `glpi_groups_users`
                    LEFT JOIN `glpi_groups` ON (`glpi_groups_users`.`groups_id` = `glpi_groups`.`id`)
                    WHERE `glpi_groups_users`.`users_id`='" . self::getLoginUserID() . "' " .
-                         getEntitiesRestrictRequest(" AND ","glpi_groups","entities_id",
-                                                    $_SESSION['glpiactiveentities'],true);
+                         getEntitiesRestrictRequest(" AND ", "glpi_groups", "entities_id",
+                                                    $_SESSION['glpiactiveentities'], true);
       $result_gp = $DB->query($query_gp);
       if ($DB->numrows($result_gp)) {
          while ($data = $DB->fetch_assoc($result_gp)) {
@@ -570,20 +570,20 @@ class Session {
       if (empty($newfile) || !is_file(GLPI_ROOT . $newfile)) {
          $newfile = "/locales/en_GB.mo";
       }
-      
+
       if (isset($CFG_GLPI["languages"][$trytoload][5])) {
-        $_SESSION['glpipluralnumber'] = $CFG_GLPI["languages"][$trytoload][5];
+         $_SESSION['glpipluralnumber'] = $CFG_GLPI["languages"][$trytoload][5];
       }
-      $TRANSLATE = new Zend\I18n\Translator\Translator;
       try {
-         $cache = Zend\Cache\StorageFactory::factory(array('adapter' => 'apc'));
+         $TRANSLATE = new Zend\I18n\Translator\Translator;
+         $cache = Zend\Cache\StorageFactory::factory(array('adapter' => 'apcu'));
          $TRANSLATE->setCache($cache);
-      } catch (Zend\Cache\Exception\ExtensionNotLoadedException $e) {
+      } catch (Exception $e) {
+         $TRANSLATE = new Zend\I18n\Translator\Translator;
          // ignore when APC not available
          // toolbox::logDebug($e->getMessage());
       }
       $TRANSLATE->addTranslationFile('gettext', GLPI_ROOT.$newfile, 'glpi', $trytoload);
-
 
       // Load plugin dicts
       if (isset($_SESSION['glpi_plugins']) && is_array($_SESSION['glpi_plugins'])) {
@@ -596,14 +596,14 @@ class Session {
 
       // TRANSLATION_MODE deleted : maybe find another solution ?
       // Debug display lang element with item
-//       if ($_SESSION['glpi_use_mode'] == Session::TRANSLATION_MODE && $CFG_GLPI["debug_lang"]) {
-//          foreach ($LANG as $module => $tab) {
-//             foreach ($tab as $num => $val) {
-//                $LANG[$module][$num] = "".$LANG[$module][$num].
-//                                       "/<span style='font-size:12px; color:red;'>$module/$num</span>";
-//             }
-//          }
-//       }
+      // if ($_SESSION['glpi_use_mode'] == Session::TRANSLATION_MODE && $CFG_GLPI["debug_lang"]) {
+      //    foreach ($LANG as $module => $tab) {
+      //       foreach ($tab as $num => $val) {
+      //          $LANG[$module][$num] = "".$LANG[$module][$num].
+      //                                 "/<span style='font-size:12px; color:red;'>$module/$num</span>";
+      //       }
+      //    }
+      // }
 
       $TRANSLATE->setLocale($trytoload);
 
@@ -773,6 +773,22 @@ class Session {
       self::checkValidSessionId();
       if (!self::haveRight($module, $right)) {
          // Gestion timeout session
+         self::redirectIfNotLoggedIn();
+         Html::displayRightError();
+      }
+   }
+
+   /**
+    * Check if I one right of array $rights to module $module (conpare to session variable)
+    *
+    * @param $module           Module to check
+    * @param $rights   array   Rights to check
+    *
+    * @return Nothing : display error if not permit
+    **/
+   static function checkRightsOr($module, $rights=array()) {
+      self::checkValidSessionId();
+      if (!self::haveRightsOr($module, $rights)) {
          self::redirectIfNotLoggedIn();
          Html::displayRightError();
       }
@@ -1003,7 +1019,7 @@ class Session {
     *
     * @param $msg             Message to add
     * @param $check_once      Check if the message is not already added (false by default)
-    * @param $message_type    Message type (INFO, ERROR) (default INFO)
+    * @param $message_type    Message type (INFO, WARNING, ERROR) (default INFO)
     * @param $reset           Clear previous added message (false by default)
    **/
    static function addMessageAfterRedirect($msg, $check_once=false, $message_type=INFO,
@@ -1020,28 +1036,17 @@ class Session {
          } else {
 
             if ($reset) {
-               $_SESSION["MESSAGE_AFTER_REDIRECT"] = '';
-            }
-            $toadd = "";
-
-            if ($check_once) {
-               if (strstr($_SESSION["MESSAGE_AFTER_REDIRECT"], $msg) === false) {
-                  $toadd = $msg.'<br>';
-               }
-            } else {
-               $toadd = $msg.'<br>';
+               $_SESSION["MESSAGE_AFTER_REDIRECT"] = [];
             }
 
-            if (!empty($toadd)) {
-               switch ($message_type) {
-                  case ERROR :
-                  case WARNING :
-                     $_SESSION["MESSAGE_AFTER_REDIRECT"] .= "<h3><span class='red'>$toadd</span></h3>";
-                     break;
+            if (!isset($_SESSION["MESSAGE_AFTER_REDIRECT"][$message_type])) {
+               $_SESSION["MESSAGE_AFTER_REDIRECT"][$message_type] = array();
+            }
 
-                  default: // INFO
-                     $_SESSION["MESSAGE_AFTER_REDIRECT"] .= "<h3>$toadd</h3>";
-               }
+            if (!$check_once
+                || !isset($_SESSION["MESSAGE_AFTER_REDIRECT"][$message_type])
+                || in_array($msg, $_SESSION["MESSAGE_AFTER_REDIRECT"][$message_type]) === false) {
+               array_push($_SESSION["MESSAGE_AFTER_REDIRECT"][$message_type], $msg);
             }
          }
       }
@@ -1220,4 +1225,3 @@ class Session {
    }
 
 }
-?>

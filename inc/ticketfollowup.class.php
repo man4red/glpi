@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// TODO extends it from CommonDBChild
@@ -142,7 +141,7 @@ class TicketFollowup  extends CommonDBTM {
       $ticket = new Ticket();
       if (!$ticket->can($this->getField('tickets_id'), READ)
         // No validation for closed tickets
-        || (in_array($ticket->fields['status'],$ticket->getClosedStatusArray())
+          || (in_array($ticket->fields['status'], $ticket->getClosedStatusArray())
             && !$ticket->isAllowedStatus($ticket->fields['status'], Ticket::INCOMING))) {
          return false;
       }
@@ -167,8 +166,10 @@ class TicketFollowup  extends CommonDBTM {
          return false;
       }
 
-      if (($this->fields["users_id"] === Session::getLoginUserID())
-          && Session::haveRight(self::$rightname, self::UPDATEMY)) {
+      if ($this->fields["users_id"] === Session::getLoginUserID()) {
+         if (!Session::haveRight(self::$rightname, self::UPDATEMY)) {
+            return false;
+         }
          return true;
       }
 
@@ -184,10 +185,10 @@ class TicketFollowup  extends CommonDBTM {
 
       if ($item->getType() == 'Ticket') {
          $nb = 0;
-         if (Session::haveRight(self::$rightname, self::SEEPUBLIC)) {
+         if (self::canCreate()) {
             if ($_SESSION['glpishow_count_on_tabs']) {
                $nb = countElementsInTable('glpi_ticketfollowups',
-                                          "`tickets_id` = '".$item->getID()."'");
+                                          ['tickets_id' => $item->getID()]);
             }
             return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
          }
@@ -211,7 +212,7 @@ class TicketFollowup  extends CommonDBTM {
       }
 
       if (isset($_SESSION["glpiname"])) {
-         $this->fields['requesttypes_id'] = RequestType::getDefault('helpdesk');
+         $this->fields['requesttypes_id'] = RequestType::getDefault('followup');
       }
    }
 
@@ -237,12 +238,19 @@ class TicketFollowup  extends CommonDBTM {
 
 
    function prepareInputForUpdate($input) {
+      $input["_job"] = new Ticket();
+      if (!$input["_job"]->getFromDB($input[$input["_job"]->getForeignKeyField()])) {
+         return false;
+      }
+
+      $input = $this->addFiles($input);
 
       // update writer if content change
       if (($uid = Session::getLoginUserID())
           && isset($input['content']) && ($input['content'] != $this->fields['content'])) {
          $input["users_id"] = $uid;
       }
+
       return $input;
    }
 
@@ -258,7 +266,7 @@ class TicketFollowup  extends CommonDBTM {
 
          if (count($this->updates)) {
             if ($CFG_GLPI["use_mailing"]
-                && (in_array("content",$this->updates)
+                && (in_array("content", $this->updates)
                     || isset($this->input['_need_send_mail']))) {
 
                $options = array('followup_id' => $this->fields["id"],
@@ -267,6 +275,16 @@ class TicketFollowup  extends CommonDBTM {
                NotificationEvent::raiseEvent("update_followup", $job, $options);
             }
          }
+
+         // change ticket status (from splitted button)
+         if (isset($this->input['_status'])
+             && ($this->input['_status'] != $this->input['_job']->fields['status'])) {
+             $update['status']        = $this->input['_status'];
+             $update['id']            = $this->input['_job']->fields['id'];
+             $update['_disablenotif'] = true;
+             $this->input['_job']->update($update);
+         }
+
          // Add log entry in the ticket
          $changes[0] = 0;
          $changes[1] = '';
@@ -285,42 +303,24 @@ class TicketFollowup  extends CommonDBTM {
       if (empty($input['content'])
           && !isset($input['add_close'])
           && !isset($input['add_reopen'])) {
+         Session::addMessageAfterRedirect(__("You can't add a followup without description"),
+                                          false, ERROR);
          return false;
       }
       if (!$input["_job"]->getFromDB($input["tickets_id"])) {
          return false;
       }
-      if ($CFG_GLPI["use_rich_text"]) {
-         $input['content'] = $input["_job"]->setSimpleTextContent($input["content"]);
-      }
-      // Manage File attached (from mailgate)
-      // Pass filename if set to ticket
-      if (isset($input['_filename'])) {
-         $input["_job"]->input['_filename'] = $input['_filename'];
-      }
-      // Add docs without notif
-      $docadded = $input["_job"]->addFiles(0,1);
-
-      if (count($docadded) > 0) {
-         $input['content'] .= "\n";
-         foreach ($docadded as $name) {
-            //TRANS: %s is tha document name
-            $input['content'] .= "\n".sprintf(__('Added document: %s'),
-                                              Toolbox::addslashes_deep($name['data']));
-         }
-      }
-
 
       // Pass old assign From Ticket in case of assign change
-//       if (isset($input["_old_assign"])) {
-//          $input["_job"]->fields["_old_assign"] = $input["_old_assign"];
-//       }
+      // if (isset($input["_old_assign"])) {
+      //    $input["_job"]->fields["_old_assign"] = $input["_old_assign"];
+      // }
 
-//      if (!isset($input["type"])) {
-//         $input["type"] = "followup";
-//      }
-//      $input["_type"] = $input["type"];
-//      unset($input["type"]);
+      // if (!isset($input["type"])) {
+      //    $input["type"] = "followup";
+      // }
+      // $input["_type"] = $input["type"];
+      // unset($input["type"]);
       $input['_close'] = 0;
 
       if (!isset($input["users_id"])) {
@@ -329,7 +329,7 @@ class TicketFollowup  extends CommonDBTM {
             $input["users_id"] = $uid;
          }
       }
-//      if ($input["_isadmin"] && $input["_type"]!="update") {
+      // if ($input["_isadmin"] && $input["_type"]!="update") {
       if (isset($input["add_close"])) {
          $input['_close'] = 1;
          if (empty($input['content'])) {
@@ -359,7 +359,7 @@ class TicketFollowup  extends CommonDBTM {
          $input['_reopen'] = 1;
       }
       unset($input["add_reopen"]);
-//      }
+      // }
       unset($input["add"]);
 
       $input["date"] = $_SESSION["glpi_currenttime"];
@@ -370,11 +370,10 @@ class TicketFollowup  extends CommonDBTM {
    function post_addItem() {
       global $CFG_GLPI;
 
-      $donotif = $CFG_GLPI["use_mailing"];
+      // Add document if needed, without notification
+      $this->input = $this->addFiles($this->input, ['force_update' => true]);
 
-//       if (isset($this->input["_no_notif"]) && $this->input["_no_notif"]) {
-//          $donotif = false;
-//       }
+      $donotif = $CFG_GLPI["use_mailing"];
 
       $this->input["_job"]->updateDateMod($this->input["tickets_id"], false,
                                           $this->input["users_id"]);
@@ -413,11 +412,11 @@ class TicketFollowup  extends CommonDBTM {
          }
 
          $update['id'] = $this->input["_job"]->fields['id'];
-         
+
          // don't notify on Ticket - update event
          $update['_disablenotif'] = true;
-         
-         // Use update method for history 
+
+         // Use update method for history
          $this->input["_job"]->update($update);
          $reopened     = true;
       }
@@ -428,11 +427,11 @@ class TicketFollowup  extends CommonDBTM {
 
          $update['status'] = $this->input['_status'];
          $update['id']     = $this->input['_job']->fields['id'];
-         
+
          // don't notify on Ticket - update event
          $update['_disablenotif'] = true;
 
-         // Use update method for history 
+         // Use update method for history
          $this->input['_job']->update($update);
       }
 
@@ -523,7 +522,7 @@ class TicketFollowup  extends CommonDBTM {
    static function showFormMassiveAction() {
 
       echo "&nbsp;".__('Source of followup')."&nbsp;";
-      RequestType::dropdown(array('value' => RequestType::getDefault('helpdesk')));
+      RequestType::dropdown(array('value' => RequestType::getDefault('followup'), 'condition' => 'is_active = 1 AND is_ticketfollowup = 1'));
 
       echo "<br>".__('Description')." ";
       echo "<textarea name='content' cols='50' rows='6'></textarea>&nbsp;";
@@ -620,7 +619,7 @@ class TicketFollowup  extends CommonDBTM {
 
       $reopen_case = false;
       if ($this->isNewID($ID)) {
-          if (in_array($ticket->fields["status"], $ticket->getClosedStatusArray())
+         if (in_array($ticket->fields["status"], $ticket->getClosedStatusArray())
              && $ticket->isAllowedStatus($ticket->fields['status'], Ticket::INCOMING)) {
             $reopen_case = true;
             echo "<div class='center b'>".__('If you want to reopen the ticket, you must specify a reason')."</div>";
@@ -633,16 +632,38 @@ class TicketFollowup  extends CommonDBTM {
          }
       }
 
+      $width = '100%';
+      if ($CFG_GLPI['use_rich_text']) {
+         $width = '50%';
+      }
+
       if ($tech) {
          $this->showFormHeader($options);
 
          $rand = mt_rand();
+         $rand_text = mt_rand();
+         $content_id = "content$rand";
+
+         $cols       = 90;
+         $rows       = 6;
 
          echo "<tr class='tab_bg_1'>";
-         echo "<td rowspan='3' class='middle right'>".__('Description')."</td>";
-         echo "<td class='center middle' rowspan='3'>";
-         echo "<textarea id='content$rand' name='content' cols='70' rows='6'>".$this->fields["content"]."</textarea>";
-         echo Html::scriptBlock("$(document).ready(function() { $('#content$rand').autogrow(); });");
+         echo "<td rowspan='3'>".__('Description')."</td>";
+         echo "<td rowspan='3' style='width:65%'>";
+
+         if ($CFG_GLPI["use_rich_text"]) {
+            $cols              = 100;
+            $rows              = 10;
+         }
+         Html::textarea(['name'              => 'content',
+                         'value'             => $this->fields["content"],
+                         'rand'              => $rand_text,
+                         'editor_id'         => $content_id,
+                         'enable_fileupload' => true,
+                         'enable_richtext'   => $CFG_GLPI["use_rich_text"],
+                         'cols'              => $cols,
+                         'rows'              => $rows]);
+
          if ($this->fields["date"]) {
             echo "</td><td>".__('Date')."</td>";
             echo "<td>".Html::convDateTime($this->fields["date"]);
@@ -660,17 +681,13 @@ class TicketFollowup  extends CommonDBTM {
 
          echo "<tr class='tab_bg_1'>";
          echo "<td>".__('Source of followup')."</td><td>";
-         RequestType::dropdown(array('value' => $this->fields["requesttypes_id"]));
+         RequestType::dropdown(array('value' => $this->fields["requesttypes_id"], 'condition' => 'is_active =1 AND is_ticketfollowup = 1'));
          echo "</td></tr>\n";
 
          echo "<tr class='tab_bg_1'>";
          echo "<td>".__('Private')."</td><td>";
          Dropdown::showYesNo('is_private', $this->fields["is_private"]);
          echo "</td></tr>";
-
-         if ($ID <= 0) {
-            Document_Item::showSimpleAddForItem($this);
-         }
 
          $this->showFormButtons($options);
 
@@ -679,23 +696,35 @@ class TicketFollowup  extends CommonDBTM {
 
          $this->showFormHeader($options);
 
+         $rand = mt_rand();
+         $rand_text = mt_rand();
+         $content_id = "content$rand";
          echo "<tr class='tab_bg_1'>";
          echo "<td class='middle right'>".__('Description')."</td>";
          echo "<td class='center middle'>";
-         echo "<textarea name='content' cols='80' rows='6'>".$this->fields["content"]."</textarea>";
+
+         if ($CFG_GLPI["use_rich_text"]) {
+            $cols              = 100;
+            $rows              = 10;
+         }
+         Html::textarea(['name'              => 'content',
+                         'value'             => $this->fields["content"],
+                         'rand'              => $rand_text,
+                         'editor_id'         => $content_id,
+                         'enable_fileupload' => true,
+                         'enable_richtext'   => $CFG_GLPI["use_rich_text"],
+                         'cols'              => $cols,
+                         'rows'              => $rows]);
+
          echo "<input type='hidden' name='tickets_id' value='".$this->fields["tickets_id"]."'>";
          echo "<input type='hidden' name='requesttypes_id' value='".
-                RequestType::getDefault('helpdesk')."'>";
+                RequestType::getDefault('followup')."'>";
          // Reopen case
          if ($reopen_case) {
             echo "<input type='hidden' name='add_reopen' value='1'>";
          }
 
          echo "</td></tr>\n";
-
-         if ($ID <= 0) {
-            Document_Item::showSimpleAddForItem($ticket);
-         }
 
          $this->showFormButtons($options);
       }
@@ -731,12 +760,13 @@ class TicketFollowup  extends CommonDBTM {
          echo "<input type='hidden' name='id' value='$ID'>";
       }
 
+      Plugin::doHook("post_item_form", ['item' => $this, 'options' => &$params]);
+
       echo "<tr class='tab_bg_2'>";
       echo "<td class='center' colspan='".($params['colspan']*2)."'>";
 
       if ($this->isNewID($ID)) {
          echo Ticket::getSplittedSubmitButtonHtml($this->fields['tickets_id'], 'add');
-//         echo "<input type='hidden' name='id' value='$ID'>";
       } else {
          if ($params['candel']
              && !$this->can($ID, DELETE)
@@ -752,7 +782,7 @@ class TicketFollowup  extends CommonDBTM {
          if ($params['candel']) {
             echo "<td class='right' colspan='".($params['colspan']*2)."' >\n";
             if ($this->can($ID, PURGE)) {
-               echo Html::submit(_x('button','Delete permanently'),
+               echo Html::submit(_x('button', 'Delete permanently'),
                                  array('name'    => 'purge',
                                        'confirm' => __('Confirm the final deletion?')));
             }
@@ -776,7 +806,8 @@ class TicketFollowup  extends CommonDBTM {
    function showSummary($ticket) {
       global $DB, $CFG_GLPI;
 
-      if (!Session::haveRightsOr(self::$rightname, array(self::SEEPUBLIC, self::SEEPRIVATE))) {
+      if (!Session::haveRightsOr(self::$rightname,
+                                 array(self::SEEPUBLIC, self::SEEPRIVATE, self::ADDMYTICKET))) {
          return false;
       }
 
@@ -848,9 +879,9 @@ class TicketFollowup  extends CommonDBTM {
                     "<a class='vsubmit' href='javascript:viewAddFollowup".$ticket->fields['id'].
                                               "$rand();'>";
                if ($reopen_case) {
-                  _e('Reopen the ticket');
+                  echo __('Reopen the ticket');
                } else {
-                  _e('Add a new followup');
+                  echo __('Add a new followup');
                }
                echo "</a></div>\n";
             }
@@ -888,6 +919,12 @@ class TicketFollowup  extends CommonDBTM {
 
          while ($data = $DB->fetch_assoc($result)) {
             $this->getFromDB($data['id']);
+            $options = array( 'parent' => $ticket,
+                              'rand'   => $rand
+                           );
+            Plugin::doHook('pre_show_item', array('item' => $this, 'options' => &$options));
+            $data = array_merge( $data, $this->fields );
+
             $candelete = $this->canPurge() && $this->canPurgeItem();
             $canedit   = $this->canUpdate() && $this->canUpdateItem();
 
@@ -952,8 +989,17 @@ class TicketFollowup  extends CommonDBTM {
             }
             echo ">";
             $content = nl2br($data['content']);
-            if (empty($content)) $content = NOT_AVAILABLE;
-            echo $content.'</div>'; // boxnotetext
+            if (empty($content)) {
+               $content = NOT_AVAILABLE;
+            }
+
+            if ($CFG_GLPI["use_rich_text"]) {
+               $content = html_entity_decode($content);
+               echo $content.'</div>';
+            } else {
+               $content = linkUrlsInTrustedHtml($content);
+               echo $content.'</div>';
+            }
 
             echo "</div>"; // boxnotecontent
             echo "<div class='boxnoteright'>";
@@ -982,6 +1028,7 @@ class TicketFollowup  extends CommonDBTM {
                echo "};";
                echo "</script>\n";
             }
+            Plugin::doHook('post_show_item', array('item' => $this, 'options' => $options));
          }
       }
    }
@@ -1056,7 +1103,7 @@ class TicketFollowup  extends CommonDBTM {
          echo "<textarea name='content' cols='70' rows='6'></textarea>";
          echo "<input type='hidden' name='tickets_id' value='".$ticket->getField('id')."'>";
          echo "<input type='hidden' name='requesttypes_id' value='".
-                RequestType::getDefault('helpdesk')."'>";
+                RequestType::getDefault('followup')."'>";
          echo "</td></tr>\n";
 
          echo "<tr class='tab_bg_2'>";
@@ -1075,38 +1122,55 @@ class TicketFollowup  extends CommonDBTM {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                    = array();
-      $tab['common']          = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']        = $this->getTable();
-      $tab[1]['field']        = 'content';
-      $tab[1]['name']         = __('Description');
-      $tab[1]['datatype']     = 'text';
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'content',
+         'name'               => __('Description'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[2]['table']        = 'glpi_requesttypes';
-      $tab[2]['field']        = 'name';
-      $tab[2]['name']         = __('Request source');
-      $tab[2]['forcegroupby'] = true;
-      $tab[2]['datatype']     = 'dropdown';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => 'glpi_requesttypes',
+         'field'              => 'name',
+         'name'               => __('Request source'),
+         'forcegroupby'       => true,
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[3]['table']        = $this->getTable();
-      $tab[3]['field']        = 'date';
-      $tab[3]['name']         = __('Date');
-      $tab[3]['datatype']     = 'datetime';
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'date',
+         'name'               => __('Date'),
+         'datatype'           => 'datetime'
+      ];
 
-      $tab[4]['table']        = $this->getTable();
-      $tab[4]['field']        = 'is_private';
-      $tab[4]['name']         = __('Private');
-      $tab[4]['datatype']     = 'bool';
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'is_private',
+         'name'               => __('Private'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[5]['table']        = 'glpi_users';
-      $tab[5]['field']        = 'name';
-      $tab[5]['name']         = __('User');
-      $tab[5]['datatype']     = 'dropdown';
-      $tab[5]['right']        = 'all';
-
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => 'glpi_users',
+         'field'              => 'name',
+         'name'               => __('User'),
+         'datatype'           => 'dropdown',
+         'right'              => 'all'
+      ];
 
       return $tab;
    }
@@ -1143,4 +1207,3 @@ class TicketFollowup  extends CommonDBTM {
       return $values;
    }
 }
-?>

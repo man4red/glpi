@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
 */
 
 /** @file
@@ -39,7 +38,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /** Class IPAddress : Represents an IPv4 or an IPv6 address. Both textual (ie. human readable)
@@ -60,7 +59,7 @@ class IPAddress extends CommonDBChild {
    static public $items_id       = 'items_id';
    public $dohistory             = false;
 
-   var $history_blacklist = array('binary_0', 'binary_1', 'binary_2', 'binary_3');
+   public $history_blacklist     = array('binary_0', 'binary_1', 'binary_2', 'binary_3');
 
    /// $version (integer) : version of the adresse. Should be 4 or 6, or empty if not valid address
    protected $version = '';
@@ -390,7 +389,7 @@ class IPAddress extends CommonDBChild {
 
       if (!empty($binaryField)) {
          $binary = $this->getBinary();
-         for ($i = 0 ; $i < 4 ; ++$i) {
+         for ($i = 0; $i < 4; ++$i) {
             if ($binary !== false) {
                $array[$binaryField."_".$i] = $binary[$i];
             } else {
@@ -632,47 +631,47 @@ class IPAddress extends CommonDBChild {
          }
          // END OF EXTREMITY CHECKS
 
-
          // The number of empty singletons depends on the type of contraction
          switch ($empty_count) {
 
-         case 0: // No empty singleton => no contraction at all
-            // Thus, its side must be 8 !
-            if (count($singletons) != 8) {
-               return false;
-            }
-            break;
+            case 0: // No empty singleton => no contraction at all
+               // Thus, its side must be 8 !
+               if (count($singletons) != 8) {
+                  return false;
+               }
+               break;
 
-         case 1:
-            // One empty singleton : must be in the middle, otherwise EXTREMITY CHECKS
-            // would return false
-            break;
+            case 1:
+               // One empty singleton : must be in the middle, otherwise EXTREMITY CHECKS
+               // would return false
+               break;
 
-         case 2: // If there is two empty singletons then it must be at the beginning or the end
-            if (!($start_with_empty XOR $end_with_empty)) {
-               return false;
-            }
-            // Thus remove one of both empty singletons.
-            if ($start_with_empty) {
-               unset($singletons[0]);
-            } else { // $end_with_empty == true
-               unset($singletons[count($singletons) - 1]);
-            }
-            break;
+            case 2: // If there is two empty singletons then it must be at the beginning or the end
+               if (!($start_with_empty XOR $end_with_empty)) {
+                  return false;
+               }
+               // Thus remove one of both empty singletons.
+               if ($start_with_empty) {
+                  unset($singletons[0]);
+               } else { // $end_with_empty == true
+                  unset($singletons[count($singletons) - 1]);
+               }
+               break;
 
-         case 3: // Only '::' allows three empty singletons ('::x::' = four empty singletons)
-            if (!($start_with_empty AND $end_with_empty)) {
-               return false;
-            }
-            // Middle value must be '' otherwise EXTREMITY CHECKS returned an error
-            if (count($singletons) != 3) {
-               return false;
-            }
-            $singletons = array('');
-            break;
+            case 3: // Only '::' allows three empty singletons ('::x::' = four empty singletons)
+               if (!($start_with_empty AND $end_with_empty)) {
+                  return false;
+               }
+               // Middle value must be '' otherwise EXTREMITY CHECKS returned an error
+               if (count($singletons) != 3) {
+                  return false;
+               }
+               $singletons = array('');
+               break;
 
-         default:
-            return false;
+            default:
+               return false;
+
          }
 
          // Here, we are sure that $singletons are valids and only contains 1 empty singleton that
@@ -690,7 +689,7 @@ class IPAddress extends CommonDBChild {
          }
 
          $binary = array();
-         for ($i = 0 ; $i < 4 ; $i++) {
+         for ($i = 0; $i < 4; $i++) {
             $binary[$i] = $epanded[2 * $i + 0] * 65536 + $epanded[2 * $i + 1];
          }
 
@@ -736,7 +735,7 @@ class IPAddress extends CommonDBChild {
                    WHERE `items_id` = '$items_id'
                          AND `itemtype` = '$itemtype'";
 
-         for ($i = 0 ; $i < 4 ; ++$i) {
+         for ($i = 0; $i < 4; ++$i) {
             $query .= " AND `binary_".$i."` = '".$address[$i]."'";
          }
          $result = $DB->query($query);
@@ -793,7 +792,7 @@ class IPAddress extends CommonDBChild {
          $hexValue = str_pad($textual[6], 4, "0", STR_PAD_LEFT).str_pad($textual[7], 4, "0",
                                                                         STR_PAD_LEFT);
          $textual  = array();
-         for ($i = 0 ; $i < 4 ; $i++) {
+         for ($i = 0; $i < 4; $i++) {
             $textual[] = hexdec($hexValue[2*$i+0].$hexValue[2*$i+1]);
          }
          $textual = implode('.', $textual);
@@ -838,7 +837,7 @@ class IPAddress extends CommonDBChild {
          return false;
       }
 
-      for ($i = 3 ; $i >= 0 ; --$i) {
+      for ($i = 3; $i >= 0; --$i) {
          $address[$i] += $value;
          if ($address[$i] < 0) {
             $address[$i] += (0x80000000 * 2);
@@ -858,7 +857,7 @@ class IPAddress extends CommonDBChild {
    /**
     * \brief get absolute value of an integer
     * Convert a negative integer to positiv float. That is usefull as integer, in PHP are signed 32
-    * bits values. As such, they are limited from +2 147 483 647 to −2 147 483 648. Thus, when
+    * bits values. As such, they are limited from +2 147 483 647 to ???2 147 483 648. Thus, when
     * working on integer with bit-wise boolean operations (&, |, ^, ~), the sign of the operand
     * remain inside the result. That make problem as IP address are only positiv ones.
     *
@@ -887,9 +886,9 @@ class IPAddress extends CommonDBChild {
       global $DB;
 
       // We must resolv binary address :
-      //    1°) we don't know if the IP address is valid
-      //    2°) we don't know its version
-      //    3°) binary request is more efficient than textual one (polymorphism of IPv6 addresses)
+      //    1??) we don't know if the IP address is valid
+      //    2??) we don't know its version
+      //    3??) binary request is more efficient than textual one (polymorphism of IPv6 addresses)
       $address = new self();
 
       if (!$address->setAddressFromString($IPaddress)) {
@@ -901,7 +900,7 @@ class IPAddress extends CommonDBChild {
                 WHERE `gip`.`version` = '".$address->version."'\n";
       $startIndex = (($address->version == 4) ? 3 : 1);
       $binaryIP = $address->getBinary();
-      for ($i = $startIndex ; $i < 4 ; ++$i) {
+      for ($i = $startIndex; $i < 4; ++$i) {
          $query .= "AND `gip`.`binary_$i` = '".$binaryIP[$i]."'";
       }
       $addressesWithItems = array();
@@ -942,15 +941,20 @@ class IPAddress extends CommonDBChild {
             }
          }
       }
-      if (count($addressesWithItems) == 1) {
-         $addressWithItems = current($addressesWithItems);
-         $item             = $addressWithItems[0];
-         $result           = array("id"       => $item->getID(),
-                                   "itemtype" => $item->getType());
-         unset($addressesWithItems);
-         return $result;
-      }
 
+      if (count($addressesWithItems)) {
+         // Get the first item that is matching entity
+         foreach ($addressesWithItems as $items) {
+            foreach ($items as $item) {
+               if ($item->getEntityID() == $entity) {
+                  $result = array("id"       => $item->getID(),
+                                  "itemtype" => $item->getType());
+                  unset($addressesWithItems);
+                  return $result;
+               }
+            }
+         }
+      }
       return array();
    }
 
@@ -973,7 +977,7 @@ class IPAddress extends CommonDBChild {
          return false;
       }
 
-      for ($index = 0 ; $index < 4 ; $index ++) {
+      for ($index = 0; $index < 4; $index ++) {
          if ($this->binary[$index] != $ipaddress->binary[$index]) {
             return false;
          }
@@ -1000,7 +1004,7 @@ class IPAddress extends CommonDBChild {
 
       if ($itemtype == 'IPNetwork') {
 
-         $base->addHeader('Item'       , _n('Item', 'Items', 1)     , $super, $father);
+         $base->addHeader('Item', _n('Item', 'Items', 1), $super, $father);
          $base->addHeader('NetworkPort', NetworkPort::getTypeName(0), $super, $father);
          $base->addHeader('NetworkName', NetworkName::getTypeName(1), $super, $father);
          $base->addHeader('Entity', Entity::getTypeName(1), $super, $father);
@@ -1258,11 +1262,9 @@ class IPAddress extends CommonDBChild {
                                               $this_cell);
                }
 
-
                IPNetwork::getHTMLTableCellsForItem($row, $address, $this_cell, $options);
             }
          }
       }
    }
 }
-?>

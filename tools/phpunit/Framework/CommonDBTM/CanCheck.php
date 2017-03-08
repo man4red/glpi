@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 class Framework_CommonDBTM_CanCheck extends PHPUnit_Framework_TestCase {
 
@@ -314,7 +313,7 @@ class Framework_CommonDBTM_CanCheck extends PHPUnit_Framework_TestCase {
 
       $input = array('contacts_id' =>  $idc[3],    // Child 2
                      'suppliers_id' => $ids[2]);   // Child 1
-      $this->assertFalse($rel->can(-1, CREATE,$input));
+      $this->assertFalse($rel->can(-1, CREATE, $input));
 
       $input = array('contacts_id' =>  $idc[3],    // Child 2
                      'suppliers_id' => $ids[3]);   // Child 3
@@ -368,7 +367,7 @@ class Framework_CommonDBTM_CanCheck extends PHPUnit_Framework_TestCase {
       $input=array('entities_id' => -1);
       $this->assertFalse($entity->can(-1, CREATE, $input), "Fail: can create entity in not existing entity");
 
-      $this->assertTrue(Session::changeActiveEntities($ent2,true));
+      $this->assertTrue(Session::changeActiveEntities($ent2, true));
 
       $this->assertTrue($entity->can(0, READ), "Fail: can't read root entity");
       $this->assertTrue($entity->can($ent0, READ), "Fail: can't read entity 0");
@@ -399,7 +398,7 @@ class Framework_CommonDBTM_CanCheck extends PHPUnit_Framework_TestCase {
       $this->assertFalse($entity->can(-1, CREATE, $input),
                          "Fail: can create entity in not existing entity");
 
-      $this->assertTrue(Session::changeActiveEntities($ent2,false));
+      $this->assertTrue(Session::changeActiveEntities($ent2, false));
       $input=array('entities_id' => $ent1);
       $this->assertFalse($entity->can(-1, CREATE, $input), "Fail: can create entity in root");
       $input=array('entities_id' => $ent2);
@@ -411,4 +410,3 @@ class Framework_CommonDBTM_CanCheck extends PHPUnit_Framework_TestCase {
       $this->assertFalse($entity->can(-1, CREATE, $input), "Fail: can create entity in 2.1");
    }
 }
-?>

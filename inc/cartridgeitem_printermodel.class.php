@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 // Relation between CartridgeItem and PrinterModel
@@ -82,7 +81,7 @@ class CartridgeItem_PrinterModel extends CommonDBRelation {
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = self::countForCartridgeItem($item);
                }
-               return self::createTabEntry(PrinterModel::getTypeName(Session::getPluralNumber()),$nb);
+               return self::createTabEntry(PrinterModel::getTypeName(Session::getPluralNumber()), $nb);
          }
       }
       return '';
@@ -94,11 +93,9 @@ class CartridgeItem_PrinterModel extends CommonDBRelation {
    **/
    static function countForCartridgeItem(CartridgeItem $item) {
 
-      $restrict = "`".static::getTable()."`.`cartridgeitems_id` = '".$item->getField('id') ."'
-                   AND `".static::getTable()."`.`printermodels_id` = `glpi_printermodels`.`id`";
-
       return countElementsInTable(array('glpi_printermodels', static::getTable()),
-                                  $restrict);
+                                        [static::getTable().'cartridgeitems_id' => $item->getField('id'),
+                                         'FKEY' => [static::getTable() => 'printermodels_id', 'glpi_printermodels' => 'id']]);
    }
 
 
@@ -153,7 +150,7 @@ class CartridgeItem_PrinterModel extends CommonDBRelation {
          echo "<input type='hidden' name='cartridgeitems_id' value='$instID'>";
          PrinterModel::dropdown(array('used' => $used));
          echo "</td><td class='tab_bg_2 center'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</td></tr>";
          echo "</table>";
          Html::closeForm();
@@ -191,7 +188,18 @@ class CartridgeItem_PrinterModel extends CommonDBRelation {
                Html::showMassiveActionCheckBox(__CLASS__, $data["id"]);
                echo "</td>";
             }
-            echo "<td class='center'>".$data['type']."</td>";
+            $opt = [
+               'is_deleted' => 0,
+               'criteria'   => [
+                  [
+                     'field'      => 40, // printer model
+                     'searchtype' => 'equals',
+                     'value'      => $data["pmid"],
+                  ]
+               ]
+            ];
+            $url = Printer::getSearchURL()."?".Toolbox::append_params($opt, '&amp;');
+            echo "<td class='center'><a href='".$url."'>".$data["type"]."</a></td>";
             echo "</tr>";
          }
          echo $header_begin.$header_bottom.$header_end;
@@ -208,4 +216,3 @@ class CartridgeItem_PrinterModel extends CommonDBRelation {
    }
 
 }
-?>

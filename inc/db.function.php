@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -48,10 +47,10 @@ if (!defined('GLPI_ROOT')) {
 **/
 function getForeignKeyFieldForTable($table) {
 
-   if (strpos($table,'glpi_') === false) {
+   if (strpos($table, 'glpi_') === false) {
       return "";
    }
-   return str_replace("glpi_","",$table)."_id";
+   return str_replace("glpi_", "", $table)."_id";
 }
 
 
@@ -67,11 +66,11 @@ function getForeignKeyFieldForTable($table) {
 function isForeignKeyField($field) {
 
    // No _id drop
-   if (strpos($field,'_id') === false) {
+   if (strpos($field, '_id') === false) {
       return false;
    }
 
-   return preg_match("/_id$/", $field) || preg_match("/_id_/", $field);
+   return preg_match("/._id$/", $field) || preg_match("/._id_/", $field);
 }
 
 
@@ -96,7 +95,7 @@ function getForeignKeyFieldForItemType($itemtype) {
 **/
 function getTableNameForForeignKeyField($fkname) {
 
-   if (strpos($fkname,'_id') === false) {
+   if (strpos($fkname, '_id') === false) {
       return "";
    }
    // If $fkname begin with _ strip it
@@ -125,19 +124,21 @@ function getItemTypeForTable($table) {
       $inittable = $table;
       $table     = str_replace("glpi_", "", $table);
       $prefix    = "";
+      $pref2     = NS_GLPI;
 
-      if (preg_match('/^plugin_([a-z0-9]+)_/',$table,$matches)) {
-         $table  = preg_replace('/^plugin_[a-z0-9]+_/','',$table);
+      if (preg_match('/^plugin_([a-z0-9]+)_/', $table, $matches)) {
+         $table  = preg_replace('/^plugin_[a-z0-9]+_/', '', $table);
          $prefix = "Plugin".Toolbox::ucfirst($matches[1]);
+         $pref2  = NS_PLUG . ucfirst($matches[1]) . '\\';
       }
 
-      if (strstr($table,'_')) {
+      if (strstr($table, '_')) {
          $split = explode('_', $table);
 
          foreach ($split as $key => $part) {
             $split[$key] = Toolbox::ucfirst(getSingular($part));
          }
-         $table = implode('_',$split);
+         $table = implode('_', $split);
 
       } else {
          $table = Toolbox::ucfirst(getSingular($table));
@@ -145,7 +146,15 @@ function getItemTypeForTable($table) {
 
       $itemtype = $prefix.$table;
       // Get real existence of itemtype
-      if ($item = getItemForItemtype($itemtype)) {
+      if (($item = getItemForItemtype($itemtype))) {
+         $itemtype                                   = get_class($item);
+         $CFG_GLPI['glpiitemtypetables'][$inittable] = $itemtype;
+         $CFG_GLPI['glpitablesitemtype'][$itemtype]  = $inittable;
+         return $itemtype;
+      }
+      // Namespaced item
+      $itemtype = $pref2 . str_replace('_', '\\', $table);
+      if (($item = getItemForItemtype($itemtype))) {
          $itemtype                                   = get_class($item);
          $CFG_GLPI['glpiitemtypetables'][$inittable] = $itemtype;
          $CFG_GLPI['glpitablesitemtype'][$itemtype]  = $inittable;
@@ -176,19 +185,25 @@ function getTableForItemType($itemtype) {
       $prefix = "glpi_";
 
       if ($plug = isPluginItemType($itemtype)) {
+         /* PluginFooBar   => glpi_plugin_foos_bars */
+         /* GlpiPlugin\Foo\Bar => glpi_plugin_foos_bars */
          $prefix .= "plugin_".strtolower($plug['plugin'])."_";
          $table   = strtolower($plug['class']);
+
       } else {
          $table = strtolower($itemtype);
+         if (substr($itemtype, 0, \strlen(NS_GLPI)) === NS_GLPI) {
+            $table = substr($table, \strlen(NS_GLPI));
+         }
       }
-
-      if (strstr($table,'_')) {
-         $split = explode('_',$table);
+      $table = str_replace('\\', '_', $table);
+      if (strstr($table, '_')) {
+         $split = explode('_', $table);
 
          foreach ($split as $key => $part) {
             $split[$key] = getPlural($part);
          }
-         $table = implode('_',$split);
+         $table = implode('_', $split);
 
       } else {
          $table = getPlural($table);
@@ -243,7 +258,7 @@ function getPlural($string) {
                   '([aeiou]{2})ses$'   => '\1ses', // Case like aliases
                   '([aeiou]{2})s$'     => '\1ses', // Case like aliases
                   'x$'                 =>'xes',
-//                   's$'           =>'ses',
+                  // 's$'                 =>'ses',
                   '([^s])$'            => '\1s',   // Add at the end if not exists
                   );
 
@@ -296,27 +311,24 @@ function getSingular($string) {
  * Count the number of elements in a table.
  *
  * @param $table        string/array   table names
- * @param $condition    string         condition to use (default '')
+ * @param $condition    string/array   condition to use (default '') or array of criteria
  *
  * @return int nb of elements in table
 **/
 function countElementsInTable($table, $condition="") {
    global $DB;
 
-   if (is_array($table)) {
-      $table = implode('`,`',$table);
+   if (!is_array($condition)) {
+      if (empty($condition)) {
+         $condition = [];
+      } else {
+         $condition = ['WHERE' => $condition]; // Deprecated use case
+      }
    }
+   $condition['COUNT'] = 'cpt';
 
-   $query = "SELECT COUNT(*) AS cpt
-             FROM `$table`";
-
-   if (!empty($condition)) {
-      $query .= " WHERE $condition ";
-   }
-
-   $result = $DB->query($query);
-   $ligne  = $DB->fetch_assoc($result);
-   return $ligne['cpt'];
+   $row = $DB->request($table, $condition)->next();
+   return ($row ? $row['cpt'] : 0);
 }
 
 /**
@@ -332,7 +344,7 @@ function countDistinctElementsInTable($table, $field, $condition="") {
    global $DB;
 
    if (is_array($table)) {
-      $table = implode('`,`',$table);
+      $table = implode('`,`', $table);
    }
 
    $query = "SELECT COUNT(DISTINCT `$field`) AS cpt
@@ -352,8 +364,8 @@ function countDistinctElementsInTable($table, $field, $condition="") {
 /**
  * Count the number of elements in a table for a specific entity
  *
- * @param $table        string   table name
- * @param $condition    string   additional condition (default '')
+ * @param $table        string         table name
+ * @param $condition    string/array   additional condition (default '') or criteria
  *
  * @return int nb of elements in table
 **/
@@ -363,12 +375,13 @@ function countElementsInTableForMyEntities($table, $condition='') {
    $itemtype = getItemTypeForTable($table);
    $item     = new $itemtype();
 
-   if (!empty($condition)) {
-      $condition .= " AND ";
+   $criteria = getEntitiesRestrictCriteria($table, '', '', $item->maybeRecursive());
+   if (is_array($condition)) {
+      $criteria = array_merge($condition, $criteria);
+   } else if ($condition) {
+      $criteria[] = $condition;
    }
-
-   $condition .= getEntitiesRestrictRequest("", $table, '', '', $item->maybeRecursive());
-   return countElementsInTable($table, $condition);
+   return countElementsInTable($table, $criteria);
 }
 
 
@@ -391,7 +404,7 @@ function countElementsInTableForEntity($table, $entity, $condition='') {
       $condition .= " AND ";
    }
 
-   $condition .= getEntitiesRestrictRequest("", $table, '', $entity,$item->maybeRecursive());
+   $condition .= getEntitiesRestrictRequest("", $table, '', $entity, $item->maybeRecursive());
    return countElementsInTable($table, $condition);
 }
 
@@ -461,7 +474,7 @@ function getTreeLeafValueName($table, $ID, $withcomment=false, $translate=true) 
    $SELECTNAME    = "`$table`.`name`, '' AS transname";
    $SELECTCOMMENT = "`$table`.`comment`, '' AS transcomment";
    $JOIN          = '';
-   if  ($translate) {
+   if ($translate) {
       if (Session::haveTranslations(getItemTypeForTable($table), 'name')) {
          $SELECTNAME  = "`$table`.`name`, `namet`.`value` AS transname";
          $JOIN       .= " LEFT JOIN `glpi_dropdowntranslations` AS namet
@@ -488,20 +501,20 @@ function getTreeLeafValueName($table, $ID, $withcomment=false, $translate=true) 
 
    if ($result = $DB->query($query)) {
       if ($DB->numrows($result) == 1) {
-         $transname = $DB->result($result,0,"transname");
+         $transname = $DB->result($result, 0, "transname");
          if ($translate && !empty($transname)) {
             $name = $transname;
          } else {
-            $name = $DB->result($result,0,"name");
+            $name = $DB->result($result, 0, "name");
          }
 
          $comment      = $name." :<br>";
-         $transcomment = $DB->result($result,0,"transcomment");
+         $transcomment = $DB->result($result, 0, "transcomment");
 
          if ($translate && !empty($transcomment)) {
             $comment .= nl2br($transcomment);
          } else {
-            $comment .= nl2br($DB->result($result,0,"comment"));
+            $comment .= nl2br($DB->result($result, 0, "comment"));
          }
       }
    }
@@ -521,12 +534,13 @@ function getTreeLeafValueName($table, $ID, $withcomment=false, $translate=true) 
  * @param $ID           integer  ID of the element
  * @param $withcomment  boolean  1 if you want to give the array with the comments (false by default)
  * @param $translate    boolean  (true by default)
+ * @param $tooltip      boolean  (true by default) returns a tooltip, else returns only 'comment'
  *
  * @return string : completename of the element
  *
  * @see getTreeLeafValueName
 **/
-function getTreeValueCompleteName($table, $ID, $withcomment=false, $translate=true) {
+function getTreeValueCompleteName($table, $ID, $withcomment=false, $translate=true, $tooltip=true) {
    global $DB;
 
    $name    = "";
@@ -535,7 +549,7 @@ function getTreeValueCompleteName($table, $ID, $withcomment=false, $translate=tr
    $SELECTNAME    = "`$table`.`completename`, '' AS transname";
    $SELECTCOMMENT = "`$table`.`comment`, '' AS transcomment";
    $JOIN          = '';
-   if  ($translate) {
+   if ($translate) {
       if (Session::haveTranslations(getItemTypeForTable($table), 'completename')) {
          $SELECTNAME  = "`$table`.`completename`, `namet`.`value` AS transname";
          $JOIN       .= " LEFT JOIN `glpi_dropdowntranslations` AS namet
@@ -562,22 +576,23 @@ function getTreeValueCompleteName($table, $ID, $withcomment=false, $translate=tr
 
    if ($result = $DB->query($query)) {
       if ($DB->numrows($result) == 1) {
-         $transname = $DB->result($result,0,"transname");
+         $transname = $DB->result($result, 0, "transname");
          if ($translate && !empty($transname)) {
             $name = $transname;
          } else {
-            $name = $DB->result($result,0,"completename");
+            $name = $DB->result($result, 0, "completename");
          }
-         $comment  = sprintf(__('%1$s: %2$s')."<br>",
-                             "<span class='b'>".__('Complete name')."</span>",
-                             $name);
-         $comment .= "<span class='b'>&nbsp;".__('Comments')."&nbsp;</span>";
-
-         $transcomment = $DB->result($result,0,"transcomment");
+         if ($tooltip) {
+            $comment  = sprintf(__('%1$s: %2$s')."<br>",
+                                "<span class='b'>".__('Complete name')."</span>",
+                                $name);
+            $comment .= "<span class='b'>&nbsp;".__('Comments')."&nbsp;</span>";
+         }
+         $transcomment = $DB->result($result, 0, "transcomment");
          if ($translate && !empty($transcomment)) {
             $comment .= nl2br($transcomment);
          } else {
-            $comment .= nl2br($DB->result($result,0,"comment"));
+            $comment .= nl2br($DB->result($result, 0, "comment"));
          }
       }
    }
@@ -619,7 +634,6 @@ function getTreeValueName($table, $ID, $wholename="", $level=0) {
       if ($DB->numrows($result)>0) {
          $row      = $DB->fetch_assoc($result);
          $parentID = $row[$parentIDfield];
-
 
          if ($wholename == "") {
             $name = $row["name"];
@@ -701,7 +715,7 @@ function getAncestorsOf($table, $items_id) {
 
       $result = $DB->query($query);
       if ($DB->numrows($result)>0) {
-         $IDf = $DB->result($result,0,0);
+         $IDf = $DB->result($result, 0, 0);
       } else {
          $IDf = 0;
       }
@@ -772,7 +786,7 @@ function getSonsOf($table, $IDf) {
       // Get next elements
       $query = "SELECT `id`
                 FROM `$table`
-                WHERE `$parentIDfield` IN ('" . implode("','",$found) . "')";
+                WHERE `$parentIDfield` IN ('" . implode("','", $found) . "')";
 
       // CLear the found array
       unset($found);
@@ -858,7 +872,7 @@ function getTreeForItem($table, $IDf) {
       // Get next elements
       $query = "SELECT *
                 FROM `$table`
-                WHERE `$parentIDfield` IN ('" . implode("','",$found)."')
+                WHERE `$parentIDfield` IN ('" . implode("','", $found)."')
                 ORDER BY `name`";
       // CLear the found array
       unset($found);
@@ -1193,7 +1207,6 @@ function formatUserName($ID, $login, $realname, $firstname, $link=0, $cut=0, $fo
       $id_visible = $_SESSION["glpiis_ids_visible"];
    }
 
-
    if (strlen($realname) > 0) {
       $temp = $realname;
 
@@ -1274,9 +1287,11 @@ function getUserName($ID, $link=0) {
             $comments        = array();
             $comments[]      = array('name'  => __('Name'),
                                      'value' => $username);
-            $comments[]      = array('name'  => __('Login'),
-                                     'value' => $data["name"]);
-
+            // Ident only if you have right to read user
+            if (session::haveRight('user', READ)) {
+               $comments[]      = array('name'  => __('Login'),
+                                        'value' => $data["name"]);
+            }
 
             $email           = UserEmail::getDefaultForUser($ID);
             if (!empty($email)) {
@@ -1301,7 +1316,7 @@ function getUserName($ID, $link=0) {
             }
 
             if ($data["usertitles_id"] > 0) {
-               $comments[] = array('name'  => _x('person','Title'),
+               $comments[] = array('name'  => _x('person', 'Title'),
                                    'value' => Dropdown::getDropdownName("glpi_usertitles",
                                                                         $data["usertitles_id"]));
             }
@@ -1374,6 +1389,11 @@ function TableExists($tablename) {
 function FieldExists($table, $field, $usecache=true) {
    global $DB;
 
+   if (!TableExists($table)) {
+      trigger_error("Table $table does not exists", E_USER_WARNING);
+      return false;
+   }
+
    if ($fields = $DB->list_fields($table, $usecache)) {
       if (isset($fields[$field])) {
          return true;
@@ -1394,6 +1414,11 @@ function FieldExists($table, $field, $usecache=true) {
 **/
 function isIndex($table, $field) {
    global $DB;
+
+   if (!TableExists($table)) {
+      trigger_error("Table $table does not exists", E_USER_WARNING);
+      return false;
+   }
 
    $result = $DB->query("SHOW INDEX FROM `$table`");
 
@@ -1426,8 +1451,8 @@ function autoName($objectName, $field, $isTemplate, $itemtype, $entities_id=-1) 
 
    if ($isTemplate
        && ($len > 8)
-       && (Toolbox::substr($objectName,0,4) === '&lt;')
-       && (Toolbox::substr($objectName,$len - 4,4) === '&gt;')) {
+       && (Toolbox::substr($objectName, 0, 4) === '&lt;')
+       && (Toolbox::substr($objectName, $len - 4, 4) === '&gt;')) {
 
       $autoNum = Toolbox::substr($objectName, 4, $len - 8);
       $mask    = '';
@@ -1527,7 +1552,7 @@ function closeDBConnections() {
    global $DB;
 
    // Case of not init $DB object
-   if (method_exists($DB,"close")) {
+   if (method_exists($DB, "close")) {
       $DB->close();
    }
 }
@@ -1542,7 +1567,7 @@ function closeDBConnections() {
 **/
 function formatOutputWebLink($link) {
 
-   if (!preg_match("/^https?/",$link)) {
+   if (!preg_match("/^https?/", $link)) {
       return "http://".$link;
    }
    return $link;
@@ -1596,7 +1621,7 @@ function exportArrayToDB($TAB) {
 **/
 function importArrayFromDB($DATA) {
 
-   $TAB = json_decode($DATA,true);
+   $TAB = json_decode($DATA, true);
 
    // Use old scheme to decode
    if (!is_array($TAB)) {
@@ -1644,7 +1669,7 @@ function getDbRelations() {
    // Add plugins relations
    $plug_rel = Plugin::getDatabaseRelations();
    if (count($plug_rel) > 0) {
-      $RELATION = array_merge_recursive($RELATION,$plug_rel);
+      $RELATION = array_merge_recursive($RELATION, $plug_rel);
    }
    return $RELATION;
 }
@@ -1686,9 +1711,6 @@ function getEntitiesRestrictRequest($separator="AND", $table="", $field="",$valu
       return $query." 1 ) ";
    }
 
-   if (!empty($table)) {
-      $query .= "`$table`.";
-   }
    if (empty($field)) {
       if ($table == 'glpi_entities') {
          $field = "id";
@@ -1696,11 +1718,16 @@ function getEntitiesRestrictRequest($separator="AND", $table="", $field="",$valu
          $field = "entities_id";
       }
    }
+   if (empty($table)) {
+      $field = "`$field`";
+   } else {
+      $field = "`$table`.`$field`";
+   }
 
-   $query .= "`$field`";
+   $query .= "$field";
 
    if (is_array($value)) {
-      $query .= " IN ('" . implode("','",$value) . "') ";
+      $query .= " IN ('" . implode("','", $value) . "') ";
    } else {
       if (strlen($value) == 0) {
          $query .= " IN (".$_SESSION['glpiactiveentities_string'].") ";
@@ -1727,10 +1754,10 @@ function getEntitiesRestrictRequest($separator="AND", $table="", $field="",$valu
 
       if (count($ancestors)) {
          if ($table == 'glpi_entities') {
-            $query .= " OR `$table`.`$field` IN ('" . implode("','",$ancestors) . "')";
+            $query .= " OR $field IN ('" . implode("','", $ancestors) . "')";
          } else {
-            $query .= " OR (`$table`.`is_recursive`='1' ".
-                           "AND `$table`.`$field` IN ('" . implode("','",$ancestors) . "'))";
+            $recur = (empty($table) ? '`is_recursive`' : "`$table`.`is_recursive`");
+            $query .= " OR ($recur='1' AND $field IN ('" . implode("','", $ancestors) . "'))";
          }
       }
    }
@@ -1738,4 +1765,91 @@ function getEntitiesRestrictRequest($separator="AND", $table="", $field="",$valu
 
    return $query;
 }
-?>
+
+/**
+ * Get criteria to restrict to current entities of the user
+ *
+ * @since 9.2
+ *
+ * @param $table              table where apply the limit (if needed, multiple tables queries)
+ *                            (default '')
+ * @param $field              field where apply the limit (id != entities_id) (default '')
+ * @param $value              entity to restrict (if not set use $_SESSION['glpiactiveentities']).
+ *                            single item or array (default '')
+ * @param $is_recursive       need to use recursive process to find item
+ *                            (field need to be named recursive) (false by default, set to auto to automatic detection)
+ * @param $complete_request   need to use a complete request and not a simple one
+ *                            when have acces to all entities (used for reminders)
+ *                            (false by default)
+ *
+ * @return array of criteria
+ **/
+function getEntitiesRestrictCriteria($table='', $field='', $value='',
+                                     $is_recursive=false, $complete_request=false) {
+
+   // !='0' needed because consider as empty
+   if (!$complete_request
+       && ($value != '0')
+       && empty($value)
+       && isset($_SESSION['glpishowallentities'])
+       && $_SESSION['glpishowallentities']) {
+
+      return [];
+   }
+
+   if (empty($field)) {
+      if ($table == 'glpi_entities') {
+         $field = "id";
+      } else {
+         $field = "entities_id";
+      }
+   }
+   if (!empty($table)) {
+      $field = "$table.$field";
+   }
+
+   if (!is_array($value) && strlen($value) == 0) {
+      $value = $_SESSION['glpiactiveentities'];
+   }
+
+   $crit = [$field => $value];
+
+   if ($is_recursive === 'auto' && !empty($table) && $table != 'glpi_entities') {
+      $item = getItemForItemtype(getItemTypeForTable($table));
+      if ($item !== false) {
+         $is_recursive = $item->maybeRecursive();
+      }
+   }
+
+   if ($is_recursive) {
+      $ancestors = array();
+      if (is_array($value)) {
+         foreach ($value as $val) {
+            $ancestors = array_unique(array_merge(getAncestorsOf('glpi_entities', $val),
+                  $ancestors));
+         }
+         $ancestors = array_diff($ancestors, $value);
+
+      } else if (strlen($value) == 0) {
+         $ancestors = $_SESSION['glpiparententities'];
+
+      } else {
+         $ancestors = getAncestorsOf('glpi_entities', $value);
+      }
+
+      if (count($ancestors)) {
+         if ($table == 'glpi_entities') {
+            if (!is_array($value)) {
+               $value = [$value => $value];
+            }
+            $crit = ['OR' => [$field => $value + $ancestors]];
+         } else {
+            $recur = (empty($table) ? 'is_recursive' : "$table.is_recursive");
+            $crit = ['OR' => [$field => $value,
+                              'AND' => [$recur => 1,
+                                        $field => $ancestors]]];
+         }
+      }
+   }
+   return $crit;
+}

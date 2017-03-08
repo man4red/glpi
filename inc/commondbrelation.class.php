@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Common DataBase Relation Table Manager Class
@@ -47,9 +46,9 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    static public $itemtype_1; // Type ref or field name (must start with itemtype)
    static public $items_id_1; // Field name
    // * entity inheritance
-   static public $take_entity_1          = true ;
+   static public $take_entity_1          = true;
    // * rights
-   static public $checkItem_1_Rights     = self::HAVE_SAME_RIGHT_ON_ITEM ;
+   static public $checkItem_1_Rights     = self::HAVE_SAME_RIGHT_ON_ITEM;
    static public $mustBeAttached_1       = true;
    // * log
    static public $logs_for_item_1        = true;
@@ -64,7 +63,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    static public $itemtype_2; // Type ref or field name (must start with itemtype)
    static public $items_id_2; // Field name
    // * entity inheritance
-   static public $take_entity_2          = false ;
+   static public $take_entity_2          = false;
    // * rights
    static public $checkItem_2_Rights     = self::HAVE_SAME_RIGHT_ON_ITEM;
    static public $mustBeAttached_2       = true;
@@ -82,7 +81,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    /// If both items must be in viewable each other entities
    static public $check_entity_coherency = true;
 
-   var $no_form_page = true;
+   public $no_form_page                  = true;
 
 
 
@@ -108,7 +107,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
       } else {
          $fields[] = "'".static::$itemtype_1."' AS itemtype_1";
          if (($itemtype ==  static::$itemtype_1)
-             || is_subclass_of($itemtype,  static::$itemtype_1)) {
+             || is_subclass_of($itemtype, static::$itemtype_1)) {
             $condition_1 = $condition_id_1;
          }
       }
@@ -119,7 +118,6 @@ abstract class CommonDBRelation extends CommonDBConnexity {
          $fields[] = "0 AS is_1";
       }
 
-
       // Check item 2 type
       $condition_id_2 = "`".static::$items_id_2."` = '$items_id'";
       $fields[]       = "`".static::$items_id_2."` as items_id_2";
@@ -129,7 +127,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
       } else {
          $fields[] = "'".static::$itemtype_2."' AS itemtype_2";
          if (($itemtype ==  static::$itemtype_2)
-             || is_subclass_of($itemtype,  static::$itemtype_2)) {
+             || is_subclass_of($itemtype, static::$itemtype_2)) {
             $condition_2 = $condition_id_2;
          }
       }
@@ -231,7 +229,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    }
 
 
-  /**
+   /**
     * Get link object between 2 items
     *
     * @since version 0.84
@@ -274,31 +272,43 @@ abstract class CommonDBRelation extends CommonDBConnexity {
     *
     * @return array of search option
    **/
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab = array();
-      $tab['common']           = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[2]['table']         = $this->getTable();
-      $tab[2]['field']         = 'id';
-      $tab[2]['name']          = __('ID');
-      $tab[2]['massiveaction'] = false;
-      $tab[2]['datatype']      = 'number';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
       if (!preg_match('/^itemtype/', static::$itemtype_1)) {
-         $tab[3]['table']         = getTableForItemType(static::$itemtype_1);
-         $tab[3]['field']         = static::$items_id_1;
-         $tab[3]['name']          = call_user_func(array(static::$itemtype_1, 'getTypeName'));
-         $tab[3]['datatype']      = 'text';
-         $tab[3]['massiveaction'] = false;
+         $tab[] = [
+            'id'                 => '3',
+            'table'              => getTableForItemType(static::$itemtype_1),
+            'field'              => static::$items_id_1,
+            'name'               => call_user_func(array(static::$itemtype_1, 'getTypeName')),
+            'datatype'           => 'text',
+            'massiveaction'      => false
+         ];
       }
 
       if (!preg_match('/^itemtype/', static::$itemtype_2)) {
-         $tab[4]['table']         = getTableForItemType(static::$itemtype_2);
-         $tab[4]['field']         = static::$items_id_2;
-         $tab[4]['name']          = call_user_func(array(static::$itemtype_2, 'getTypeName'));
-         $tab[4]['datatype']      = 'text';
-         $tab[4]['massiveaction'] = false;
+         $tab[] = [
+            'id'                 => '4',
+            'table'              => getTableForItemType(static::$itemtype_2),
+            'field'              => static::$items_id_2,
+            'name'               => call_user_func(array(static::$itemtype_2, 'getTypeName')),
+            'datatype'           => 'text',
+            'massiveaction'      => false
+         ];
       }
 
       return $tab;
@@ -429,7 +439,6 @@ abstract class CommonDBRelation extends CommonDBConnexity {
          $check_entity = false; // If no item, then, we cannot check entities
       }
 
-
       if ($OneWriteIsEnough) {
          if ((!$can1 && !$can2)
              || ($can1 && !$view2)
@@ -441,7 +450,6 @@ abstract class CommonDBRelation extends CommonDBConnexity {
             return false;
          }
       }
-
 
       // Check coherency of entities
       if ($check_entity && static::$check_entity_coherency) {
@@ -921,7 +929,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    }
 
 
-  /**
+   /**
     * Actions done after the DELETE of the item in the database
     *
     * @since version 0.84
@@ -965,7 +973,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    }
 
 
-  /**
+   /**
     * @since version 0.84
     *
     * @param $itemtype
@@ -1434,7 +1442,7 @@ abstract class CommonDBRelation extends CommonDBConnexity {
                         $ma->addMessage($link->getErrorMessage(ERROR_RIGHT));
                      }
                   }
-                }
+               }
             }
             return;
 
@@ -1516,4 +1524,3 @@ abstract class CommonDBRelation extends CommonDBConnexity {
    }
 
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -47,41 +46,41 @@ if (!defined('GLPI_ROOT')) {
 **/
 class NotificationTarget extends CommonDBChild {
 
-   var $prefix                      = '';
+   public $prefix                      = '';
    // From CommonDBChild
-   static public $itemtype          = 'Notification';
-   static public $items_id          = 'notifications_id';
-   public $table                    = 'glpi_notificationtargets';
+   static public $itemtype             = 'Notification';
+   static public $items_id             = 'notifications_id';
+   public $table                       = 'glpi_notificationtargets';
 
-   var $notification_targets        = array();
-   var $notification_targets_labels = array();
-   var $notificationoptions         = 0;
+   public $notification_targets        = array();
+   public $notification_targets_labels = array();
+   public $notificationoptions         = 0;
 
    // Tags which have data in HTML : do not try to clean them
-   public $html_tags                = array();
+   public $html_tags                   = array();
 
    // Data from the objet which can be used by the template
    // See https://forge.indepnet.net/projects/5/wiki/NotificationTemplatesTags
-   var $datas                       = array();
-   var $tag_descriptions            = array();
+   public $datas                       = array();
+   public $tag_descriptions            = array();
 
    // From CommonDBTM
-   public $dohistory                = true;
+   public $dohistory                   = true;
 
    //Array to store emails by notification
-   var $target                      = array();
-   var $entity                      = '';
+   public $target                      = array();
+   public $entity                      = '';
 
    //Object which raises the notification event
-   var $obj                         = null;
+   public $obj                         = null;
 
    //Object which is associated with the event
-   var $target_object               = array();
+   public $target_object               = array();
 
    // array of event name => event label
-   var $events                      = array();
-   var $options                     = array();
-   var $raiseevent                  = '';
+   public $events                      = array();
+   public $options                     = array();
+   public $raiseevent                  = '';
 
    const TAG_LANGUAGE               = 'lang';
    const TAG_VALUE                  = 'tag';
@@ -265,8 +264,8 @@ class NotificationTarget extends CommonDBChild {
          if (isset($options['entities_id'])) {
             $entity = $options['entities_id'];
 
-         //Item which raises the event contains an entityID
          } else if ($item->getEntityID() >= 0) {
+            //Item which raises the event contains an entityID
             $entity = $item->getEntityID();
 
          }
@@ -288,7 +287,7 @@ class NotificationTarget extends CommonDBChild {
    **/
    static function getInstanceByType($itemtype, $event='', $options=array()) {
 
-      if (($itemtype != '')
+      if (($itemtype)
           && ($item = getItemForItemtype($itemtype))) {
          return self::getInstance($item, $event, $options);
       }
@@ -441,7 +440,6 @@ class NotificationTarget extends CommonDBChild {
       // Default USER TYPE is ANONYMOUS
       $notificationoption = array('usertype' => self::ANONYMOUS_USER);
 
-
       if (isset($data['language'])) {
          $new_lang = trim($data['language']);
       }
@@ -474,7 +472,8 @@ class NotificationTarget extends CommonDBChild {
          }
          // It is a GLPI user :
          $notificationoption['usertype'] = self::GLPI_USER;
-         if (Auth::isAlternateAuth($user->fields['authtype'])
+         if ($user->fields['authtype'] == Auth::LDAP
+             || Auth::isAlternateAuth($user->fields['authtype'])
              || (($user->fields['authtype'] == Auth::NOT_YET_AUTHENTIFIED)
                  && Auth::isAlternateAuth(Auth::checkAlternateAuthSystems()))) {
             $notificationoption['usertype'] = self::EXTERNAL_USER;
@@ -577,7 +576,7 @@ class NotificationTarget extends CommonDBChild {
    function getItemGroupAddress() {
 
       if (!empty($this->target_object)) {
-         foreach($this->target_object as $val){
+         foreach ($this->target_object as $val) {
             if ($val->fields['groups_id'] > 0) {
                $this->getAddressesByGroup(0, $val->fields['groups_id']);
             }
@@ -992,7 +991,7 @@ class NotificationTarget extends CommonDBChild {
 
                default :
                   //Maybe a target specific to a type
-                  $this->getSpecificTargets($data,$options);
+                  $this->getSpecificTargets($data, $options);
             }
             break;
 
@@ -1013,11 +1012,11 @@ class NotificationTarget extends CommonDBChild {
 
          default :
             //Maybe a target specific to a type
-            $this->getSpecificTargets($data,$options);
+            $this->getSpecificTargets($data, $options);
       }
       // action for target from plugin
       $this->data = $data;
-      Plugin::doHook('item_action_targets',$this);
+      Plugin::doHook('item_action_targets', $this);
 
    }
 
@@ -1115,7 +1114,7 @@ class NotificationTarget extends CommonDBChild {
             $tag = "##FOREACH".$p['tag']."## ##ENDFOREACH".$p['tag']."##";
             $this->tag_descriptions[self::TAG_VALUE][$tag] = $p;
 
-          } else {
+         } else {
             if ($p['value']) {
                $tag = "##".$p['tag']."##";
                $this->tag_descriptions[self::TAG_VALUE][$tag] = $p;
@@ -1146,7 +1145,7 @@ class NotificationTarget extends CommonDBChild {
             case 'Notification' :
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable($this->getTable(),
-                                             "notifications_id = '".$item->getID()."'");
+                                             ['notifications_id' => $item->getID()]);
                }
                return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
          }
@@ -1247,7 +1246,7 @@ class NotificationTarget extends CommonDBChild {
             }
          }
       } else {
-      echo "<tr class='tab_bg_2'><td class='b center'>".__('No item found')."</td></tr>";
+         echo "<tr class='tab_bg_2'><td class='b center'>".__('No item found')."</td></tr>";
       }
       echo "</table>";
    }
@@ -1270,4 +1269,3 @@ class NotificationTarget extends CommonDBChild {
    }
 
 }
-?>

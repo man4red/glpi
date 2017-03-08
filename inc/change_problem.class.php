@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -66,7 +65,7 @@ class Change_Problem extends CommonDBRelation{
 
 
    static function getTypeName($nb=0) {
-      return _n('Link Problem/Change','Links Problem/Change',$nb);
+      return _n('Link Problem/Change', 'Links Problem/Change', $nb);
    }
 
 
@@ -81,14 +80,14 @@ class Change_Problem extends CommonDBRelation{
             case 'Change' :
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable('glpi_changes_problems',
-                                             "`changes_id` = '".$item->getID()."'");
+                                             ['changes_id' => $item->getID()]);
                }
                return self::createTabEntry(Problem::getTypeName(Session::getPluralNumber()), $nb);
 
             case 'Problem' :
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable('glpi_changes_problems',
-                                             "`problems_id` = '".$item->getID()."'");
+                                             ['problems_id' => $item->getID()]);
                }
                return self::createTabEntry(Change::getTypeName(Session::getPluralNumber()), $nb);
          }
@@ -109,16 +108,6 @@ class Change_Problem extends CommonDBRelation{
             break;
       }
       return true;
-   }
-
-
-   /**
-    * Get search function for the class
-    *
-    * @return array of search option
-   **/
-   function getSearchOptions() {
-      return parent::getSearchOptions();
    }
 
 
@@ -175,7 +164,7 @@ class Change_Problem extends CommonDBRelation{
          echo "</td><td>";
          if (Session::haveRight('change', CREATE)) {
             echo "<a href='".Toolbox::getItemTypeFormURL('Change')."?problems_id=$ID'>";
-            _e('Create a change from this problem');
+            echo __('Create a change from this problem');
             echo "</a>";
          }
          echo "</td></tr></table>";
@@ -195,7 +184,7 @@ class Change_Problem extends CommonDBRelation{
       echo "<tr class='noHover'><th colspan='12'>".Change::getTypeName($numrows)."</th>";
       echo "</tr>";
       if ($numrows) {
-         Change::commonListHeader(Search::HTML_OUTPUT,'mass'.__CLASS__.$rand);
+         Change::commonListHeader(Search::HTML_OUTPUT, 'mass'.__CLASS__.$rand);
          Session::initNavigateListItems('Change',
                                  //TRANS : %1$s is the itemtype name,
                                  //        %2$s is the name of the item (used for headings of a list)
@@ -210,7 +199,7 @@ class Change_Problem extends CommonDBRelation{
                                                  'id_for_massiveaction'   => $data['linkID']));
             $i++;
          }
-         Change::commonListHeader(Search::HTML_OUTPUT,'mass'.__CLASS__.$rand);
+         Change::commonListHeader(Search::HTML_OUTPUT, 'mass'.__CLASS__.$rand);
       }
       echo "</table>";
 
@@ -291,7 +280,7 @@ class Change_Problem extends CommonDBRelation{
       echo "<tr class='noHover'><th colspan='12'>".Problem::getTypeName($numrows)."</th>";
       echo "</tr>";
       if ($numrows) {
-         Problem::commonListHeader(Search::HTML_OUTPUT,'mass'.__CLASS__.$rand);
+         Problem::commonListHeader(Search::HTML_OUTPUT, 'mass'.__CLASS__.$rand);
          Session::initNavigateListItems('Problem',
                                  //TRANS : %1$s is the itemtype name,
                                  //        %2$s is the name of the item (used for headings of a list)
@@ -306,7 +295,7 @@ class Change_Problem extends CommonDBRelation{
                                                  'id_for_massiveaction'   => $data['linkID']));
             $i++;
          }
-         Problem::commonListHeader(Search::HTML_OUTPUT,'mass'.__CLASS__.$rand);
+         Problem::commonListHeader(Search::HTML_OUTPUT, 'mass'.__CLASS__.$rand);
       }
       echo "</table>";
 
@@ -321,4 +310,3 @@ class Change_Problem extends CommonDBRelation{
 
 
 }
-?>

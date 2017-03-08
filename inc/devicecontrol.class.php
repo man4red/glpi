@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -45,7 +44,7 @@ if (!defined('GLPI_ROOT')) {
 class DeviceControl extends CommonDevice {
 
    static protected $forward_entity_to = array('Item_DeviceControl', 'Infocom');
-   
+
    static function getTypeName($nb=0) {
       return _n('Controller', 'Controllers', $nb);
    }
@@ -60,6 +59,9 @@ class DeviceControl extends CommonDevice {
                                array('name'  => 'interfacetypes_id',
                                      'label' => __('Interface'),
                                      'type'  => 'dropdownValue'),
+                               array('name'  => 'devicecontrolmodels_id',
+                                     'label' => __('Model'),
+                                     'type'  => 'dropdownValue'),
                                array('name'  => 'none',
                                      'label' => RegisteredID::getTypeName(Session::getPluralNumber()).
                                         RegisteredID::showAddChildButtonForItemForm($this,
@@ -69,19 +71,32 @@ class DeviceControl extends CommonDevice {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                 = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'is_raid',
+         'name'               => __('RAID'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[12]['table']    = $this->getTable();
-      $tab[12]['field']    = 'is_raid';
-      $tab[12]['name']     = __('RAID');
-      $tab[12]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '14',
+         'table'              => 'glpi_interfacetypes',
+         'field'              => 'name',
+         'name'               => __('Interface'),
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[14]['table']    = 'glpi_interfacetypes';
-      $tab[14]['field']    = 'name';
-      $tab[14]['name']     = __('Interface');
-      $tab[14]['datatype'] = 'dropdown';
+      $tab[] = [
+         'id'                 => '15',
+         'table'              => 'glpi_devicecontrolmodels',
+         'field'              => 'name',
+         'name'               => __('Model'),
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -133,4 +148,3 @@ class DeviceControl extends CommonDevice {
       }
    }
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -101,7 +100,7 @@ class NotificationTemplate extends CommonDBTM {
          return false;
       }
 
-     $spotted = false;
+      $spotted = false;
 
       if (empty($ID)) {
          if ($this->getEmpty()) {
@@ -141,28 +140,40 @@ class NotificationTemplate extends CommonDBTM {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                     = array();
-      $tab['common']           = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']         = $this->getTable();
-      $tab[1]['field']         = 'name';
-      $tab[1]['name']          = __('Name');
-      $tab[1]['datatype']      = 'itemlink';
-      $tab[1]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[4]['table']         = $this->getTable();
-      $tab[4]['field']         = 'itemtype';
-      $tab[4]['name']          = __('Type');
-      $tab[4]['datatype']      = 'itemtypename';
-      $tab[4]['itemtype_list'] = 'notificationtemplates_types';
-      $tab[4]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'itemtype',
+         'name'               => __('Type'),
+         'datatype'           => 'itemtypename',
+         'itemtype_list'      => 'notificationtemplates_types',
+         'massiveaction'      => false
+      ];
 
-      $tab[16]['table']        = $this->getTable();
-      $tab[16]['field']        = 'comment';
-      $tab[16]['name']         = __('Comments');
-      $tab[16]['datatype']     = 'text';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
       return $tab;
    }
@@ -208,8 +219,8 @@ class NotificationTemplate extends CommonDBTM {
     *
     * @return id of the template in templates_by_languages / false if computation failed
    **/
-   function getTemplateByLanguage(NotificationTarget $target, $user_infos=array(), $event,
-                                  $options=array()) {
+   function getTemplateByLanguage(NotificationTarget $target, $user_infos=[],
+                                  $event='', $options=[]) {
 
       $lang     = array();
       $language = $user_infos['language'];
@@ -219,7 +230,7 @@ class NotificationTemplate extends CommonDBTM {
       } else {
          $additionnaloption =  array();
       }
-      
+
       $tid  = $language;
       $tid .= serialize($additionnaloption);
 
@@ -227,22 +238,34 @@ class NotificationTemplate extends CommonDBTM {
 
       if (!isset($this->templates_by_languages[$tid])) {
          //Switch to the desired language
-         $start = microtime(true);
+         $bak_dropdowntranslations = (isset($_SESSION['glpi_dropdowntranslations']) ? $_SESSION['glpi_dropdowntranslations'] : null);
+         $_SESSION['glpi_dropdowntranslations'] = DropdownTranslation::getAvailableTranslations($language);
          Session::loadLanguage($language);
+         $bak_language = $_SESSION["glpilanguage"];
+         $_SESSION["glpilanguage"] = $language;
 
          //If event is raised by a plugin, load it in order to get the language file available
          if ($plug = isPluginItemType(get_class($target->obj))) {
-            Plugin::loadLang(strtolower($plug['plugin']),$language);
+            Plugin::loadLang(strtolower($plug['plugin']), $language);
          }
 
          //Get template's language data for in this language
          $options['additionnaloption'] = $additionnaloption;
-         $data = &$target->getForTemplate($event,$options);
+         $data = &$target->getForTemplate($event, $options);
 
          $footer_string = Html::entity_decode_deep(sprintf(__('Automatically generated by GLPI %s'), GLPI_VERSION));
 
+         $add_header                = Html::entity_decode_deep($target->getContentHeader());
+         $add_footer                = Html::entity_decode_deep($target->getContentFooter());
+
          //Restore default language
+         $_SESSION["glpilanguage"] = $bak_language;
          Session::loadLanguage();
+         if ($bak_dropdowntranslations !== null) {
+            $_SESSION['glpi_dropdowntranslations'] = $bak_dropdowntranslations;
+         } else {
+            unset($_SESSION['glpi_dropdowntranslations']);
+         }
          if ($plug = isPluginItemType(get_class($target->obj))) {
             Plugin::loadLang(strtolower($plug['plugin']));
          }
@@ -262,8 +285,6 @@ class NotificationTemplate extends CommonDBTM {
             $lang['subject']           = $target->getSubjectPrefix($event) .
                                           self::process($template_datas['subject'], $data);
             $lang['content_html']      = '';
-            $add_header                = Html::entity_decode_deep($target->getContentHeader());
-            $add_footer                = Html::entity_decode_deep($target->getContentFooter());
 
             //If no html content, then send only in text
             if (!empty($template_datas['content_html'])) {
@@ -347,7 +368,7 @@ class NotificationTemplate extends CommonDBTM {
          foreach ($out[3] as $id => $tag_infos) {
             $regex = "/".$out[0][$id]."(.*)##ENDFOREACH".$tag_infos."##/Uis";
 
-            if (preg_match($regex,$string,$tag_out)
+            if (preg_match($regex, $string, $tag_out)
                 && isset($data[$tag_infos])
                 && is_array($data[$tag_infos])) {
 
@@ -364,9 +385,9 @@ class NotificationTemplate extends CommonDBTM {
                      }
 
                      if (isset($out[2][$id]) && $out[2][$id]) {
-                        $foreachvalues = array_slice($foreachvalues,0,$out[2][$id]);
+                        $foreachvalues = array_slice($foreachvalues, 0, $out[2][$id]);
                      } else {
-                        $foreachvalues = array_slice($foreachvalues,0,1);
+                        $foreachvalues = array_slice($foreachvalues, 0, 1);
                      }
                   }
                }
@@ -381,7 +402,7 @@ class NotificationTemplate extends CommonDBTM {
                   $tmp                    = self::processIf($tag_out[1], $data_lang_foreach);
                   $output_foreach_string .= strtr($tmp, $data_lang_foreach);
                }
-               $string = str_replace($tag_out[0],$output_foreach_string, $string);
+               $string = str_replace($tag_out[0], $output_foreach_string, $string);
 
             } else {
                $string = str_replace($tag_out, '', $string);
@@ -403,7 +424,7 @@ class NotificationTemplate extends CommonDBTM {
    **/
    static function processIf($string, $data) {
 
-      if (preg_match_all("/##IF([a-z\.]*)[=]?(.*?)##/i",$string,$out)) {
+      if (preg_match_all("/##IF([a-z\.]*)[=]?(.*?)##/i", $string, $out)) {
          foreach ($out[1] as $key => $tag_infos) {
             $if_field = $tag_infos;
             //Get the field tag value (if one)
@@ -411,7 +432,7 @@ class NotificationTemplate extends CommonDBTM {
             //Get the else tag value (if one)
             $regex_else = "/##ELSE".$if_field."[=]?.*##(.*)##ENDELSE".$if_field."##/Uis";
 
-            if (empty($out[2][$key]) && !strlen($out[2][$key]) ) { // No = : check if ot empty or not null
+            if (empty($out[2][$key]) && !strlen($out[2][$key])) { // No = : check if ot empty or not null
 
                if (isset($data['##'.$if_field.'##'])
                    && $data['##'.$if_field.'##'] != '0'
@@ -440,12 +461,12 @@ class NotificationTemplate extends CommonDBTM {
 
             // Force only one replacement to permit multiple use of the same condition
             if ($condition_ok) { // Do IF
-               $string = preg_replace($regex_if, "\\1", $string,1);
-               $string = preg_replace($regex_else, "",  $string,1);
+               $string = preg_replace($regex_if, "\\1", $string, 1);
+               $string = preg_replace($regex_else, "", $string, 1);
 
             } else { // Do ELSE
-               $string = preg_replace($regex_if, "", $string,1);
-               $string = preg_replace($regex_else, "\\1",  $string,1);
+               $string = preg_replace($regex_if, "", $string, 1);
+               $string = preg_replace($regex_else, "\\1", $string, 1);
             }
          }
       }
@@ -512,14 +533,11 @@ class NotificationTemplate extends CommonDBTM {
       $mailing_options['content_html'] = $template_data['content_html'];
       $mailing_options['content_text'] = $template_data['content_text'];
       $mailing_options['items_id']     = $target->obj->getField('id');
-      if ($target->obj->getType() == 'Ticket') {
-         if (isset($target->obj->documents)) {
-            $mailing_options['documents'] = $target->obj->documents;
-         }
+      if (isset($target->obj->documents)) {
+         $mailing_options['documents'] = $target->obj->documents;
       }
 
       return $mailing_options;
    }
 
 }
-?>

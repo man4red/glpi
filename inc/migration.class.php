@@ -1,45 +1,39 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
-/** @file
-* @brief
-*/
-
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
-// class Central
 /**
  * Migration Class
  *
@@ -53,10 +47,16 @@ class Migration {
    private   $lastMessage;
    private   $log_errors = 0;
    private   $current_message_area_id;
+   private   $queries = [
+      'pre'    => [],
+      'post'   => []
+   ];
 
+   const PRE_QUERY = 'pre';
+   const POST_QUERY = 'post';
 
    /**
-    * @param $ver    number of new version of GLPI
+    * @param integer $ver Version number
    **/
    function __construct($ver) {
 
@@ -64,11 +64,14 @@ class Migration {
       $this->setVersion($ver);
    }
 
-
    /**
+    * Set version
+    *
     * @since version 0.84
     *
-    * @param $ver    number of new version
+    * @param integer $ver Version number
+    *
+    * @return void
    **/
    function setVersion($ver) {
 
@@ -79,9 +82,13 @@ class Migration {
 
 
    /**
+    * Add new message
+    *
     * @since version 0.84
     *
-    * @param $id
+    * @param string $id Area ID
+    *
+    * @return void
    **/
    function addNewMessageArea($id) {
 
@@ -94,9 +101,11 @@ class Migration {
 
 
    /**
-    * Flush previous display message in log file
+    * Flush previous displayed message in log file
     *
     * @since version 0.84
+    *
+    * @return void
    **/
    function flushLogDisplayMessage() {
 
@@ -111,7 +120,9 @@ class Migration {
    /**
     * Additional message in global message
     *
-    * @param $msg    text  to display
+    * @param string $msg text  to display
+    *
+    * @return void
    **/
    function displayMessage($msg) {
 
@@ -131,12 +142,14 @@ class Migration {
 
 
    /**
-    * log message for this migration
+    * Log message for this migration
     *
     * @since version 0.84
     *
-    * @param $message
-    * @param $warning
+    * @param string  $message Message to display
+    * @param boolean $warning Is a warning
+    *
+    * @return void
    **/
    function log($message, $warning) {
 
@@ -146,18 +159,20 @@ class Migration {
          $log_file_name = 'migration_to_'.$this->version;
       }
 
-     // Do not log if more than 3 log error
-     if ($this->log_errors < 3
+      // Do not log if more than 3 log error
+      if ($this->log_errors < 3
          && !Toolbox::logInFile($log_file_name, $message . ' @ ', true)) {
          $this->log_errors++;
-     }
+      }
    }
 
 
    /**
     * Display a title
     *
-    * @param $title string
+    * @param string $title Title to display
+    *
+    * @return void
    **/
    function displayTitle($title) {
       echo "<h3>".Html::entities_deep($title)."</h3>";
@@ -167,8 +182,10 @@ class Migration {
    /**
     * Display a Warning
     *
-    * @param $msg    string
-    * @param $red    boolean (false by default)
+    * @param string  $msg Message to display
+    * @param boolean $red Displays with red class (false by default)
+    *
+    * @return void
    **/
    function displayWarning($msg, $red=false) {
 
@@ -182,11 +199,12 @@ class Migration {
    /**
     * Define field's format
     *
-    * @param $type            string   can be bool, string, integer, date, datatime, text, longtext,
-    *                                         autoincrement, char
-    * @param $default_value   string   new field's default value,
-    *                                  if a specific default value needs to be used
-    * @param $nodefault       bolean   (false by default)
+    * @param string  $type          can be bool, char, string, integer, date, datetime, text, longtext or autoincrement
+    * @param string  $default_value new field's default value,
+    *                               if a specific default value needs to be used
+    * @param boolean $nodefault     No default value (false by default)
+    *
+    * @return string
    **/
    private function fieldFormat($type, $default_value, $nodefault=false) {
 
@@ -301,18 +319,21 @@ class Migration {
    /**
     * Add a new GLPI normalized field
     *
-    * @param $table     string
-    * @param $field     string   to add
-    * @param $type      string   (see fieldFormat)
-    * @param $options   array
-    *    - update    : if not empty = value of $field (must be protected)
-    *    - condition : if needed
-    *    - value     : default_value new field's default value, if a specific default value needs to be used
-    *    - nodefault : do not define default value (default false)
-    *    - comment   : comment to be added during field creation
-    *    - after     : where adding the new field
+    * @param string $table   Table name
+    * @param string $field   Field name
+    * @param string $type    Field type, @see Migration::fieldFormat()
+    * @param array  $options Options:
+    *                         - update    : if not empty = value of $field (must be protected)
+    *                         - condition : if needed
+    *                         - value     : default_value new field's default value, if a specific default value needs to be used
+    *                         - nodefault : do not define default value (default false)
+    *                         - comment   : comment to be added during field creation
+    *                         - after     : where adding the new field
+    *                         - null      : value could be NULL (default false)
+    *
+    * @return boolean
    **/
-   function addField($table, $field, $type, $options=array()) {
+   function addField($table, $field, $type, $options = []) {
       global $DB;
 
       $params['update']    = '';
@@ -321,6 +342,8 @@ class Migration {
       $params['nodefault'] = false;
       $params['comment']   = '';
       $params['after']     = '';
+      $params['first']     = '';
+      $params['null']      = false;
 
       if (is_array($options) && count($options)) {
          foreach ($options as $key => $val) {
@@ -330,20 +353,26 @@ class Migration {
 
       $format = $this->fieldFormat($type, $params['value'], $params['nodefault']);
 
-      if ($params['comment']) {
+      if (!empty($params['comment'])) {
          $params['comment'] = " COMMENT '".addslashes($params['comment'])."'";
       }
 
-      if ($params['after']) {
+      if (!empty($params['after'])) {
          $params['after'] = " AFTER `".$params['after']."`";
+      } else if (!empty($params['first'])) {
+         $params['first'] = " FIRST ";
+      }
+
+      if ($params['null']) {
+         $params['null'] = 'NULL ';
       }
 
       if ($format) {
          if (!FieldExists($table, $field, false)) {
             $this->change[$table][] = "ADD `$field` $format ".$params['comment'] ." ".
-                                           $params['after']."";
+                                      $params['null'].$params['first'].$params['after'];
 
-            if (isset($params['update']) && strlen($params['update'])) {
+            if (!empty($params['update'])) {
                $this->migrationOneTable($table);
                $query = "UPDATE `$table`
                          SET `$field` = ".$params['update']." ".
@@ -360,16 +389,18 @@ class Migration {
    /**
     * Modify field for migration
     *
-    * @param $table        string
-    * @param $oldfield     string   old name of the field
-    * @param $newfield     string   new name of the field
-    * @param $type         string   (see fieldFormat)
-    * @param $options      array
-    *    - default_value new field's default value, if a specific default value needs to be used
-    *    - comment comment to be added during field creation
-    *    - nodefault : do not define default value (default false)
+    * @param string $table    Table name
+    * @param string $oldfield Old name of the field
+    * @param string $newfield New name of the field
+    * @param string $type     Field type, @see Migration::fieldFormat()
+    * @param array  $options  Options:
+    *                         - default_value new field's default value, if a specific default value needs to be used
+    *                         - comment comment to be added during field creation
+    *                         - nodefault : do not define default value (default false)
+    *
+    * @return boolean
    **/
-   function changeField($table, $oldfield, $newfield, $type, $options=array()) {
+   function changeField($table, $oldfield, $newfield, $type, $options = []) {
 
       $params['value']     = NULL;
       $params['nodefault'] = false;
@@ -386,7 +417,6 @@ class Migration {
       if ($params['comment']) {
          $params['comment'] = " COMMENT '".addslashes($params['comment'])."'";
       }
-
 
       if (FieldExists($table, $oldfield, false)) {
          // in order the function to be replayed
@@ -409,8 +439,10 @@ class Migration {
    /**
     * Drop field for migration
     *
-    * @param $table  string
-    * @param $field  string   field to drop
+    * @param string $table Table name
+    * @param string $field Field name
+    *
+    * @return void
    **/
    function dropField($table, $field) {
 
@@ -423,7 +455,9 @@ class Migration {
    /**
     * Drop immediatly a table if it exists
     *
-    * @param table   string
+    * @param string $table Table name
+    *
+    * @return void
    **/
    function dropTable($table) {
       global $DB;
@@ -437,11 +471,13 @@ class Migration {
    /**
     * Add index for migration
     *
-    * @param $table        string
-    * @param $fields       string or array
-    * @param $indexname    string            if empty =$fields (default '')
-    * @param $type         string            index or unique (default 'INDEX')
-    * @param $len          integer           for field length (default 0)
+    * @param string       $table     Table name
+    * @param string|array $fields    Field(s) name(s)
+    * @param string       $indexname Index name, $fields if empty, defaults to empty
+    * @param string       $type      Index type (index or unique - default 'INDEX')
+    * @param integer      $len       Field length (default 0)
+    *
+    * @return void
    **/
    function addKey($table, $fields, $indexname='', $type='INDEX', $len=0) {
 
@@ -454,7 +490,7 @@ class Migration {
          }
       }
 
-      if (!isIndex($table,$indexname)) {
+      if (!isIndex($table, $indexname)) {
          if (is_array($fields)) {
             if ($len) {
                $fields = "`".implode($fields, "`($len), `")."`($len)";
@@ -475,12 +511,14 @@ class Migration {
    /**
     * Drop index for migration
     *
-    * @param $table     string
-    * @param $indexname string
+    * @param string $table     Table name
+    * @param string $indexname Index name
+    *
+    * @return void
    **/
    function dropKey($table, $indexname) {
 
-      if (isIndex($table,$indexname)) {
+      if (isIndex($table, $indexname)) {
          $this->change[$table][] = "DROP INDEX `$indexname`";
       }
    }
@@ -489,8 +527,10 @@ class Migration {
    /**
     * Rename table for migration
     *
-    * @param $oldtable  string
-    * @param $newtable  string
+    * @param string $oldtable Old table name
+    * @param string $newtable new table name
+    *
+    * @return void
    **/
    function renameTable($oldtable, $newtable) {
       global $DB;
@@ -507,8 +547,10 @@ class Migration {
     *
     * @since version 0.84
     *
-    * @param $oldtable  string   The name of the table already inside the database
-    * @param $newtable  string   The copy of the old table
+    * @param string $oldtable The name of the table already inside the database
+    * @param string $newtable The copy of the old table
+    *
+    * @return void
    **/
    function copyTable($oldtable, $newtable) {
       global $DB;
@@ -516,9 +558,9 @@ class Migration {
       if (!TableExists($newtable)
           && TableExists($oldtable)) {
 
-//          // Try to do a flush tables if RELOAD privileges available
-//          $query = "FLUSH TABLES `$oldtable`, `$newtable`";
-//          $DB->query($query);
+         // Try to do a flush tables if RELOAD privileges available
+         // $query = "FLUSH TABLES `$oldtable`, `$newtable`";
+         // $DB->query($query);
 
          $query = "CREATE TABLE `$newtable` LIKE `$oldtable`";
          $DB->queryOrDie($query, $this->version." create $newtable");
@@ -536,10 +578,10 @@ class Migration {
     *
     * @since version 0.84
     *
-    * @param $table  string   The table to alter
-    * @param $input  array    The elements to add inside the table
+    * @param string $table The table to alter
+    * @param array  $input The elements to add inside the table
     *
-    * @return id of the last item inserted by mysql
+    * @return integer id of the last item inserted by mysql
    **/
    function insertInTable($table, array $input) {
       global $DB;
@@ -568,7 +610,9 @@ class Migration {
    /**
     * Execute migration for only one table
     *
-    * @param $table  string
+    * @param string $table Table name
+    *
+    * @return void
    **/
    function migrationOneTable($table) {
       global $DB;
@@ -585,11 +629,22 @@ class Migration {
 
    /**
     * Execute global migration
+    *
+    * @return void
    **/
    function executeMigration() {
+      global $DB;
+
+      foreach ($this->queries[self::PRE_QUERY] as $query) {
+         $DB->queryOrDie($query['query'], $query['message']);
+      }
 
       foreach ($this->change as $table => $tab) {
          $this->migrationOneTable($table);
+      }
+
+      foreach ($this->queries[self::POST_QUERY] as $query) {
+         $DB->queryOrDie($query['query'], $query['message']);
       }
 
       // end of global message
@@ -600,19 +655,19 @@ class Migration {
    /**
     * Register a new rule
     *
-    * @param $rule      Array of fields of glpi_rules
-    * @param $criteria  Array of Array of fields of glpi_rulecriterias
-    * @param $actions   Array of Array of fields of glpi_ruleactions
+    * @param array $rule     Array of fields of glpi_rules
+    * @param array $criteria Array of Array of fields of glpi_rulecriterias
+    * @param array $actions  Array of Array of fields of glpi_ruleactions
     *
     * @since version 0.84
     *
-    * @return integer : new rule id
+    * @return integer new rule id
    **/
    function createRule(Array $rule, Array $criteria, Array $actions) {
       global $DB;
 
       // Avoid duplicate - Need to be improved using a rule uuid of other
-      if (countElementsInTable('glpi_rules', "`name`='".$DB->escape($rule['name'])."'")) {
+      if (countElementsInTable('glpi_rules', ['name' => $DB->escape($rule['name'])])) {
          return 0;
       }
       $rule['comment']     = sprintf(__('Automatically generated by GLPI %s'), $this->version);
@@ -678,8 +733,10 @@ class Migration {
     *
     * @since version 0.85
     *
-    * @param $toadd   array   items to add : itemtype => array of values
-    * @param $todel   array   items to del : itemtype => array of values
+    * @param array $toadd items to add : itemtype => array of values
+    * @param array $todel items to del : itemtype => array of values
+    *
+    * @return void
    **/
    function updateDisplayPrefs($toadd=array(), $todel=array()) {
       global $DB;
@@ -700,7 +757,7 @@ class Migration {
                                WHERE `users_id` = '".$data['users_id']."'
                                      AND `itemtype` = '$type'";
                      $result = $DB->query($query);
-                     $rank   = $DB->result($result,0,0);
+                     $rank   = $DB->result($result, 0, 0);
                      $rank++;
 
                      foreach ($tab as $newval) {
@@ -748,5 +805,44 @@ class Migration {
       }
    }
 
+   /**
+    * Add a migration SQL query
+    *
+    * @param string $type    Either self::PRE_QUERY or self::POST_QUERY
+    * @param string $query   Query to execute
+    * @param string $message Mesage to display on error, defaults to null
+    *
+    * @return Migration
+    */
+   private function addQuery($type, $query, $message = null) {
+      $this->queries[$type][] =  [
+         'query'     => $query,
+         'message'   => $message
+      ];
+      return $this;
+   }
+
+   /**
+    * Add a pre migration SQL query
+    *
+    * @param string $query   Query to execute
+    * @param string $message Mesage to display on error, defaults to null
+    *
+    * @return Migration
+    */
+   public function addPreQuery($query, $message = null) {
+      return $this->addQuery(self::PRE_QUERY, $query, $message);
+   }
+
+   /**
+    * Add a post migration SQL query
+    *
+    * @param string $query   Query to execute
+    * @param string $message Mesage to display on error, defaults to null
+    *
+    * @return Migration
+    */
+   public function addPostQuery($query, $message = null) {
+      return $this->addQuery(self::POST_QUERY, $query, $message);
+   }
 }
-?>

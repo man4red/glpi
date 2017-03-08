@@ -1,41 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -245,6 +244,10 @@ class RuleTicket extends Rule {
                   if ($action->fields['field'] == 'locations_id' && isset($output['items_locations'])) {
                      $output['locations_id'] = $output['items_locations'];
                   }
+                  if ($action->fields['field'] == '_groups_id_requester'
+                      && isset($output['items_groups'])) {
+                     $output['_groups_id_requester'] = $output['items_groups'];
+                  }
                   break;
 
                case 'compute' :
@@ -288,8 +291,8 @@ class RuleTicket extends Rule {
                         $result = array();
                   }
                   if (!empty($result)) {
-                     $output["itemtype"] = $result["itemtype"];
-                     $output["items_id"] = $result["id"];
+                     $output["items_id"] = array();
+                     $output["items_id"][$result["itemtype"]][] = $result["id"];
                   }
                   break;
             }
@@ -363,6 +366,12 @@ class RuleTicket extends Rule {
       $criterias['items_locations']['name']                 = __('Item location');
       $criterias['items_locations']['linkfield']            = 'items_locations';
       $criterias['items_locations']['type']                 = 'dropdown';
+
+      $criterias['items_groups']['table']                   = 'glpi_groups';
+      $criterias['items_groups']['field']                   = 'completename';
+      $criterias['items_groups']['name']                    = __('Item group');
+      $criterias['items_groups']['linkfield']               = 'items_groups';
+      $criterias['items_groups']['type']                    = 'dropdown';
 
       $criterias['locations_id']['table']                   = 'glpi_locations';
       $criterias['locations_id']['field']                   = 'completename';
@@ -444,11 +453,21 @@ class RuleTicket extends Rule {
       $criterias['_x-priority']['table']                    = '';
       $criterias['_x-priority']['type']                     = 'text';
 
-      $criterias['slas_id']['table']                        = 'glpi_slas';
-      $criterias['slas_id']['field']                        = 'name';
-      $criterias['slas_id']['name']                         = __('SLA');
-      $criterias['slas_id']['linkfield']                    = 'slas_id';
-      $criterias['slas_id']['type']                         = 'dropdown';
+      $criterias['slts_ttr_id']['table']                    = 'glpi_slts';
+      $criterias['slts_ttr_id']['field']                    = 'name';
+      $criterias['slts_ttr_id']['name']                     = sprintf(__('%1$s %2$s'), __('SLT'),
+                                                                      __('Time to resolve'));
+      $criterias['slts_ttr_id']['linkfield']                = 'slts_ttr_id';
+      $criterias['slts_ttr_id']['type']                     = 'dropdown';
+      $criterias['slts_ttr_id']['condition']                = "`glpi_slts`.`type` = '".SLT::TTR."'";
+
+      $criterias['slts_tto_id']['table']                    = 'glpi_slts';
+      $criterias['slts_tto_id']['field']                    = 'name';
+      $criterias['slts_tto_id']['name']                     = sprintf(__('%1$s %2$s'), __('SLT'),
+                                                                      __('Time to own'));
+      $criterias['slts_tto_id']['linkfield']                = 'slts_tto_id';
+      $criterias['slts_tto_id']['type']                     = 'dropdown';
+      $criterias['slts_tto_id']['condition']                = "`glpi_slts`.`type` = '".SLT::TTO."'";
 
       return $criterias;
    }
@@ -478,10 +497,9 @@ class RuleTicket extends Rule {
       $actions['_groups_id_requester']['type']              = 'dropdown';
       $actions['_groups_id_requester']['table']             = 'glpi_groups';
       $actions['_groups_id_requester']['condition']         = '`is_requester`';
-      $actions['_groups_id_requester']['force_actions']     = array('assign', 'append');
+      $actions['_groups_id_requester']['force_actions']     = array('assign', 'append', 'fromitem');
       $actions['_groups_id_requester']['permitseveral']     = array('append');
       $actions['_groups_id_requester']['appendto']          = '_additional_groups_requesters';
-
 
       $actions['_users_id_assign']['name']                  = __('Technician');
       $actions['_users_id_assign']['type']                  = 'dropdown_assign';
@@ -540,9 +558,21 @@ class RuleTicket extends Rule {
       $actions['affectobject']['force_actions']             = array('affectbyip', 'affectbyfqdn',
                                                                     'affectbymac');
 
-      $actions['slas_id']['table']                          = 'glpi_slas';
-      $actions['slas_id']['name']                           = __('SLA');
-      $actions['slas_id']['type']                           = 'dropdown';
+      $actions['slts_ttr_id']['table']                      = 'glpi_slts';
+      $actions['slts_ttr_id']['field']                      = 'name';
+      $actions['slts_ttr_id']['name']                       = sprintf(__('%1$s %2$s'), __('SLT'),
+                                                                      __('Time to resolve'));
+      $actions['slts_ttr_id']['linkfield']                  = 'slts_ttr_id';
+      $actions['slts_ttr_id']['type']                       = 'dropdown';
+      $actions['slts_ttr_id']['condition']                  = "`glpi_slts`.`type` = '".SLT::TTR."'";
+
+      $actions['slts_tto_id']['table']                      = 'glpi_slts';
+      $actions['slts_tto_id']['field']                      = 'name';
+      $actions['slts_tto_id']['name']                       = sprintf(__('%1$s %2$s'), __('SLT'),
+                                                                      __('Time to own'));
+      $actions['slts_tto_id']['linkfield']                  = 'slts_tto_id';
+      $actions['slts_tto_id']['type']                       = 'dropdown';
+      $actions['slts_tto_id']['condition']                  = "`glpi_slts`.`type` = '".SLT::TTO."'";
 
       $actions['users_id_validate']['name']                 = sprintf(__('%1$s - %2$s'),
                                                                       __('Send an approval request'),
@@ -604,4 +634,3 @@ class RuleTicket extends Rule {
    }
 
 }
-?>

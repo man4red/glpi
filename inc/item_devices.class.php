@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -37,7 +36,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -49,13 +48,13 @@ class Item_Devices extends CommonDBRelation {
    static public $itemtype_1            = 'itemtype';
    static public $items_id_1            = 'items_id';
    static public $mustBeAttached_1      = false;
-   static public $take_entity_1         = false ;
-//    static public $checkItem_1_Rights    = self::DONT_CHECK_ITEM_RIGHTS;
+   static public $take_entity_1         = false;
+   // static public $checkItem_1_Rights    = self::DONT_CHECK_ITEM_RIGHTS;
 
    static protected $notable            = true;
 
    static public $logs_for_item_2       = false;
-   static public $take_entity_2         = true ;
+   static public $take_entity_2         = true;
 
    static public $log_history_1_add     = Log::HISTORY_ADD_DEVICE;
    static public $log_history_1_update  = Log::HISTORY_UPDATE_DEVICE;
@@ -64,9 +63,9 @@ class Item_Devices extends CommonDBRelation {
    static public $log_history_1_unlock  = Log::HISTORY_UNLOCK_DEVICE;
 
    // This var is defined by CommonDBRelation ...
-   var $no_form_page                    = false;
+   public $no_form_page                 = false;
 
-   static protected $forward_entity_to = array('Infocom');
+   static protected $forward_entity_to  = array('Infocom');
 
 
    /**
@@ -107,30 +106,42 @@ class Item_Devices extends CommonDBRelation {
    }
 
 
-   /**
-    * @since version 0.85
-    *
-    * @see CommonDBRelation::getSearchOptions()
-   **/
-   function getSearchOptions() {
-
-      $tab = parent::getSearchOptions();
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
       foreach (static::getSpecificities() as $field => $attributs) {
-         $tab[$attributs['id']] = array('table'         => $this->getTable(),
-                                        'field'         => $field,
-                                        'name'          => $attributs['long name'],
-                                        'massiveaction' => true);
+         switch ($field) {
+            case 'states_id':
+               $table = 'glpi_states';
+               break;
+            case 'locations_id':
+               $table = 'glpi_locations';
+               break;
+            default:
+               $table = $this->getTable();
+         }
+
+         $newtab = [
+            'id'                 => $attributs['id'],
+            'table'              => $table,
+            'field'              => $field,
+            'name'               => $attributs['long name'],
+            'massiveaction'      => true
+         ];
 
          if (isset($attributs['datatype'])) {
-            $tab[$attributs['id']]['datatype'] = $attributs['datatype'];
+            $newtab['datatype'] = $attributs['datatype'];
          }
+         $tab[] = $newtab;
       }
 
-      $tab[80]['table']          = 'glpi_entities';
-      $tab[80]['field']          = 'completename';
-      $tab[80]['name']           = __('Entity');
-      $tab[80]['datatype']       = 'dropdown';
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -149,7 +160,7 @@ class Item_Devices extends CommonDBRelation {
    **/
    static function getSpecificities($specif='') {
 
-      switch($specif) {
+      switch ($specif) {
          case 'serial' :
             return array('long name'  => __('Serial number'),
                          'short name' => __('Serial number'),
@@ -161,6 +172,26 @@ class Item_Devices extends CommonDBRelation {
                          'short name' => __('bus ID'),
                          'size'       => 10,
                          'id'         => 11);
+
+         case 'otherserial':
+            return array('long name'  => __('Inventory number'),
+                         'short name' => __('Inventory number'),
+                         'size'       => 20,
+                         'id'         => 12);
+
+         case 'locations_id':
+            return array('long name'  => __('Location'),
+                         'short name' => __('Location'),
+                         'size'       => 20,
+                         'id'         => 13,
+                         'datatype'   => 'dropdown');
+
+         case 'states_id':
+            return array('long name'  => __('Status'),
+                         'short name' => __('Status'),
+                         'size'       => 20,
+                         'id'         => 14,
+                         'datatype'   => 'dropdown');
       }
       return array();
    }
@@ -169,15 +200,25 @@ class Item_Devices extends CommonDBRelation {
    /**
     * Get the items on which this Item_Device can be attached. For instance, a computer can have
     * any kind of device. Conversely, a soundcard does not concern a NetworkEquipment
+    * A configuration entry is automatically checked in $CFG_GLPI (must be the name of
+    * the class, lowercase, without "_" with extra "_types" at the end; for example
+    * "itemdevicesoundcard_types").
     *
-    * Should be overloaded by Item_Device*
+    * Alternatively, it could be overloaded from subclasses
     *
     * @since version 0.85
     *
     * @return array of the itemtype that can have this Item_Device
    **/
    static function itemAffinity() {
-      return array('Computer');
+      global $CFG_GLPI;
+
+      $conf_param = str_replace('_', '', strtolower(static::class)) . '_types';
+      if (isset($CFG_GLPI[$conf_param])) {
+         return $CFG_GLPI[$conf_param];
+      }
+
+      return $CFG_GLPI["itemdevices_itemaffinity"];
    }
 
 
@@ -224,7 +265,7 @@ class Item_Devices extends CommonDBRelation {
       if (!isset($_SESSION['glpi_item_device_affinities'][$itemtype])) {
          $afffinities = array();
          foreach ($_SESSION['glpi_item_device_affinities'][''] as $item_id => $item_device) {
-            if (in_array($itemtype, $item_device::itemAffinity())) {
+            if (in_array($itemtype, $item_device::itemAffinity()) || in_array('*', $item_device::itemAffinity())) {
                $afffinities[$item_id] = $item_device;
             }
          }
@@ -243,7 +284,8 @@ class Item_Devices extends CommonDBRelation {
     * @return array of the available items
    **/
    static function getConcernedItems() {
-      return array('Computer', 'NetworkEquipment', 'Peripheral', 'Phone', 'Printer');
+      global $CFG_GLPI;
+      return $CFG_GLPI["itemdevices_types"];
    }
 
 
@@ -268,23 +310,18 @@ class Item_Devices extends CommonDBRelation {
       global $DB;
 
       foreach (self::getItemAffinities($itemtype) as $link_type) {
-         $query = "SELECT *
-                   FROM `".$link_type::getTable()."`
-                   WHERE `itemtype` = '$itemtype'
-                         AND `items_id` = '$oldid'";
-
-         $result_iterator = $DB->request($query);
-         if ($result_iterator->numrows() > 0) {
+         $table = $link_type::getTable();
+         foreach ($DB->request($table,
+                               "`itemtype` = '$itemtype'
+                                 AND `items_id` = '$oldid'") as $data) {
             $link = new $link_type();
-            foreach ($result_iterator as $data) {
-               unset($data['id']);
-               $data['items_id']     = $newid;
-               $data['_itemtype']    = $itemtype;
-               $data['_no_history']  = true;
-               $data                 = Toolbox::addslashes_deep($data);
+            unset($data['id']);
+            $data['items_id']     = $newid;
+            $data['_itemtype']    = $itemtype;
+            $data['_no_history']  = true;
+            $data                 = Toolbox::addslashes_deep($data);
 
-               $link->add($data);
-             }
+            $link->add($data);
          }
       }
    }
@@ -298,9 +335,9 @@ class Item_Devices extends CommonDBRelation {
             if ($_SESSION['glpishow_count_on_tabs']) {
                foreach (self::getItemAffinities($item->getType()) as $link_type) {
                   $nb   += countElementsInTable($link_type::getTable(),
-                                                "`items_id` = '".$item->getID()."'
-                                                   AND `itemtype` = '".$item->getType()."'
-                                                   AND `is_deleted` = '0'");
+                                                ['items_id'   => $item->getID(),
+                                                 'itemtype'   => $item->getType(),
+                                                 'is_deleted' => 0 ]);
                }
             }
             return self::createTabEntry(_n('Component', 'Components', Session::getPluralNumber()),
@@ -313,8 +350,8 @@ class Item_Devices extends CommonDBRelation {
                $table           = $linkClass::getTable();
                $foreignkeyField = $deviceClass::getForeignKeyField();
                $nb = countElementsInTable($table,
-                                          "`$foreignkeyField` = '".$item->getID()."'
-                                            AND `is_deleted` = '0'");
+                                          [$foreignkeyField => $item->getID(),
+                                           'is_deleted' => 0 ]);
             }
             return self::createTabEntry(_n('Item', 'Items', Session::getPluralNumber()), $nb);
          }
@@ -362,7 +399,7 @@ class Item_Devices extends CommonDBRelation {
                                                 '__RAND__'));
          $delete_all_column->setHTMLClass('center');
       } else {
-         $delete_all_column = NULL;
+         $delete_all_column = null;
       }
 
       $column_label    = ($is_device ? _n('Item', 'Items', Session::getPluralNumber()) : __('Type of component'));
@@ -385,7 +422,7 @@ class Item_Devices extends CommonDBRelation {
          $delete_column = $table->addHeader('delete one', $content);
          $delete_column->setHTMLClass('center');
       } else {
-         $delete_column = NULL;
+         $delete_column = null;
       }
 
       $table_options = array('canedit' => $canedit,
@@ -450,8 +487,8 @@ class Item_Devices extends CommonDBRelation {
                             'display_title_for_each_group' => false));
 
       if ($canedit) {
-//          echo "<input type='submit' class='submit' name='updateall' value='" .
-//               _sx('button', 'Save')."'>";
+          echo "<input type='submit' class='submit' name='updateall' value='" .
+               _sx('button', 'Save')."'>";
 
          Html::closeForm();
       }
@@ -479,17 +516,17 @@ class Item_Devices extends CommonDBRelation {
     * @param $item
     * @param $table
     * @param $options            array
-    * @param $delete_all_column          (default NULL)
+    * @param $delete_all_column
     * @param $common_column
     * @param $specific_column
-    * @param $delete_column               (default NULL)
+    * @param $delete_column
     * @param $dynamic_column
    **/
    function getTableGroup(CommonDBTM $item, HTMLTableMain $table, array $options,
-                          HTMLTableSuperHeader $delete_all_column=NULL,
+                          HTMLTableSuperHeader $delete_all_column = null,
                           HTMLTableSuperHeader $common_column,
                           HTMLTableSuperHeader $specific_column,
-                          HTMLTableSuperHeader $delete_column=NULL, $dynamic_column) {
+                          HTMLTableSuperHeader $delete_column = null, $dynamic_column) {
       global $DB;
 
       $is_device = ($item instanceof CommonDevice);
@@ -638,7 +675,6 @@ class Item_Devices extends CommonDBRelation {
 
          }
 
-
          if (Session::haveRight('device', UPDATE)) {
             $mode = __s('Update');
          } else {
@@ -649,15 +685,24 @@ class Item_Devices extends CommonDBRelation {
 
          foreach ($this->getSpecificities() as $field => $attributs) {
             if (!empty($link[$field])) {
-               $content = $link[$field];
+               switch ($field) {
+                  case 'states_id':
+                     $content = Dropdown::getDropdownName("glpi_states", $link[$field]);
+                     break;
+                  case 'locations_id':
+                     $content = Dropdown::getDropdownName("glpi_locations", $link[$field]);
+                     break;
+                  default:
+                     $content = $link[$field];
+               }
             } else {
                $content = '';
             }
             $spec_cell = $current_row->addCell($specificity_columns[$field], $content, $spec_cell);
          }
 
-         if (countElementsInTable('glpi_infocoms', "`itemtype`='".$this->getType()."' AND
-                                                    `items_id`='".$link['id']."'")) {
+         if (countElementsInTable('glpi_infocoms', ['itemtype' => $this->getType(),
+                                                    'items_id' => $link['id']])) {
             $content = array(array('function'   => 'Infocom::showDisplayLink',
                                    'parameters' => array($this->getType(), $link['id'])));
          } else {
@@ -681,8 +726,6 @@ class Item_Devices extends CommonDBRelation {
          }
          $content = implode('<br>', $content);
          $current_row->addCell($document_column, $content, $spec_cell);
-
-
 
          if ($item->isDynamic()) {
             $previous_cell = $current_row->addCell($dynamics_column,
@@ -730,7 +773,7 @@ class Item_Devices extends CommonDBRelation {
       }
 
       if ($this->can(-1, CREATE, $input)) {
-         for ($i = 0 ; $i < $numberToAdd ; $i ++) {
+         for ($i = 0; $i < $numberToAdd; $i ++) {
             $this->add($input);
          }
       }
@@ -808,7 +851,7 @@ class Item_Devices extends CommonDBRelation {
       // Update quantity or values
       $device_type = '';
       foreach ($input as $key => $val) {
-         $data = explode("_",$key);
+         $data = explode("_", $key);
          if (!empty($data[0])) {
             $command = $data[0];
          } else {
@@ -925,7 +968,6 @@ class Item_Devices extends CommonDBRelation {
    function getRights($interface='central') {
 
       $values = parent::getRights();
-      unset($values[READ]);
       return $values;
    }
 
@@ -959,6 +1001,7 @@ class Item_Devices extends CommonDBRelation {
       $this->addStandardTab('Infocom', $ong, $options);
       $this->addStandardTab('Document_Item', $ong, $options);
       $this->addStandardTab('Log', $ong, $options);
+      $this->addStandardTab('Contract_Item', $ong, $options);
 
       return $ong;
    }
@@ -990,7 +1033,7 @@ class Item_Devices extends CommonDBRelation {
       }
       echo "</td>";
 
-      echo "<td>".__('Device')."</td>";
+      echo "<td>"._n('Component', 'Components', 1)."</td>";
       echo "<td>".$device->getLink()."</td>";
       echo "</tr>";
       $even = 0;
@@ -1001,7 +1044,20 @@ class Item_Devices extends CommonDBRelation {
          }
          echo "<td>".$attributs['long name']."</td>";
          echo "<td>";
-         Html::autocompletionTextField($this, $field, array('size' => $attributs['size']));
+         switch ($field) {
+            case 'locations_id':
+               Location::dropdown(array('value'  => $this->fields["locations_id"],
+                                        'entity' => $this->fields["entities_id"]));
+               break;
+            case 'states_id':
+               State::dropdown(array('value'     => $this->fields["states_id"],
+                                     'entity'    => $this->fields["entities_id"],
+                                     //'condition' => "`is_visible_computer`"
+                                     ));
+               break;
+            default:
+               Html::autocompletionTextField($this, $field, array('size' => $attributs['size']));
+         }
          echo "</td>";
          $even ++;
          if (($even == $nb) && (($nb % 2) != 0) && $nb > 1) {
@@ -1014,5 +1070,44 @@ class Item_Devices extends CommonDBRelation {
       return true;
    }
 
+   /**
+    * Prepare input data for adding the relation
+    *
+    * Overloaded to manage autoupdate feature
+    *
+    * @param array $input array of datas used to add the item
+    *
+    * @return the modified $input array
+    *
+   **/
+   function prepareInputForAdd($input) {
+      global $DB, $CFG_GLPI;
+
+      $computer = static::getItemFromArray(static::$itemtype_1, static::$items_id_1, $input);
+
+      if ($CFG_GLPI["is_location_autoupdate"]
+         && (!isset($input['locations_id']) ||
+         $computer->fields['locations_id'] != $input['locations_id'])
+      ) {
+         $input['locations_id'] = $computer->fields['locations_id'];
+      }
+
+      if (($CFG_GLPI["state_autoupdate_mode"] < 0)
+         && ($computer->fields['states_id'] != $input['states_id']
+         || !isset($input['states_id']))
+      ) {
+
+         $input['states_id'] = $computer->fields['states_id'];
+      }
+
+      if (($CFG_GLPI["state_autoupdate_mode"] > 0)
+         && ($input['states_id'] != $CFG_GLPI["state_autoupdate_mode"]
+         || !isset($input['states_id']))
+      ) {
+
+         $input['states_id'] = $CFG_GLPI["state_autoupdate_mode"];
+      }
+
+      return parent::prepareInputForAdd($input);
+   }
 }
-?>

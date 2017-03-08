@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -46,14 +45,12 @@ if (!defined('GLPI_ROOT')) {
 */
 abstract class CommonDevice extends CommonDropdown {
 
-   static $rightname = 'device';
+   static $rightname          = 'device';
 
-   var $can_be_translated = false;
+   public $can_be_translated  = false;
 
-
-   static function canView() {
-      return Session::haveRightsOr(self::$rightname, array(CREATE, UPDATE, PURGE));
-   }
+   // From CommonDBTM
+   public $dohistory           = true;
 
 
    static function getTypeName($nb=0) {
@@ -102,9 +99,9 @@ abstract class CommonDevice extends CommonDropdown {
    static function getMenuContent() {
 
       $menu = array();
-      if (Session::haveRightsOr('device', array(CREATE, UPDATE, PURGE))) {
+      if (self::canView()) {
          $menu['title'] = static::getTypeName(Session::getPluralNumber());
-         $menu['page']  = '/front/device.php';
+         $menu['page']  = '/front/devices.php';
 
          $dps = Dropdown::getDeviceItemTypes();
 
@@ -170,12 +167,8 @@ abstract class CommonDevice extends CommonDropdown {
       if (!parent::canUnrecurs()) {
          return false;
       }
-      $entities = "(".$this->fields['entities_id'];
-      foreach (getAncestorsOf("glpi_entities", $this->fields['entities_id']) as $papa) {
-         $entities .= ",$papa";
-      }
-      $entities .= ")";
-
+      $entities = getAncestorsOf("glpi_entities", $this->fields['entities_id']);
+      $entities[] = $this->fields['entities_id'];
 
       // RELATION : device -> item_device -> item
       $linktype  = static::getItem_DeviceType();
@@ -193,8 +186,8 @@ abstract class CommonDevice extends CommonDropdown {
             if ($item = getItemForItemtype($data["itemtype"])) {
                // For each itemtype which are entity dependant
                if ($item->isEntityAssign()) {
-                  if (countElementsInTable($itemtable, "id IN (".$data["ids"].")
-                                           AND entities_id NOT IN $entities") > 0) {
+                  if (countElementsInTable($itemtable, ['id'  => $data["ids"],
+                                                        'NOT' => ['entities_id' => $entities ]]) > 0) {
                      return false;
                   }
                }
@@ -205,31 +198,64 @@ abstract class CommonDevice extends CommonDropdown {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab = array();
-      $tab['common']           = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']         = $this->getTable();
-      $tab[1]['field']         = 'designation';
-      $tab[1]['name']          = __('Name');
-      $tab[1]['datatype']      = 'itemlink';
-      $tab[1]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'designation',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[23]['table']        = 'glpi_manufacturers';
-      $tab[23]['field']        = 'name';
-      $tab[23]['name']         = __('Manufacturer');
-      $tab[23]['datatype']     = 'dropdown';
+      $tab[] = [
+         'id'                 => '23',
+         'table'              => 'glpi_manufacturers',
+         'field'              => 'name',
+         'name'               => __('Manufacturer'),
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[16]['table']        = $this->getTable();
-      $tab[16]['field']        = 'comment';
-      $tab[16]['name']         = __('Comments');
-      $tab[16]['datatype']     = 'text';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[80]['table']        = 'glpi_entities';
-      $tab[80]['field']        = 'completename';
-      $tab[80]['name']         = __('Entity');
-      $tab[80]['datatype']     = 'dropdown';
+      $tab[] = [
+         'id'                 => '19',
+         'table'              => $this->getTable(),
+         'field'              => 'date_mod',
+         'name'               => __('Last update'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
+
+      $tab[] = [
+         'id'                 => '121',
+         'table'              => $this->getTable(),
+         'field'              => 'date_creation',
+         'name'               => __('Creation date'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
+
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -426,6 +452,7 @@ abstract class CommonDevice extends CommonDropdown {
       $this->addDefaultFormTab($ong);
       $this->addStandardTab(static::getItem_DeviceType(), $ong, $options);
       $this->addStandardTab('Document_Item', $ong, $options);
+      $this->addStandardTab('Log', $ong, $options);
 
       return $ong;
    }
@@ -451,7 +478,7 @@ abstract class CommonDevice extends CommonDropdown {
             } else {
                $input['device_type'] = '';
             }
-            //$input['device_type'] = ;
+            //$input['device_type'] = '';
             if ($id < 0) {
                if (!empty($registered_id)) {
                   $id_object->add($input);
@@ -492,5 +519,23 @@ abstract class CommonDevice extends CommonDropdown {
       parent::post_updateItem($history);
    }
 
+   static function getFormURL($full=true) {
+      global $CFG_GLPI;
+
+      $dir = ($full ? $CFG_GLPI['root_doc'] : '');
+      $itemtype = get_called_class();
+      $link = "$dir/front/device.form.php?itemtype=$itemtype";
+
+      return $link;
+   }
+
+   static function getSearchURL($full=true) {
+      global $CFG_GLPI;
+
+      $dir = ($full ? $CFG_GLPI['root_doc'] : '');
+      $itemtype = get_called_class();
+      $link = "$dir/front/device.php?itemtype=$itemtype";
+
+      return $link;
+   }
 }
-?>

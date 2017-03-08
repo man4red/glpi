@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -69,7 +68,7 @@ class ReservationItem extends CommonDBChild {
 
 
    static function getTypeName($nb=0) {
-      return _n('Reservable item', 'Reservable items',$nb);
+      return _n('Reservable item', 'Reservable items', $nb);
    }
 
 
@@ -107,14 +106,6 @@ class ReservationItem extends CommonDBChild {
    }
 
 
-   /**
-    * @since 0.84
-   **/
-//   static function canView() {
-//      return true;
-//   }
-
-
    // From CommonDBTM
    /**
     * Retrieve an item from the database for a specific item
@@ -142,101 +133,143 @@ class ReservationItem extends CommonDBChild {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                          = array();
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[4]['table']              = $this->getTable();
-      $tab[4]['field']              = 'comment';
-      $tab[4]['name']               = __('Comments');
-      $tab[4]['datatype']           = 'text';
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => $this->getTable(),
+         'field'              => 'is_active',
+         'name'               => __('Active'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[5]['table']              = $this->getTable();
-      $tab[5]['field']              = 'is_active';
-      $tab[5]['name']               = __('Active');
-      $tab[5]['datatype']           = 'bool';
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab['common']                = __('Characteristics');
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => 'reservation_types',
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false,
+         'addobjectparams'    => [
+            'forcetab'           => 'Reservation$1'
+         ]
+      ];
 
-      $tab[1]['table']              = 'reservation_types';
-      $tab[1]['field']              = 'name';
-      $tab[1]['name']               = __('Name');
-      $tab[1]['datatype']           = 'itemlink';
-      $tab[1]['massiveaction']      = false;
-      $tab[1]['addobjectparams']    = array('forcetab' => 'Reservation$1');
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => 'reservation_types',
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[2]['table']              = 'reservation_types';
-      $tab[2]['field']              = 'id';
-      $tab[2]['name']               = __('ID');
-      $tab[2]['massiveaction']      = false;
-      $tab[2]['datatype']           = 'number';
+      $tab[] = [
+         'id'                 => '9',
+         'table'              => $this->getTable(),
+         'field'              => '_virtual',
+         'name'               => __('Planning'),
+         'datatype'           => 'specific',
+         'massiveaction'      => false,
+         'nosearch'           => true,
+         'nosort'             => true,
+         'additionalfields'   => ['is_active']
+      ];
 
-      $tab[9]['table']              = 'glpi_reservationitems';
-      $tab[9]['field']              = '_virtual';
-      $tab[9]['name']               = __('Planning');
-      $tab[9]['datatype']           = 'specific';
-      $tab[9]['massiveaction']      = false;
-      $tab[9]['nosearch']           = true;
-      $tab[9]['nosort']             = true;
-      $tab[9]['additionalfields']   = array('is_active');
-
-      $loc = Location::getSearchOptionsToAdd();
+      $loc = Location::getSearchOptionsToAddNew();
       // Force massive actions to false
-      foreach ($loc as $key => $val) {
-         $tab[$key]                  = $val;
-         $tab[$key]['massiveaction'] = false;
+      foreach ($loc as &$val) {
+         $val['massiveaction'] = false;
       }
+      $tab = array_merge($tab, $loc);
 
-      $tab[6]['table']              = 'reservation_types';
-      $tab[6]['field']              = 'otherserial';
-      $tab[6]['name']               = __('Inventory number');
-      $tab[6]['datatype']           = 'string';
+      $tab[] = [
+         'id'                 => '6',
+         'table'              => 'reservation_types',
+         'field'              => 'otherserial',
+         'name'               => __('Inventory number'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[16]['table']             = 'reservation_types';
-      $tab[16]['field']             = 'comment';
-      $tab[16]['name']              = __('Comments');
-      $tab[16]['datatype']          = 'text';
-      $tab[16]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => 'reservation_types',
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text',
+         'massiveaction'      => false
+      ];
 
-      $tab[70]['table']             = 'glpi_users';
-      $tab[70]['field']             = 'name';
-      $tab[70]['name']              = __('User');
-      $tab[70]['datatype']          = 'dropdown';
-      $tab[70]['right']             = 'all';
-      $tab[70]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '70',
+         'table'              => 'glpi_users',
+         'field'              => 'name',
+         'name'               => __('User'),
+         'datatype'           => 'dropdown',
+         'right'              => 'all',
+         'massiveaction'      => false
+      ];
 
-      $tab[71]['table']             = 'glpi_groups';
-      $tab[71]['field']             = 'completename';
-      $tab[71]['name']              = __('Group');
-      $tab[71]['datatype']          = 'dropdown';
-      $tab[71]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '71',
+         'table'              => 'glpi_groups',
+         'field'              => 'completename',
+         'name'               => __('Group'),
+         'datatype'           => 'dropdown',
+         'massiveaction'      => false
+      ];
 
-      $tab[19]['table']             = 'reservation_types';
-      $tab[19]['field']             = 'date_mod';
-      $tab[19]['name']              = __('Last update');
-      $tab[19]['datatype']          = 'datetime';
-      $tab[19]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '19',
+         'table'              => 'reservation_types',
+         'field'              => 'date_mod',
+         'name'               => __('Last update'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
 
-      $tab[23]['table']             = 'glpi_manufacturers';
-      $tab[23]['field']             = 'name';
-      $tab[23]['name']              = __('Manufacturer');
-      $tab[23]['datatype']          = 'dropdown';
-      $tab[23]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '23',
+         'table'              => 'glpi_manufacturers',
+         'field'              => 'name',
+         'name'               => __('Manufacturer'),
+         'datatype'           => 'dropdown',
+         'massiveaction'      => false
+      ];
 
-      $tab[24]['table']             = 'glpi_users';
-      $tab[24]['field']             = 'name';
-      $tab[24]['linkfield']         = 'users_id_tech';
-      $tab[24]['name']              = __('Technician in charge of the hardware');
-      $tab[24]['datatype']          = 'dropdown';
-      $tab[24]['right']             = 'interface';
-      $tab[24]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '24',
+         'table'              => 'glpi_users',
+         'field'              => 'name',
+         'linkfield'          => 'users_id_tech',
+         'name'               => __('Technician in charge of the hardware'),
+         'datatype'           => 'dropdown',
+         'right'              => 'interface',
+         'massiveaction'      => false
+      ];
 
-      $tab[80]['table']             = 'glpi_entities';
-      $tab[80]['field']             = 'completename';
-      $tab[80]['name']              = __('Entity');
-      $tab[80]['massiveaction']     = false;
-      $tab[80]['datatype']          = 'dropdown';
-      $tab[80]['massiveaction']     = false;
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -267,7 +300,7 @@ class ReservationItem extends CommonDBChild {
       echo "<table class='tab_cadre_fixe'>";
       echo "<tr><th colspan='2'>".__('Reserve an item')."</th></tr>";
       echo "<tr class='tab_bg_1'>";
-      if ($ri->getFromDBbyItem($item->getType(),$item->getID())) {
+      if ($ri->getFromDBbyItem($item->getType(), $item->getID())) {
          echo "<td class='center'>";
          //Switch reservation state
 
@@ -283,18 +316,18 @@ class ReservationItem extends CommonDBChild {
 
          echo '</td><td>';
          Html::showSimpleForm(static::getFormURL(), 'purge', __('Prohibit reservations'),
-                              array('id' => $ri->fields['id']),'','',
+                              array('id' => $ri->fields['id']), '', '',
                               array(__('Are you sure you want to return this non-reservable item?'),
                                     __('That will remove all the reservations in progress.')));
 
          echo "</td>";
       } else {
          echo "<td class='center'>";
-               Html::showSimpleForm(static::getFormURL(), 'add', __('Authorize reservations'),
-                                    array('items_id'     => $item->getID(),
-                                          'itemtype'     => $item->getType(),
-                                          'entities_id'  => $item->getEntityID(),
-                                          'is_recursive' => $item->isRecursive(),));
+         Html::showSimpleForm(static::getFormURL(), 'add', __('Authorize reservations'),
+                              array('items_id'     => $item->getID(),
+                                    'itemtype'     => $item->getType(),
+                                    'entities_id'  => $item->getEntityID(),
+                                    'is_recursive' => $item->isRecursive(),));
          echo "</td>";
       }
       echo "</tr></table>";
@@ -334,7 +367,7 @@ class ReservationItem extends CommonDBChild {
          echo "</textarea></td></tr>\n";
 
          echo "<tr class='tab_bg_2'><td colspan='2' class='top center'>";
-         echo "<input type='submit' name='update' value=\""._sx('button','Save')."\" class='submit'>";
+         echo "<input type='submit' name='update' value=\""._sx('button', 'Save')."\" class='submit'>";
          echo "</td></tr>\n";
 
          echo "</table>";
@@ -357,6 +390,7 @@ class ReservationItem extends CommonDBChild {
       $ri         = new self();
       $ok         = false;
       $showentity = Session::isMultiEntitiesMode();
+      $values     = array();
 
       if (isset($_SESSION['glpi_saved']['ReservationItem'])) {
          $_POST = $_SESSION['glpi_saved']['ReservationItem'];
@@ -378,14 +412,13 @@ class ReservationItem extends CommonDBChild {
          echo "<div id='viewresasearch' style=\"display:none;\" class='center'>";
          $begin_time                 = time();
          $begin_time                -= ($begin_time%HOUR_TIMESTAMP);
-         $_POST['reserve']["begin"]  = date("Y-m-d H:i:s",$begin_time);
-         $_POST['reserve']["end"]    = date("Y-m-d H:i:s",$begin_time+HOUR_TIMESTAMP);
+         $_POST['reserve']["begin"]  = date("Y-m-d H:i:s", $begin_time);
+         $_POST['reserve']["end"]    = date("Y-m-d H:i:s", $begin_time+HOUR_TIMESTAMP);
          $_POST['reservation_types'] = '';
       }
       echo "<form method='post' name='form' action='".Toolbox::getItemTypeSearchURL(__CLASS__)."'>";
       echo "<table class='tab_cadre_fixe'><tr class='tab_bg_2'>";
       echo "<th colspan='3'>".__('Find a free item in a specific period')."</th></tr>";
-
 
       echo "<tr class='tab_bg_2'><td>".__('Start date')."</td><td>";
       Html::showDateTimeField("reserve[begin]", array('value'      =>  $_POST['reserve']["begin"],
@@ -421,17 +454,16 @@ class ReservationItem extends CommonDBChild {
 
       $result = $DB->query($sql);
 
-      $values[0] = Dropdown::EMPTY_VALUE;
       while ($data = $DB->fetch_assoc($result)) {
          $values[$data['itemtype']] = $data['itemtype']::getTypeName();
       }
 
-      $query = "SELECT `glpi_peripheraltypes`.`name`, `glpi_reservationitems`.`id`
-                FROM `glpi_reservationitems`
+      $query = "SELECT `glpi_peripheraltypes`.`name`, `glpi_peripheraltypes`.`id`
+                FROM `glpi_peripheraltypes`
                 LEFT JOIN `glpi_peripherals`
-                  ON `glpi_reservationitems`.`items_id` = `glpi_peripherals`.`id`
-                LEFT JOIN `glpi_peripheraltypes`
                   ON `glpi_peripherals`.`peripheraltypes_id` = `glpi_peripheraltypes`.`id`
+                LEFT JOIN `glpi_reservationitems`
+                  ON `glpi_reservationitems`.`items_id` = `glpi_peripherals`.`id`
                 WHERE `itemtype` = 'Peripheral'
                       AND `is_active` = 1
                       AND `peripheraltypes_id`".
@@ -445,13 +477,13 @@ class ReservationItem extends CommonDBChild {
       }
 
       Dropdown::showFromArray("reservation_types", $values,
-                              array('value' => $_POST['reservation_types']));
+                              array('value'               => $_POST['reservation_types'],
+                                    'display_emptychoice' => true));
 
       echo "</td></tr>";
       echo "</table>";
       Html::closeForm();
       echo "</div>";
-
 
       // GET method passed to form creation
       echo "<div id='nosearch' class='center'>";
@@ -483,7 +515,10 @@ class ReservationItem extends CommonDBChild {
          if (isset($_POST["reservation_types"]) && !empty($_POST["reservation_types"])) {
             $tmp = explode('#', $_POST["reservation_types"]);
             $where .= " AND `glpi_reservationitems`.`itemtype` = '".$tmp[0]."'";
-            if (isset($tmp[1]) && ($tmp[0] == 'Peripheral')) {
+            if (isset($tmp[1]) && ($tmp[0] == 'Peripheral')
+                && ($itemtype == 'Peripheral')) {
+               $left  .= " LEFT JOIN `glpi_peripheraltypes`
+                              ON (`glpi_peripherals`.`peripheraltypes_id` = `glpi_peripheraltypes`.`id`)";
                $where .= " AND `$itemtable`.`peripheraltypes_id` = '".$tmp[1]."'";
             }
          }
@@ -496,10 +531,10 @@ class ReservationItem extends CommonDBChild {
                           `glpi_locations`.`id` AS location,
                           `glpi_reservationitems`.`items_id` AS items_id
                    FROM `glpi_reservationitems`
-                   $left
                    INNER JOIN `$itemtable`
                         ON (`glpi_reservationitems`.`itemtype` = '$itemtype'
                             AND `glpi_reservationitems`.`items_id` = `$itemtable`.`id`)
+                   $left
                    LEFT JOIN `glpi_locations`
                         ON (`$itemtable`.`locations_id` = `glpi_locations`.`id`)
                    WHERE `glpi_reservationitems`.`is_active` = '1'
@@ -546,7 +581,7 @@ class ReservationItem extends CommonDBChild {
             echo Html::hidden('begin', array('value' => $_POST['reserve']["begin"]));
             echo Html::hidden('end', array('value'   => $_POST['reserve']["end"]));
          }
-         echo "<input type='submit' value=\""._sx('button','Add')."\" class='submit'></td></tr>\n";
+         echo "<input type='submit' value=\""._sx('button', 'Add')."\" class='submit'></td></tr>\n";
 
       }
       echo "</table>\n";
@@ -764,4 +799,3 @@ class ReservationItem extends CommonDBChild {
    }
 
 }
-?>

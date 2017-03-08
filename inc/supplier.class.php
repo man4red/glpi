@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -86,7 +85,6 @@ class Supplier extends CommonDBTM {
                        AND `itemtype` = '".__CLASS__."'";
       $DB->query($query1);
 
-
       $cs  = new Contract_Supplier();
       $cs->cleanDBonItemDelete($this->getType(), $this->fields['id']);
 
@@ -111,6 +109,7 @@ class Supplier extends CommonDBTM {
       $this->addStandardTab('Change_Item', $ong, $options);
       $this->addStandardTab('Link', $ong, $options);
       $this->addStandardTab('Notepad', $ong, $options);
+      $this->addStandardTab('KnowbaseItem_Item', $ong, $options);
       $this->addStandardTab('Log', $ong, $options);
 
       return $ong;
@@ -185,7 +184,7 @@ class Supplier extends CommonDBTM {
       echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
-      echo "<td>"._x('location','State')."</td>";
+      echo "<td>"._x('location', 'State')."</td>";
       echo "<td>";
       Html::autocompletionTextField($this, "state");
       echo "</td></tr>";
@@ -219,74 +218,129 @@ class Supplier extends CommonDBTM {
       return $actions;
    }
 
+   function getSearchOptionsNew() {
+      $tab = [];
 
-   function getSearchOptions() {
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab                          = array();
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Name'),
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab['common']                = __('Characteristics');
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[1]['table']              = $this->getTable();
-      $tab[1]['field']              = 'name';
-      $tab[1]['name']               = __('Name');
-      $tab[1]['datatype']           = 'itemlink';
-      $tab[1]['massiveaction']      = false;
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'address',
+         'name'               => __('Address'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[2]['table']              = $this->getTable();
-      $tab[2]['field']              = 'id';
-      $tab[2]['name']               = __('ID');
-      $tab[2]['massiveaction']      = false;
-      $tab[2]['datatype']           = 'number';
+      $tab[] = [
+         'id'                 => '10',
+         'table'              => $this->getTable(),
+         'field'              => 'fax',
+         'name'               => __('Fax'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[3]['table']              = $this->getTable();
-      $tab[3]['field']              = 'address';
-      $tab[3]['name']               = __('Address');
-      $tab[3]['datatype']           = 'text';
+      $tab[] = [
+         'id'                 => '11',
+         'table'              => $this->getTable(),
+         'field'              => 'town',
+         'name'               => __('City'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[10]['table']             = $this->getTable();
-      $tab[10]['field']             = 'fax';
-      $tab[10]['name']              = __('Fax');
-      $tab[10]['datatype']          = 'string';
+      $tab[] = [
+         'id'                 => '14',
+         'table'              => $this->getTable(),
+         'field'              => 'postcode',
+         'name'               => __('Postal code'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[11]['table']             = $this->getTable();
-      $tab[11]['field']             = 'town';
-      $tab[11]['name']              = __('City');
-      $tab[11]['datatype']          = 'string';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'state',
+         'name'               => _x('location', 'State'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[14]['table']             = $this->getTable();
-      $tab[14]['field']             = 'postcode';
-      $tab[14]['name']              = __('Postal code');
-      $tab[14]['datatype']          = 'string';
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => $this->getTable(),
+         'field'              => 'country',
+         'name'               => __('Country'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[12]['table']             = $this->getTable();
-      $tab[12]['field']             = 'state';
-      $tab[12]['name']              = _x('location','State');
-      $tab[12]['datatype']          = 'string';
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'website',
+         'name'               => __('Website'),
+         'datatype'           => 'weblink'
+      ];
 
-      $tab[13]['table']             = $this->getTable();
-      $tab[13]['field']             = 'country';
-      $tab[13]['name']              = __('Country');
-      $tab[13]['datatype']          = 'string';
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => $this->getTable(),
+         'field'              => 'phonenumber',
+         'name'               => __('Phone'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[4]['table']              = $this->getTable();
-      $tab[4]['field']              = 'website';
-      $tab[4]['name']               = __('Website');
-      $tab[4]['datatype']           = 'weblink';
+      $tab[] = [
+         'id'                 => '6',
+         'table'              => $this->getTable(),
+         'field'              => 'email',
+         'name'               => _n('Email', 'Emails', 1),
+         'datatype'           => 'email'
+      ];
 
-      $tab[5]['table']              = $this->getTable();
-      $tab[5]['field']              = 'phonenumber';
-      $tab[5]['name']               =  __('Phone');
-      $tab[5]['datatype']           = 'string';
+      $tab[] = [
+         'id'                 => '9',
+         'table'              => 'glpi_suppliertypes',
+         'field'              => 'name',
+         'name'               => __('Third party type'),
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[6]['table']              = $this->getTable();
-      $tab[6]['field']              = 'email';
-      $tab[6]['name']               = _n('Email', 'Emails', 1);
-      $tab[6]['datatype']           = 'email';
+      $tab[] = [
+         'id'                 => '19',
+         'table'              => $this->getTable(),
+         'field'              => 'date_mod',
+         'name'               => __('Last update'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
 
-      $tab[9]['table']              = 'glpi_suppliertypes';
-      $tab[9]['field']              = 'name';
-      $tab[9]['name']               = __('Third party type');
-      $tab[9]['datatype']           = 'dropdown';
+      $tab[] = [
+         'id'                 => '121',
+         'table'              => $this->getTable(),
+         'field'              => 'date_creation',
+         'name'               => __('Creation date'),
+         'datatype'           => 'datetime',
+         'massiveaction'      => false
+      ];
 
       if ($_SESSION["glpinames_format"] == User::FIRSTNAME_BEFORE) {
          $name1 = 'firstname';
@@ -295,45 +349,74 @@ class Supplier extends CommonDBTM {
          $name1 = 'name';
          $name2 = 'firstname';
       }
-      $tab[8]['table']              = 'glpi_contacts';
-      $tab[8]['field']              = 'completename';
-      $tab[8]['name']               = _n('Associated contact', 'Associated contacts', Session::getPluralNumber());
-      $tab[8]['forcegroupby']       = true;
-      $tab[8]['datatype']           = 'itemlink';
-      $tab[8]['massiveaction']      = false;
-      $tab[8]['computation']        = "CONCAT(TABLE.`$name1`, ' ', TABLE.`$name2`)";
-      $tab[8]['computationgroupby'] = true;
-      $tab[8]['joinparams']         = array('beforejoin'
-                                             => array('table'      => 'glpi_contacts_suppliers',
-                                                      'joinparams' => array('jointype' => 'child')));
 
-      $tab[16]['table']             = $this->getTable();
-      $tab[16]['field']             = 'comment';
-      $tab[16]['name']              = __('Comments');
-      $tab[16]['datatype']          = 'text';
+      $tab[] = [
+         'id'                 => '8',
+         'table'              => 'glpi_contacts',
+         'field'              => 'completename',
+         'name'               => _n('Associated contact', 'Associated contacts', Session::getPluralNumber()),
+         'forcegroupby'       => true,
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false,
+         'computation'        => "CONCAT(TABLE.`$name1`, ' ', TABLE.`$name2`)",
+         'computationgroupby' => true,
+         'joinparams'         => [
+            'beforejoin'         => [
+               'table'              => 'glpi_contacts_suppliers',
+               'joinparams'         => [
+                  'jointype'           => 'child'
+               ]
+            ]
+         ]
+      ];
 
-      $tab[80]['table']             = 'glpi_entities';
-      $tab[80]['field']             = 'completename';
-      $tab[80]['name']              = __('Entity');
-      $tab[80]['massiveaction']     = false;
-      $tab[80]['datatype']          = 'dropdown';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[86]['table']             = $this->getTable();
-      $tab[86]['field']             = 'is_recursive';
-      $tab[86]['name']              = __('Child entities');
-      $tab[86]['datatype']          = 'bool';
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[29]['table']             = 'glpi_contracts';
-      $tab[29]['field']             = 'name';
-      $tab[29]['name']              = _n('Associated contract', 'Associated contracts', Session::getPluralNumber());
-      $tab[29]['forcegroupby']      = true;
-      $tab[29]['datatype']          = 'itemlink';
-      $tab[29]['massiveaction']     = false;
-      $tab[29]['joinparams']        = array('beforejoin'
-                                             => array('table'      => 'glpi_contracts_suppliers',
-                                                      'joinparams' => array('jointype' => 'child')));
+      $tab[] = [
+         'id'                 => '86',
+         'table'              => $this->getTable(),
+         'field'              => 'is_recursive',
+         'name'               => __('Child entities'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab += Notepad::getSearchOptionsToAdd();
+      $tab[] = [
+         'id'                 => '29',
+         'table'              => 'glpi_contracts',
+         'field'              => 'name',
+         'name'               => _n('Associated contract', 'Associated contracts', Session::getPluralNumber()),
+         'forcegroupby'       => true,
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false,
+         'joinparams'         => [
+            'beforejoin'         => [
+               'table'              => 'glpi_contracts_suppliers',
+               'joinparams'         => [
+                  'jointype'           => 'child'
+               ]
+            ]
+         ]
+      ];
+
+      // add objectlock search options
+      $tab = array_merge($tab, ObjectLock::getSearchOptionsToAddNew(get_class($this)));
+
+      $tab = array_merge($tab, Notepad::getSearchOptionsToAddNew());
 
       return $tab;
    }
@@ -398,7 +481,7 @@ class Supplier extends CommonDBTM {
       Html::printPagerForm();
       echo "</th><th colspan='3'>";
       if ($DB->numrows($result) == 0) {
-         _e('No associated item');
+         echo __('No associated item');
       } else {
          echo _n('Associated item', 'Associated items', $DB->numrows($result));
       }
@@ -411,7 +494,7 @@ class Supplier extends CommonDBTM {
       echo "</tr>";
 
       $num = 0;
-      for ($i=0 ; $i < $number ; $i++) {
+      for ($i=0; $i < $number; $i++) {
          $itemtype = $DB->result($result, $i, "itemtype");
 
          if (!($item = getItemForItemtype($itemtype))) {
@@ -436,7 +519,7 @@ class Supplier extends CommonDBTM {
                $linkfield = 'cartridgeitems_id';
             }
 
-            if ($itemtype == 'Consumable' ) {
+            if ($itemtype == 'Consumable') {
                $query .= "INNER JOIN `glpi_consumableitems`
                             ON (`glpi_consumableitems`.`id`=`glpi_consumables`.`consumableitems_id`) ";
 
@@ -479,8 +562,8 @@ class Supplier extends CommonDBTM {
                             'criteria'   => array(0 => array('value'      => '$$$$'.$instID,
                                                              'searchtype' => 'contains',
                                                              'field'      => 53)));
-              $link = $linktype::getSearchURL();
-              $link.= (strpos($link,'?') ? '&amp;':'?');
+               $link = $linktype::getSearchURL();
+               $link.= (strpos($link, '?') ? '&amp;':'?');
 
                echo "<a href='$link" .
                      Toolbox::append_params($opt). "'>" . __('Device list')."</a></td>";
@@ -488,7 +571,7 @@ class Supplier extends CommonDBTM {
                echo "<td class='center'>-</td><td class='center'>-</td></tr>";
 
             } else if ($nb) {
-               for ($prem=true ; $data=$DB->fetch_assoc($result_linked) ; $prem=false) {
+               for ($prem=true; $data=$DB->fetch_assoc($result_linked); $prem=false) {
                   $name = $data["name"];
                   if ($_SESSION["glpiis_ids_visible"] || empty($data["name"])) {
                      $name = sprintf(__('%1$s (%2$s)'), $name, $data["id"]);
@@ -530,4 +613,3 @@ class Supplier extends CommonDBTM {
 
 
 }
-?>

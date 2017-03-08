@@ -1,48 +1,47 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
-ini_set("memory_limit","-1");
+ini_set("memory_limit", "-1");
 ini_set("max_execution_time", "0");
 
 if ($argv) {
-   for ($i=1 ; $i<count($argv) ; $i++) {
+   for ($i=1; $i<count($argv); $i++) {
       //To be able to use = in search filters, enter \= instead in command line
       //Replace the \= by ° not to match the split function
       $arg   = str_replace('\=', '°', $argv[$i]);
-      $it    = explode("=",$arg);
+      $it    = explode("=", $arg);
       $it[0] = preg_replace('/^--/', '', $it[0]);
 
       //Replace the ° by = the find the good filter
@@ -93,5 +92,5 @@ if (isset($_GET["dictionnary"])) {
    echo "RuleDictionnaryOperatingSystem : OS\n";
    echo "RuleDictionnaryOperatingSystemVersion : OS Version\n";
    echo "RuleDictionnaryOperatingSystemServicePack : OS Service Pack\n";
+   echo "RuleDictionnaryOperatingSystemArchitecture : OS Architecture\n";
 }
-?>

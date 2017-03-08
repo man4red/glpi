@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -65,14 +64,14 @@ class NotificationTargetProject extends NotificationTarget {
    **/
    function getAdditionalTargets($event='') {
 
-      $this->addTarget(Notification::MANAGER_USER,  __('Manager'));
+      $this->addTarget(Notification::MANAGER_USER, __('Manager'));
       $this->addTarget(Notification::MANAGER_GROUP, __('Manager group'));
       $this->addTarget(Notification::MANAGER_GROUP_SUPERVISOR, __('Manager of manager group'));
       $this->addTarget(Notification::MANAGER_GROUP_WITHOUT_SUPERVISOR,
                         __("Manager group except manager users"));
       $this->addTarget(Notification::TEAM_USER, __('User of project team'));
       $this->addTarget(Notification::TEAM_GROUP, __('Group of project team'));
-      $this->addTarget(Notification::TEAM_GROUP_SUPERVISOR,  __('Manager of group of project team'));
+      $this->addTarget(Notification::TEAM_GROUP_SUPERVISOR, __('Manager of group of project team'));
       $this->addTarget(Notification::TEAM_GROUP_WITHOUT_SUPERVISOR,
                         __("Group of project team except manager users"));
       $this->addTarget(Notification::TEAM_CONTACT, __('Contact of project team'));
@@ -140,7 +139,7 @@ class NotificationTargetProject extends NotificationTarget {
                   break;
 
             }
-         }
+      }
    }
 
 
@@ -256,7 +255,7 @@ class NotificationTargetProject extends NotificationTarget {
       $this->datas["##project.priority##"]
             = CommonITILObject::getPriorityName($item->getField('priority'));
       $this->datas["##project.percent##"]
-            = Dropdown::getValueWithUnit($item->getField('percent_done'),"%");
+            = Dropdown::getValueWithUnit($item->getField('percent_done'), "%");
       $this->datas["##project.planstartdate##"]
             = Html::convDateTime($item->getField('plan_start_date'));
       $this->datas["##project.planenddate##"]
@@ -272,7 +271,6 @@ class NotificationTargetProject extends NotificationTarget {
       $this->datas["##project.effectiveduration##"]
             = Html::timestampToString(ProjectTask::getTotalEffectiveDurationForProject($item->getID()),
                                       false);
-
 
       $entity = new Entity();
       $this->datas["##project.entity##"] = '';
@@ -318,7 +316,7 @@ class NotificationTargetProject extends NotificationTarget {
       }
       // Team infos
       $restrict = "`projects_id` = '".$item->getField('id')."'";
-      $items    = getAllDatasFromTable('glpi_projectteams',$restrict);
+      $items    = getAllDatasFromTable('glpi_projectteams', $restrict);
 
       $this->datas['teammembers'] = array();
       if (count($items)) {
@@ -340,7 +338,7 @@ class NotificationTargetProject extends NotificationTarget {
       $restrict             = "`projects_id`='".$item->getField('id')."'";
       $restrict            .= " ORDER BY `date` DESC, `id` ASC";
 
-      $tasks                = getAllDatasFromTable('glpi_projecttasks',$restrict);
+      $tasks                = getAllDatasFromTable('glpi_projecttasks', $restrict);
       $this->datas['tasks'] = array();
       foreach ($tasks as $task) {
          $tmp                            = array();
@@ -354,7 +352,7 @@ class NotificationTargetProject extends NotificationTarget {
                                                                      $task['projectstates_id']);
          $tmp['##task.type##']           = Dropdown::getDropdownName('glpi_projecttasktypes',
                                                                      $task['projecttasktypes_id']);
-         $tmp['##task.percent##']        = Dropdown::getValueWithUnit($task['percent_done'],"%");
+         $tmp['##task.percent##']        = Dropdown::getValueWithUnit($task['percent_done'], "%");
 
          $this->datas["##task.planstartdate##"]  = '';
          $this->datas["##task.planenddate##"]    = '';
@@ -382,7 +380,7 @@ class NotificationTargetProject extends NotificationTarget {
       $restrict             = "`projects_id`='".$item->getField('id')."'";
       $restrict            .= " ORDER BY `begin_date` DESC, `id` ASC";
 
-      $costs                = getAllDatasFromTable('glpi_projectcosts',$restrict);
+      $costs                = getAllDatasFromTable('glpi_projectcosts', $restrict);
       $this->datas['costs'] = array();
       $this->datas["##project.totalcost##"] = 0;
       foreach ($costs as $cost) {
@@ -417,7 +415,7 @@ class NotificationTargetProject extends NotificationTarget {
 
       // Changes infos
       $restrict               = "`projects_id`='".$item->getField('id')."'";
-      $changes                = getAllDatasFromTable('glpi_changes_projects',$restrict);
+      $changes                = getAllDatasFromTable('glpi_changes_projects', $restrict);
       $this->datas['changes'] = array();
       if (count($changes)) {
          $change = new Change();
@@ -444,7 +442,6 @@ class NotificationTargetProject extends NotificationTarget {
 
       $this->datas['##project.numberofchanges##'] = count($this->datas['changes']);
 
-
       // Document
       $query = "SELECT `glpi_documents`.*
                 FROM `glpi_documents`
@@ -452,7 +449,6 @@ class NotificationTargetProject extends NotificationTarget {
                   ON (`glpi_documents`.`id` = `glpi_documents_items`.`documents_id`)
                 WHERE `glpi_documents_items`.`itemtype` =  'Project'
                       AND `glpi_documents_items`.`items_id` = '".$item->getField('id')."'";
-
 
       $this->datas["documents"] = array();
       if ($result = $DB->query($query)) {
@@ -490,7 +486,7 @@ class NotificationTargetProject extends NotificationTarget {
 
       // Items infos
       $restrict             = "`projects_id` = '".$item->getField('id')."'";
-      $items                = getAllDatasFromTable('glpi_items_projects',$restrict);
+      $items                = getAllDatasFromTable('glpi_items_projects', $restrict);
 
       $this->datas['items'] = array();
       if (count($items)) {
@@ -624,7 +620,6 @@ class NotificationTargetProject extends NotificationTarget {
                                    'value' => true));
       }
 
-
       //Tags without lang
       $tags = array('change.id'               => sprintf(__('%1$s: %2$s'), __('Change'), __('ID')),
                     'change.date'             => sprintf(__('%1$s: %2$s'), __('Change'), __('Date')),
@@ -670,7 +665,6 @@ class NotificationTargetProject extends NotificationTarget {
                                                         __('Type'))
                      );
 
-
       foreach ($tags as $tag => $label) {
          $this->addTagToList(array('tag'   => $tag,
                                    'label' => $label,
@@ -712,4 +706,3 @@ class NotificationTargetProject extends NotificationTarget {
    }
 
 }
-?>

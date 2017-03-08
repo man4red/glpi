@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -52,10 +51,6 @@ class Group_User extends CommonDBRelation{
 
    static $itemtype_2                 = 'Group';
    static $items_id_2                 = 'groups_id';
-
-   static public $logs_for_item_1     = false;
-
-
 
    /**
     * @param $users_id
@@ -174,11 +169,11 @@ class Group_User extends CommonDBRelation{
             Dropdown::showYesNo('is_userdelegate');
 
             echo "</td><td class='tab_bg_2 center'>";
-            echo "<input type='submit' name='addgroup' value=\""._sx('button','Add')."\"
+            echo "<input type='submit' name='addgroup' value=\""._sx('button', 'Add')."\"
                    class='submit'>";
 
          } else {
-            _e('None');
+            echo __('None');
          }
 
          echo "</td></tr>";
@@ -293,7 +288,7 @@ class Group_User extends CommonDBRelation{
 
       $rand = mt_rand();
       $res  = User::getSqlSearchResult (true, "all", $entityrestrict, 0, $used_ids);
-      $nb   = ($res ? $DB->result($res,0,"CPT") : 0);
+      $nb   = ($res ? $DB->result($res, 0, "CPT") : 0);
 
       if ($nb) {
          echo "<form name='groupuser_form$rand' id='groupuser_form$rand' method='post'
@@ -317,7 +312,7 @@ class Group_User extends CommonDBRelation{
 
          echo "</td><td class='tab_bg_2 center'>";
          echo "<input type='hidden' name'is_dynamic' value='0'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</td></tr>";
          echo "</table></div>";
          Html::closeForm();
@@ -435,12 +430,12 @@ class Group_User extends CommonDBRelation{
       echo "<tr class='tab_bg_1'><th colspan='2'>".User::getTypeName(Session::getPluralNumber())."</th></tr>";
       echo "<tr class='tab_bg_1'><td class='center'>";
       echo _n('Criterion', 'Criteria', 1)."&nbsp;";
-      $crits = array(''                => Dropdown::EMPTY_VALUE,
-                     'is_manager'      => __('Manager'),
+      $crits = array('is_manager'      => __('Manager'),
                      'is_userdelegate' => __('Delegatee'));
       Dropdown::showFromArray('crit', $crits,
-                              array('value'     => $crit,
-                                    'on_change' => 'reloadTab("start=0&criterion="+this.value)'));
+                              array('value'               => $crit,
+                                    'on_change'           => 'reloadTab("start=0&criterion="+this.value)',
+                                    'display_emptychoice' => true));
       if ($group->haveChildren()) {
          echo "</td><td class='center'>".__('Child groups');
          Dropdown::showYesNo('tree', $tree, -1,
@@ -491,16 +486,17 @@ class Group_User extends CommonDBRelation{
          }
          $header_end .= "<th>".User::getTypeName(1)."</th>";
          if ($tree) {
-           $header_end .= "<th>".Group::getTypeName(1)."</th>";
+            $header_end .= "<th>".Group::getTypeName(1)."</th>";
          }
          $header_end .= "<th>".__('Dynamic')."</th>";
          $header_end .= "<th>".__('Manager')."</th>";
-         $header_end .= "<th>".__('Delegatee')."</th></tr>";
+         $header_end .= "<th>".__('Delegatee')."</th>";
+         $header_end .= "<th>".__('Active')."</th></tr>";
          echo $header_begin.$header_top.$header_end;
 
          $tmpgrp = new Group();
 
-         for ($i=$start, $j=0 ; ($i < $number) && ($j < $_SESSION['glpilist_limit']) ; $i++, $j++) {
+         for ($i=$start, $j=0; ($i < $number) && ($j < $_SESSION['glpilist_limit']); $i++, $j++) {
             $data = $used[$i];
             $user->getFromDB($data["id"]);
             Session::addToNavigateListItems('User', $data["id"]);
@@ -532,6 +528,11 @@ class Group_User extends CommonDBRelation{
             if ($data['is_userdelegate']) {
                echo "<img src='".$CFG_GLPI["root_doc"]."/pics/ok.png' width='14' height='14' alt=\"".
                       __('Delegatee')."\">";
+            }
+            echo "</td><td class='center'>";
+            if ($user->fields['is_active']) {
+               echo "<img src='".$CFG_GLPI["root_doc"]."/pics/ok.png' width='14' height='14' alt=\"".
+               __('Active')."\">";
             }
             echo "</tr>";
          }
@@ -598,50 +599,71 @@ class Group_User extends CommonDBRelation{
    }
 
 
-  /**
+   /**
     * Get search function for the class
     *
     * @return array of search option
    **/
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                       = array();
-      $tab['common']             = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[2]['table']           = $this->getTable();
-      $tab[2]['field']           = 'id';
-      $tab[2]['name']            = __('ID');
-      $tab[2]['massiveaction']   = false;
-      $tab[2]['datatype']        = 'number';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[3]['table']           = $this->getTable();
-      $tab[3]['field']           = 'is_dynamic';
-      $tab[3]['name']            = __('Dynamic');
-      $tab[3]['datatype']        = 'bool';
-      $tab[3]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'is_dynamic',
+         'name'               => __('Dynamic'),
+         'datatype'           => 'bool',
+         'massiveaction'      => false
+      ];
 
-      $tab[4]['table']           = 'glpi_groups';
-      $tab[4]['field']           = 'completename';
-      $tab[4]['name']            = __('Group');
-      $tab[4]['massiveaction']   = false;
-      $tab[4]['datatype']        = 'dropdown';
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => 'glpi_groups',
+         'field'              => 'completename',
+         'name'               => __('Group'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[5]['table']           = 'glpi_users';
-      $tab[5]['field']           = 'name';
-      $tab[5]['name']            = __('User');
-      $tab[5]['massiveaction']   = false;
-      $tab[5]['datatype']        = 'dropdown';
-      $tab[5]['right']           = 'all';
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => 'glpi_users',
+         'field'              => 'name',
+         'name'               => __('User'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown',
+         'right'              => 'all'
+      ];
 
-      $tab[6]['table']           = $this->getTable();
-      $tab[6]['field']           = 'is_manager';
-      $tab[6]['name']            = __('Manager');
-      $tab[6]['datatype']        = 'bool';
+      $tab[] = [
+         'id'                 => '6',
+         'table'              => $this->getTable(),
+         'field'              => 'is_manager',
+         'name'               => __('Manager'),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[7]['table']           = $this->getTable();
-      $tab[7]['field']           = 'is_userdelegate';
-      $tab[7]['name']            = __('Delegatee');
-      $tab[7]['datatype']        = 'bool';
+      $tab[] = [
+         'id'                 => '7',
+         'table'              => $this->getTable(),
+         'field'              => 'is_userdelegate',
+         'name'               => __('Delegatee'),
+         'datatype'           => 'bool'
+      ];
 
       return $tab;
    }
@@ -672,7 +694,7 @@ class Group_User extends CommonDBRelation{
                if (Group::canView()) {
                   if ($_SESSION['glpishow_count_on_tabs']) {
                      $nb = countElementsInTable($this->getTable(),
-                                                "users_id = '".$item->getID()."'");
+                                               ['users_id' => $item->getID()]);
                   }
                   return self::createTabEntry(Group::getTypeName(Session::getPluralNumber()), $nb);
                }
@@ -682,7 +704,7 @@ class Group_User extends CommonDBRelation{
                if (User::canView()) {
                   if ($_SESSION['glpishow_count_on_tabs']) {
                      $nb = countElementsInTable("glpi_groups_users",
-                                                "`groups_id` = '".$item->getID()."'" );
+                                               ['groups_id' => $item->getID()]);
                   }
                   return self::createTabEntry(User::getTypeName(Session::getPluralNumber()), $nb);
                }
@@ -709,4 +731,3 @@ class Group_User extends CommonDBRelation{
 
 
 }
-?>

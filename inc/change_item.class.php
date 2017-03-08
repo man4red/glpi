@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -73,10 +72,9 @@ class Change_Item extends CommonDBRelation{
       }
 
       // Avoid duplicate entry
-      $restrict = "`changes_id` = '".$input['changes_id']."'
-                   AND `itemtype` = '".$input['itemtype']."'
-                   AND `items_id` = '".$input['items_id']."'";
-      if (countElementsInTable($this->getTable(),$restrict)>0) {
+      if (countElementsInTable($this->getTable(), ['changes_id' => $input['changes_id'],
+                                                  'itemtype' => $input['itemtype'],
+                                                  'items_id' => $input['items_id']])>0) {
          return false;
       }
       return parent::prepareInputForAdd($input);
@@ -92,7 +90,7 @@ class Change_Item extends CommonDBRelation{
 
       $nb = countElementsInTable(array('glpi_changes_items', 'glpi_changes'), $restrict);
 
-      return $nb ;
+      return $nb;
    }
 
 
@@ -121,7 +119,6 @@ class Change_Item extends CommonDBRelation{
 
       $result = $DB->query($query);
       $number = $DB->numrows($result);
-
 
       if ($canedit) {
          echo "<div class='firstbloc'>";
@@ -178,7 +175,7 @@ class Change_Item extends CommonDBRelation{
       echo $header_begin.$header_top.$header_end;
 
       $totalnb = 0;
-      for ($i=0 ; $i<$number ; $i++) {
+      for ($i=0; $i<$number; $i++) {
          $itemtype = $DB->result($result, $i, "itemtype");
          if (!($item = getItemForItemtype($itemtype))) {
             continue;
@@ -211,7 +208,7 @@ class Change_Item extends CommonDBRelation{
             $result_linked = $DB->query($query);
             $nb            = $DB->numrows($result_linked);
 
-            for ($prem=true ; $data=$DB->fetch_assoc($result_linked) ; $prem=false) {
+            for ($prem=true; $data=$DB->fetch_assoc($result_linked); $prem=false) {
                $link     = $itemtype::getFormURLWithID($data['id']);
                $linkname = $data["name"];
                if ($_SESSION["glpiis_ids_visible"]
@@ -268,27 +265,27 @@ class Change_Item extends CommonDBRelation{
             case 'Change' :
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable('glpi_changes_items',
-                                             "`changes_id` = '".$item->getID()."'");
+                                             ['changes_id' => $item->getID()]);
                }
                return self::createTabEntry(_n('Item', 'Items', Session::getPluralNumber()), $nb);
 
             case 'User' :
                if ($_SESSION['glpishow_count_on_tabs']) {
-                  $nb = countDistinctElementsInTable('glpi_changes_users','changes_id',
+                  $nb = countDistinctElementsInTable('glpi_changes_users', 'changes_id',
                                              "`users_id` = '".$item->getID()."'");
                }
                return self::createTabEntry(Change::getTypeName(Session::getPluralNumber()), $nb);
 
             case 'Group' :
                if ($_SESSION['glpishow_count_on_tabs']) {
-                  $nb = countDistinctElementsInTable('glpi_changes_groups','changes_id',
+                  $nb = countDistinctElementsInTable('glpi_changes_groups', 'changes_id',
                                              "`groups_id` = '".$item->getID()."'");
                }
                return self::createTabEntry(Change::getTypeName(Session::getPluralNumber()), $nb);
 
             case 'Supplier' :
                if ($_SESSION['glpishow_count_on_tabs']) {
-                  $nb = countDistinctElementsInTable('glpi_changes_suppliers','changes_id',
+                  $nb = countDistinctElementsInTable('glpi_changes_suppliers', 'changes_id',
                                              "`suppliers_id` = '".$item->getID()."'");
                }
                return self::createTabEntry(Change::getTypeName(Session::getPluralNumber()), $nb);
@@ -298,8 +295,8 @@ class Change_Item extends CommonDBRelation{
                   if ($_SESSION['glpishow_count_on_tabs']) {
                      // Direct one
                      $nb = countElementsInTable('glpi_changes_items',
-                                                " `itemtype` = '".$item->getType()."'
-                                                   AND `items_id` = '".$item->getID()."'");
+                                                   ['itemtype' => $item->getType(),
+                                                    'items_id' => $item->getID()]);
                      // Linked items
                      $linkeditems = $item->getLinkedItems();
 
@@ -307,8 +304,8 @@ class Change_Item extends CommonDBRelation{
                         foreach ($linkeditems as $type => $tab) {
                            foreach ($tab as $ID) {
                               $nb += countElementsInTable('glpi_changes_items',
-                                                          " `itemtype` = '$type'
-                                                            AND `items_id` = '$ID'");
+                                                          ['itemtype' => $type,
+                                                           'items_id' => $ID]);
                            }
                         }
                      }
@@ -334,7 +331,6 @@ class Change_Item extends CommonDBRelation{
       }
       return true;
 
-    }
+   }
 
 }
-?>

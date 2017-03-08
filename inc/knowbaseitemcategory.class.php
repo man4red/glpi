@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,17 +35,17 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Class KnowbaseItemCategory
 class KnowbaseItemCategory extends CommonTreeDropdown {
 
    // From CommonDBTM
-   public $dohistory       = true;
-   var $can_be_translated  = true;
+   public $dohistory          = true;
+   public $can_be_translated  = true;
 
-   static $rightname       = 'knowbasecategory';
+   static $rightname          = 'knowbasecategory';
 
 
 
@@ -131,7 +130,7 @@ class KnowbaseItemCategory extends CommonTreeDropdown {
                   }
                }
                if (count($tmp)) {
-                  $_SESSION['glpi_faqcategories'] = "('".implode("','",$tmp)."')";
+                  $_SESSION['glpi_faqcategories'] = "('".implode("','", $tmp)."')";
                }
             }
          }
@@ -202,7 +201,7 @@ class KnowbaseItemCategory extends CommonTreeDropdown {
                echo "<span class='b'>".
                     "<a href='".$params['target']."?knowbaseitemcategories_id=".$row["id"]."$parameters'>".
                       $row["name"]."</a></span>";
-               echo "<div class='kb_resume'>".Html::resume_text($row['comment'],60)."</div>";
+               echo "<div class='kb_resume'>".Html::resume_text($row['comment'], 60)."</div>";
 
                if (($i%3) == 2) {
                   echo "</tr>";
@@ -214,7 +213,4 @@ class KnowbaseItemCategory extends CommonTreeDropdown {
       }
    }
 
-
-
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -89,8 +88,8 @@ class Log extends CommonDBTM {
          $nb = 0;
          if ($_SESSION['glpishow_count_on_tabs']) {
             $nb = countElementsInTable('glpi_logs',
-                                       "itemtype = '".$item->getType()."'
-                                          AND items_id = '".$item->getID()."'");
+                                       ['itemtype' => $item->getType(),
+                                        'items_id' => $item->getID()]);
          }
          return self::createTabEntry(self::getTypeName(1), $nb);
       }
@@ -134,7 +133,7 @@ class Log extends CommonDBTM {
 
          // Parsing $SEARCHOPTION to find changed field
          foreach ($searchopt as $key2 => $val2) {
-            if (!is_array($val2)) {
+            if (!isset($val2['table'])) {
                // skip sub-title
                continue;
             }
@@ -148,16 +147,16 @@ class Log extends CommonDBTM {
                   $changes          =  array($id_search_option, addslashes($oldval), $values[$key]);
                }
 
-            // Linkfield or standard field not massive action enable
             } else if (($val2['linkfield'] == $key)
                 || (($key == $val2['field'])
                     && ($val2['table'] == $item->getTable()))) {
+               // Linkfield or standard field not massive action enable
                $id_search_option = $key2; // Give ID of the $SEARCHOPTION
 
                if ($val2['table'] == $item->getTable()) {
                   $changes = array($id_search_option, addslashes($oldval), $values[$key]);
                } else {
-                  // other cases ; link field -> get data from dropdown
+                  // other cases; link field -> get data from dropdown
                   if ($val2["table"] != 'glpi_auth_tables') {
                      $changes = array($id_search_option,
                                       addslashes(sprintf(__('%1$s (%2$s)'),
@@ -223,10 +222,10 @@ class Log extends CommonDBTM {
 
       // Security to be sure that values do not pass over the max length
       if (Toolbox::strlen($old_value) > 255) {
-         $old_value = Toolbox::substr($old_value,0,250);
+         $old_value = Toolbox::substr($old_value, 0, 250);
       }
       if (Toolbox::strlen($new_value) > 255) {
-         $new_value = Toolbox::substr($new_value,0,250);
+         $new_value = Toolbox::substr($new_value, 0, 250);
       }
 
       // Build query
@@ -265,8 +264,7 @@ class Log extends CommonDBTM {
       }
 
       // Total Number of events
-      $number = countElementsInTable("glpi_logs",
-                                     "`items_id`='$items_id' AND `itemtype`='$itemtype'");
+      $number = countElementsInTable("glpi_logs", ['items_id' => $items_id, 'itemtype' => $itemtype ]);
 
       // No Events in database
       if ($number < 1) {
@@ -292,7 +290,7 @@ class Log extends CommonDBTM {
       $header .= "<th>"._x('name', 'Update')."</th></tr>";
       echo $header;
 
-      foreach (self::getHistoryData($item,$start, $_SESSION['glpilist_limit']) as $data) {
+      foreach (self::getHistoryData($item, $start, $_SESSION['glpilist_limit']) as $data) {
          if ($data['display_history']) {
             // show line
             echo "<tr class='tab_bg_2'>";
@@ -485,6 +483,17 @@ class Log extends CommonDBTM {
                                            $data["new_value"]);
                   break;
 
+               case self::HISTORY_UPDATE_RELATION :
+                  $tmp['field']   = NOT_AVAILABLE;
+                  if ($linktype_field = explode('#', $data["itemtype_link"])) {
+                     $linktype     = $linktype_field[0];
+                     $tmp['field'] = $linktype::getTypeName();
+                  }
+                  $tmp['change'] = sprintf(__('%1$s: %2$s'), __('Update a link with an item'),
+                                       sprintf(__('%1$s (%2$s)'), $data["old_value"],
+                                          $data["new_value"]));
+                  break;
+
                case self::HISTORY_DEL_RELATION :
                   $tmp['field'] = NOT_AVAILABLE;
                   if ($item2 = getItemForItemtype($data["itemtype_link"])) {
@@ -607,8 +616,36 @@ class Log extends CommonDBTM {
             }
 
             if (empty($tmp['change'])) {
-               $tmp['change'] = sprintf(__('Change %1$s by %2$s'),
-                                        $data["old_value"], $data["new_value"]);
+               $newval = $data["new_value"];
+               $oldval = $data["old_value"];
+
+               if ($data['id_search_option'] == '70') {
+                  $newval = explode(' ', $newval);
+                  $oldval = explode(' ', $oldval);
+
+                  if ($oldval[0] == '&nbsp;') {
+                     $oldval = $data["old_value"];
+                  } else {
+                     foreach ($DB->request('glpi_users', "`name` = '".$oldval[0]."'") as $val) {
+                        $oldval = sprintf(__('%1$s %2$s'),
+                              formatUserName($val['id'], $oldval[0], $val['realname'],
+                                    $val['firstname']),
+                              $oldval[1]);
+                     }
+                  }
+
+                  if ($newval[0] == '&nbsp;') {
+                     $newval = $data["new_value"];
+                  } else {
+                     foreach ($DB->request('glpi_users', "`name` = '".$newval[0]."'") as $val) {
+                        $newval = sprintf(__('%1$s %2$s'),
+                              formatUserName($val['id'], $newval[0], $val['realname'],
+                                    $val['firstname']),
+                              $newval[1]);
+                     }
+                  }
+               }
+               $tmp['change'] = sprintf(__('Change %1$s to %2$s'), $oldval, $newval);
             }
          }
          $changes[] = $tmp;
@@ -641,4 +678,3 @@ class Log extends CommonDBTM {
    }
 
 }
-?>

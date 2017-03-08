@@ -1,39 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
+
+use Glpi\Event;
 
 include ('../inc/includes.php');
 
@@ -145,6 +146,17 @@ if (isset($_GET['getvcard'])) {
    }
    Html::back();
 
+} else if (isset($_POST['language'])) {
+   $user->update(
+      [
+         'id'        => Session::getLoginUserID(),
+         'language'  => $_POST['language']
+      ]
+   );
+
+   Session::addMessageAfterRedirect(__('Lang has been changed!'));
+   Html::back();
+
 } else {
 
 
@@ -161,17 +173,17 @@ if (isset($_GET['getvcard'])) {
       }
       Html::back();
    } else if (isset($_POST['add_ext_auth_simple'])) {
-         if (isset($_POST['login']) && !empty($_POST['login'])) {
-            Session::checkRight("user", User::IMPORTEXTAUTHUSERS);
-            $input = array('name'     => $_POST['login'],
-                           '_extauth' => 1,
-                           'add'      => 1);
-            $user->check(-1, CREATE, $input);
-            $newID = $user->add($input);
-            Event::log($newID, "users", 4, "setup",
-                       sprintf(__('%1$s adds the item %2$s'), $_SESSION["glpiname"],
-                               $_POST["login"]));
-         }
+      if (isset($_POST['login']) && !empty($_POST['login'])) {
+         Session::checkRight("user", User::IMPORTEXTAUTHUSERS);
+         $input = array('name'     => $_POST['login'],
+                     '_extauth' => 1,
+                     'add'      => 1);
+         $user->check(-1, CREATE, $input);
+         $newID = $user->add($input);
+         Event::log($newID, "users", 4, "setup",
+                 sprintf(__('%1$s adds the item %2$s'), $_SESSION["glpiname"],
+                         $_POST["login"]));
+      }
 
          Html::back();
    } else {
@@ -182,4 +194,3 @@ if (isset($_GET['getvcard'])) {
 
    }
 }
-?>

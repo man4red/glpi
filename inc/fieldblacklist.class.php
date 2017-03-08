@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -44,9 +43,9 @@ if (!defined('GLPI_ROOT')) {
 **/
 class Fieldblacklist extends CommonDropdown {
 
-   static $rightname = 'config';
+   static $rightname         = 'config';
 
-   var $can_be_translated = false;
+   public $can_be_translated = false;
 
 
    static function getTypeName($nb=0) {
@@ -86,30 +85,43 @@ class Fieldblacklist extends CommonDropdown {
     *
     * @return array of search option
    **/
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                        = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'itemtype',
+         'name'               => __('Type'),
+         'massiveaction'      => false,
+         'datatype'           => 'itemtypename',
+         'forcegroupby'       => true
+      ];
 
-      $tab[4]['table']            = $this->getTable();
-      $tab[4]['field']            = 'itemtype';
-      $tab[4]['name']             = __('Type');
-      $tab[4]['massiveaction']    = false;
-      $tab[4]['datatype']         = 'itemtypename';
-      $tab[4]['forcegroupby']     = true;
+      $tab[] = [
+         'id'                 => '6',
+         'table'              => $this->getTable(),
+         'field'              => 'field',
+         'name'               => __('Field'),
+         'massiveaction'      => false,
+         'datatype'           => 'specific',
+         'additionalfields'   => [
+            '0'                  => 'itemtype'
+         ]
+      ];
 
-      $tab[6]['table']            = $this->getTable();
-      $tab[6]['field']            = 'field';
-      $tab[6]['name']             = _n('Field', 'Fields', 1);
-      $tab[6]['massiveaction']    = false;
-      $tab[6]['datatype']         = 'specific';
-      $tab[6]['additionalfields'] = array('itemtype');
-
-      $tab[7]['table']            = $this->getTable();
-      $tab[7]['field']            = 'value';
-      $tab[7]['name']             = __('Value'); // Is also specific
-      $tab[7]['datatype']         = 'specific';
-      $tab[7]['additionalfields'] = array('itemtype', 'field');
-      $tab[7]['massiveaction']    = false;
+      $tab[] = [
+         'id'                 => '7',
+         'table'              => $this->getTable(),
+         'field'              => 'value',
+         'name'               => __('Value'),
+         'datatype'           => 'specific',
+         'additionalfields'   => [
+            '0'                  => 'itemtype',
+            '1'                  => 'field'
+         ],
+         'massiveaction'      => false
+      ];
 
       return $tab;
    }
@@ -125,12 +137,6 @@ class Fieldblacklist extends CommonDropdown {
             if (isset($values['itemtype']) && !empty($values['itemtype'])) {
                $target       = getItemForItemtype($values['itemtype']);
                $searchOption = $target->getSearchOptionByField('field', $values[$field]);
-//                if (empty($searchOption)) {
-//                   if ($table = getTableNameForForeignKeyField($values[$field])) {
-//                      $searchOption = $target->getSearchOptionByField('field', 'name', $table);
-//                   }
-//                   echo $table.'--';
-//                }
                return $searchOption['name'];
             }
             break;
@@ -140,10 +146,6 @@ class Fieldblacklist extends CommonDropdown {
                $target = getItemForItemtype($values['itemtype']);
                if (isset($values['field']) && !empty($values['field'])) {
                   $searchOption = $target->getSearchOptionByField('field', $values['field']);
-                  // MoYo : do not know why this part ?
-//                   if ($table = getTableNameForForeignKeyField($values['field'])) {
-//                      $searchOption = $target->getSearchOptionByField('field', 'name', $table);
-//                   }
                   return $target->getValueToDisplay($searchOption, $values[$field]);
                }
             }
@@ -253,7 +255,6 @@ class Fieldblacklist extends CommonDropdown {
 
       } else {
          //Add criteria : display dropdown
-         $options[0] = Dropdown::EMPTY_VALUE;
          foreach ($CFG_GLPI['unicity_types'] as $itemtype) {
             if ($item = getItemForItemtype($itemtype)) {
                if ($item->can(-1, READ)) {
@@ -263,7 +264,8 @@ class Fieldblacklist extends CommonDropdown {
          }
          asort($options);
          $rand = Dropdown::showFromArray('itemtype', $options,
-                                         array('value' => $this->fields['value']));
+                                         array('value'               => $this->fields['value'],
+                                               'display_emptychoice' => true));
 
          $params = array('itemtype' => '__VALUE__',
                          'id'       => $this->fields['id']);
@@ -326,12 +328,12 @@ class Fieldblacklist extends CommonDropdown {
          foreach ($DB->list_fields($target->getTable()) as $field) {
             $searchOption = $target->getSearchOptionByField('field', $field['Field']);
 
-         // MoYo : do not know why  this part ?
-//             if (empty($searchOption)) {
-//                if ($table = getTableNameForForeignKeyField($field['Field'])) {
-//                   $searchOption = $target->getSearchOptionByField('field', 'name', $table);
-//                }
-//             }
+            // MoYo : do not know why  this part ?
+            // if (empty($searchOption)) {
+            //    if ($table = getTableNameForForeignKeyField($field['Field'])) {
+            //       $searchOption = $target->getSearchOptionByField('field', 'name', $table);
+            //    }
+            // }
 
             if (!empty($searchOption)
                 && !in_array($field['Type'], $target->getUnallowedFieldsForUnicity())
@@ -364,45 +366,7 @@ class Fieldblacklist extends CommonDropdown {
                $options['entity_sons'] = $this->fields['is_recursive'];
             }
             echo $item->getValueToSelect($searchOption, 'value', $this->fields['value'], $options);
-//             if (isset($searchOption['linkfield'])) {
-//                $linkfield = $searchOption['linkfield'];
-//             } else {
-//                $linkfield = $searchOption['field'];
-//             }
-//
-//             if ($linkfield == $this->fields['field']) {
-//                $value = $this->fields['value'];
-//             } else {
-//                $value = '';
-//             }
          }
-
-//          //If field is a foreign key on another table or not
-//          $table = getTableNameForForeignKeyField($linkfield);
-//          if ($table == '') {
-//             if (isset($searchOption['datatype'])) {
-//                $datatype = $searchOption['datatype'];
-//             } else {
-//                $datatype = 'text';
-//             }
-//
-//             switch ($datatype) {
-//                case 'text' :
-//                case 'string' :
-//                default :
-//                   Html::autocompletionTextField($this, 'value', array('value' => $value));
-//                   break;
-//
-//                case 'bool':
-//                   Dropdown::showYesNo('value',$value);
-//                   break;
-//             }
-//
-//          } else {
-//             $itemtype = getItemTypeForTable($table);
-//             Dropdown::show($itemtype, array('name'  => 'value',
-//                                             'value' => $value));
-//          }
       }
       echo "</span>";
    }
@@ -432,4 +396,3 @@ class Fieldblacklist extends CommonDropdown {
    }
 
 }
-?>

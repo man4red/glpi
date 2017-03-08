@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -44,16 +43,17 @@ if (!defined('GLPI_ROOT')) {
 **/
 class State extends CommonTreeDropdown {
 
-   protected $visibility_fields = array('Computer'         => 'is_visible_computer',
-                                        'SoftwareVersion'  => 'is_visible_softwareversion',
-                                        'Monitor'          => 'is_visible_monitor',
-                                        'Printer'          => 'is_visible_printer',
-                                        'Peripheral'       => 'is_visible_peripheral',
-                                        'Phone'            => 'is_visible_phone',
-                                        'NetworkEquipment' => 'is_visible_networkequipment');
-   var $can_be_translated       = true;
+   protected $visibility_fields    = array('Computer'         => 'is_visible_computer',
+                                           'SoftwareVersion'  => 'is_visible_softwareversion',
+                                           'Monitor'          => 'is_visible_monitor',
+                                           'Printer'          => 'is_visible_printer',
+                                           'Peripheral'       => 'is_visible_peripheral',
+                                           'Phone'            => 'is_visible_phone',
+                                           'NetworkEquipment' => 'is_visible_networkequipment',
+                                           'SoftwareLicense'  => 'is_visible_softwarelicense');
+   public $can_be_translated       = true;
 
-   static $rightname            = 'state';
+   static $rightname               = 'state';
 
 
 
@@ -129,7 +129,7 @@ class State extends CommonTreeDropdown {
                $table = getTableForItemType($itemtype);
                $query = "SELECT `states_id`, COUNT(*) AS cpt
                          FROM `$table` ".
-                         getEntitiesRestrictRequest("WHERE",$table)."
+                         getEntitiesRestrictRequest("WHERE", $table)."
                               AND `is_deleted` = '0'
                               AND `is_template` = '0'
                          GROUP BY `states_id`";
@@ -165,7 +165,7 @@ class State extends CommonTreeDropdown {
          echo "</tr>";
          $query = "SELECT *
                    FROM `glpi_states` ".
-                   getEntitiesRestrictRequest("WHERE", "glpi_states",'','',true)."
+                   getEntitiesRestrictRequest("WHERE", "glpi_states", '', '', true)."
                    ORDER BY `completename`";
          $result = $DB->query($query);
 
@@ -274,56 +274,76 @@ class State extends CommonTreeDropdown {
    }
 
 
-   /**
-    * Get search function for the class
-    *
-    * @since version 0.85
-    *
-    * @return array of search option
-   **/
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                 = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '21',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_computer',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'), Computer::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[21]['table']    = $this->getTable();
-      $tab[21]['field']    = 'is_visible_computer';
-      $tab[21]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'), Computer::getTypeName(Session::getPluralNumber()));
-      $tab[21]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '22',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_softwareversion',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'),
+                                     SoftwareVersion::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[22]['table']    = $this->getTable();
-      $tab[22]['field']    = 'is_visible_softwareversion';
-      $tab[22]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'),
-                                     SoftwareVersion::getTypeName(Session::getPluralNumber()));
-      $tab[22]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '23',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_monitor',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'), Monitor::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[23]['table']    = $this->getTable();
-      $tab[23]['field']    = 'is_visible_monitor';
-      $tab[23]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'), Monitor::getTypeName(Session::getPluralNumber()));
-      $tab[23]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '24',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_printer',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'), Printer::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[24]['table']    = $this->getTable();
-      $tab[24]['field']    = 'is_visible_printer';
-      $tab[24]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'), Printer::getTypeName(Session::getPluralNumber()));
-      $tab[24]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '25',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_peripheral',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'), Peripheral::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[25]['table']    = $this->getTable();
-      $tab[25]['field']    = 'is_visible_peripheral';
-      $tab[25]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'), Peripheral::getTypeName(Session::getPluralNumber()));
-      $tab[25]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '26',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_phone',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'), Phone::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[26]['table']    = $this->getTable();
-      $tab[26]['field']    = 'is_visible_phone';
-      $tab[26]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'), Phone::getTypeName(Session::getPluralNumber()));
-      $tab[26]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '27',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_networkequipment',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'),
+                                     NetworkEquipment::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
-      $tab[27]['table']    = $this->getTable();
-      $tab[27]['field']    = 'is_visible_networkequipment';
-      $tab[27]['name']     = sprintf(__('%1$s - %2$s'),__('Visibility'),
-                                     NetworkEquipment::getTypeName(Session::getPluralNumber()));
-      $tab[27]['datatype'] = 'bool';
+      $tab[] = [
+         'id'                 => '28',
+         'table'              => $this->getTable(),
+         'field'              => 'is_visible_softwarelicense',
+         'name'               => sprintf(__('%1$s - %2$s'), __('Visibility'),
+                                     SoftwareLicense::getTypeName(Session::getPluralNumber())),
+         'datatype'           => 'bool'
+      ];
 
       return $tab;
    }
-
 }
-?>

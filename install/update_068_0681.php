@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -44,13 +43,13 @@ class DBocs extends DBmysql {
    function DBocs() {
       global $db,$cfg_glpi;
 
-      if ($cfg_glpi["ocs_mode"]){
+      if ($cfg_glpi["ocs_mode"]) {
          $query            = "SELECT * FROM `glpi_ocs_config`";
          $result           = $db->query($query);
-         $this->dbhost     = $db->result($result,0,"ocs_db_host");
-         $this->dbuser     = $db->result($result,0,"ocs_db_user");
-         $this->dbpassword = $db->result($result,0,"ocs_db_passwd");
-         $this->dbdefault  = $db->result($result,0,"ocs_db_name");
+         $this->dbhost     = $db->result($result, 0, "ocs_db_host");
+         $this->dbuser     = $db->result($result, 0, "ocs_db_user");
+         $this->dbpassword = $db->result($result, 0, "ocs_db_passwd");
+         $this->dbdefault  = $db->result($result, 0, "ocs_db_name");
          if (!($this->dbh = new mysqli($this->dbhost, $this->dbuser, $this->dbpassword))) {
             $this->error = 1;
          }
@@ -117,7 +116,6 @@ function update068to0681() {
       }
    }
 
-
    if (!isIndex("glpi_software", "FK_groups")) {
       $query = "ALTER TABLE `glpi_software`
                 ADD INDEX (`FK_groups`)";
@@ -176,7 +174,7 @@ function update068to0681() {
       $query = "ALTER TABLE `glpi_computers`
                 ADD INDEX (`domain`)";
       $DB->queryOrDie($query, "0.68.1 add index on glpi_computers.domain");
-}
+   }
 
    if (!isIndex("glpi_computers", "auto_update")) {
       $query = "ALTER TABLE `glpi_computers`
@@ -612,7 +610,6 @@ function update068to0681() {
       $DB->queryOrDie($query, "0.68.1 add glpi_ocs_link.last_ocs_update");
    }
 
-
    if (countElementsInTable("glpi_ocs_link")) {
       $CFG_GLPI["ocs_mode"] = 1;
       $DBocs                = new DBocs(1);
@@ -716,7 +713,7 @@ function update068to0681() {
       if (isIndex("glpi_state_item", "device_type")) {
          $query = "ALTER TABLE `glpi_state_item`
                    DROP INDEX `device_type` ";
-         $DB->queryOrDie($query,"0.68.1 drop index glpi_state_item");
+         $DB->queryOrDie($query, "0.68.1 drop index glpi_state_item");
       }
 
       if (isIndex("glpi_state_item", "device_type2")) {
@@ -732,7 +729,6 @@ function update068to0681() {
       $query = "ALTER TABLE `glpi_state_item`
                 ADD UNIQUE (`device_type`, `id_device`) ";
       $DB->queryOrDie($query, "0.68.1 add unique glpi_state_item");
-}
+   }
 
 } // fin 0.68 #####################################################################################
-?>

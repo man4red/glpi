@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -59,13 +58,13 @@ if (empty($_GET["value2"])) {
 
 if (empty($_GET["date1"]) && empty($_GET["date2"])) {
    $year              = date("Y")-1;
-   $_GET["date1"] = date("Y-m-d",mktime(1,0,0,date("m"),date("d"),$year));
+   $_GET["date1"] = date("Y-m-d", mktime(1, 0, 0, date("m"), date("d"), $year));
    $_GET["date2"] = date("Y-m-d");
 }
 
 if (!empty($_GET["date1"])
     && !empty($_GET["date2"])
-    && (strcmp($_GET["date2"],$_GET["date1"]) < 0)) {
+    && (strcmp($_GET["date2"], $_GET["date1"]) < 0)) {
 
    $tmp           = $_GET["date1"];
    $_GET["date1"] = $_GET["date2"];
@@ -76,13 +75,14 @@ if (!isset($_GET["start"])) {
    $_GET["start"] = 0;
 }
 
+$stat = new Stat();
 Stat::title();
 
 $requester = array('user'               => array('title' => __('Requester')),
                    'users_id_recipient' => array('title' => __('Writer')),
                    'group'              => array('title' => __('Group')),
                    'group_tree'         => array('title' => __('Group tree')),
-                   'usertitles_id'      => array('title' => _x('person','Title')),
+                   'usertitles_id'      => array('title' => _x('person', 'Title')),
                    'usercategories_id'  => array('title' => __('Category')));
 
 $caract    = array('itilcategories_id'   => array('title' => __('Category')),
@@ -166,74 +166,142 @@ if (!$_GET['showgraph']) {
                    $val, $_GET['value2']);
 
 } else {
-   $data = Stat::getDatas($_GET["itemtype"], $_GET["type"], $_GET["date1"], $_GET["date2"],
+   $data = Stat::getData($_GET["itemtype"], $_GET["type"], $_GET["date1"], $_GET["date2"],
                           $_GET['start'], $val, $_GET['value2']);
 
    if (isset($data['opened']) && is_array($data['opened'])) {
+      $count = 0;
+      $labels = [];
+      $series = [];
       foreach ($data['opened'] as $key => $val) {
          $newkey             = Toolbox::unclean_cross_side_scripting_deep(Html::clean($key));
-         $cleandata[$newkey] = $val;
+         if ($val > 0) {
+            $labels[] = $newkey;
+            $series[] = ['name' => $newkey, 'data' => $val];
+            $count += $val;
+         }
       }
-      Stat::showGraph(array(__('Number opened') => $cleandata),
-                      array('title'     => __('Number opened'),
-                            'showtotal' => 1,
-                            'unit'      => $item->getTypeName(Session::getPluralNumber()),
-                            'type'      => 'pie'));
+
+      if (count($series)) {
+         $stat->displayPieGraph(
+            sprintf(
+               __('Opened %1$s (%2$s)'),
+               $item->getTypeName(Session::getPluralNumber()),
+               $count
+            ),
+            $labels,
+            $series
+         );
+      }
    }
 
    if (isset($data['solved']) && is_array($data['solved'])) {
+      $count = 0;
+      $labels = [];
+      $series = [];
       foreach ($data['solved'] as $key => $val) {
          $newkey             = Toolbox::unclean_cross_side_scripting_deep(Html::clean($key));
-         $cleandata[$newkey] = $val;
+         if ($val > 0) {
+            $labels[] = $newkey;
+            $series[] = ['name' => $newkey, 'data' => $val];
+            $count += $val;
+         }
       }
-      Stat::showGraph(array(__('Number solved') => $cleandata),
-                      array('title'     => __('Number solved'),
-                            'showtotal' => 1,
-                            'unit'      => $item->getTypeName(Session::getPluralNumber()),
-                            'type'      => 'pie'));
+
+      if (count($series)) {
+         $stat->displayPieGraph(
+            sprintf(
+               __('Solved %1$s (%2$s)'),
+               $item->getTypeName(Session::getPluralNumber()),
+               $count
+            ),
+            $labels,
+            $series
+         );
+      }
    }
 
    if (isset($data['late']) && is_array($data['late'])) {
+      $count = 0;
+      $labels = [];
+      $series = [];
       foreach ($data['late'] as $key => $val) {
          $newkey             = Toolbox::unclean_cross_side_scripting_deep(Html::clean($key));
-         $cleandata[$newkey] = $val;
+         if ($val > 0) {
+            $labels[] = $newkey;
+            $series[] = ['name' => $newkey, 'data' => $val];
+            $count += $val;
+         }
       }
 
-      Stat::showGraph(array(__('Number solved late') => $cleandata),
-                      array('title'     => __('Number solved late'),
-                            'showtotal' => 1,
-                            'unit'      => $item->getTypeName(Session::getPluralNumber()),
-                            'type'      => 'pie'));
+      if (count($series)) {
+         $stat->displayPieGraph(
+            sprintf(
+               __('Solved late %1$s (%2$s)'),
+               $item->getTypeName(Session::getPluralNumber()),
+               $count
+            ),
+            $labels,
+               $series
+         );
+      }
    }
 
 
    if (isset($data['closed']) && is_array($data['closed'])) {
+      $count = 0;
+      $labels = [];
+      $series = [];
       foreach ($data['closed'] as $key => $val) {
          $newkey             = Toolbox::unclean_cross_side_scripting_deep(Html::clean($key));
-         $cleandata[$newkey] = $val;
+         if ($val > 0) {
+            $labels[] = $newkey;
+            $series[] = ['name' => $newkey, 'data' => $val];
+            $count += $val;
+         }
       }
-      Stat::showGraph(array(__('Number closed') => $cleandata),
-                      array('title'     => __('Number closed'),
-                            'showtotal' => 1,
-                            'unit'      => $item->getTypeName(Session::getPluralNumber()),
-                            'type'      => 'pie'));
+
+      if (count($series)) {
+         $stat->displayPieGraph(
+            sprintf(
+               __('Closed %1$s (%2$s)'),
+               $item->getTypeName(Session::getPluralNumber()),
+               $count
+            ),
+            $labels,
+               $series
+         );
+      }
    }
 
    if ($_GET['itemtype'] == 'Ticket') {
+      $count = 0;
+      $labels = [];
+      $series = [];
       if (isset($data['opensatisfaction']) && is_array($data['opensatisfaction'])) {
          foreach ($data['opensatisfaction'] as $key => $val) {
             $newkey             = Toolbox::unclean_cross_side_scripting_deep(Html::clean($key));
-            $cleandata[$newkey] = $val;
+            if ($val > 0) {
+               $labels[] = $newkey;
+               $series[] = ['name' => $newkey, 'data' => $val];
+               $count += $val;
+            }
          }
-         Stat::showGraph(array(__('Satisfaction survey') => $cleandata),
-                        array('title'     => __('Satisfaction survey'),
-                              'showtotal' => 1,
-                              'unit'      => $item->getTypeName(Session::getPluralNumber()),
-                              'type'      => 'pie'));
+
+         if (count($series)) {
+            $stat->displayPieGraph(
+               sprintf(
+                  __('%1$s satisfaction survey (%2$s)'),
+                  $item->getTypeName(Session::getPluralNumber()),
+                  $count
+               ),
+               $labels,
+               $series
+            );
+         }
       }
    }
 
 }
 
 Html::footer();
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -73,7 +72,7 @@ class Change extends CommonITILObject {
     * @param $nb : number of item in the type (default 0)
    **/
    static function getTypeName($nb=0) {
-      return _n('Change','Changes',$nb);
+      return _n('Change', 'Changes', $nb);
    }
 
 
@@ -254,6 +253,7 @@ class Change extends CommonITILObject {
       $this->addStandardTab('Change_Ticket', $ong, $options);
       $this->addStandardTab('Document_Item', $ong, $options);
       $this->addStandardTab('Change_Item', $ong, $options);
+      $this->addStandardTab('KnowbaseItem_Item', $ong, $options);
       $this->addStandardTab('Notepad', $ong, $options);
       $this->addStandardTab('Log', $ong, $options);
 
@@ -263,7 +263,6 @@ class Change extends CommonITILObject {
 
    function cleanDBonPurge() {
       global $DB;
-
 
       $query1 = "DELETE
                  FROM `glpi_changetasks`
@@ -294,9 +293,6 @@ class Change extends CommonITILObject {
 
    function prepareInputForUpdate($input) {
 
-      // Get change : need for comparison
-//       $this->getFromDB($input['id']);
-
       $input = parent::prepareInputForUpdate($input);
       return $input;
    }
@@ -323,14 +319,14 @@ class Change extends CommonITILObject {
       if ($donotif && $CFG_GLPI["use_mailing"]) {
          $mailtype = "update";
          if (isset($this->input["status"]) && $this->input["status"]
-             && in_array("status",$this->updates)
+             && in_array("status", $this->updates)
              && in_array($this->input["status"], $this->getSolvedStatusArray())) {
 
             $mailtype = "solved";
          }
 
          if (isset($this->input["status"]) && $this->input["status"]
-             && in_array("status",$this->updates)
+             && in_array("status", $this->updates)
              && in_array($this->input["status"], $this->getClosedStatusArray())) {
 
             $mailtype = "closed";
@@ -411,55 +407,72 @@ class Change extends CommonITILObject {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab = array();
+      $tab = array_merge($tab, $this->getSearchOptionsMain());
 
-      $tab += $this->getSearchOptionsMain();
+      $tab = array_merge($tab, $this->getSearchOptionsActors());
 
-      $tab += $this->getSearchOptionsActors();
+      $tab[] = [
+         'id'                 => 'analysis',
+         'name'               => __('Control list')
+      ];
 
-      $tab['analysis']          = __('Control list');
+      $tab[] = [
+         'id'                 => '60',
+         'table'              => $this->getTable(),
+         'field'              => 'impactcontent',
+         'name'               => __('Impact'),
+         'massiveaction'      => false,
+         'datatype'           => 'text'
+      ];
 
-      $tab[60]['table']         = $this->getTable();
-      $tab[60]['field']         = 'impactcontent';
-      $tab[60]['name']          = __('Impact');
-      $tab[60]['massiveaction'] = false;
-      $tab[60]['datatype']      = 'text';
+      $tab[] = [
+         'id'                 => '61',
+         'table'              => $this->getTable(),
+         'field'              => 'controlistcontent',
+         'name'               => __('Control list'),
+         'massiveaction'      => false,
+         'datatype'           => 'text'
+      ];
 
-      $tab[61]['table']         = $this->getTable();
-      $tab[61]['field']         = 'controlistcontent';
-      $tab[61]['name']          = __('Control list');
-      $tab[61]['massiveaction'] = false;
-      $tab[61]['datatype']      = 'text';
+      $tab[] = [
+         'id'                 => '62',
+         'table'              => $this->getTable(),
+         'field'              => 'rolloutplancontent',
+         'name'               => __('Deployment plan'),
+         'massiveaction'      => false,
+         'datatype'           => 'text'
+      ];
 
-      $tab[62]['table']         = $this->getTable();
-      $tab[62]['field']         = 'rolloutplancontent';
-      $tab[62]['name']          = __('Deployment plan');
-      $tab[62]['massiveaction'] = false;
-      $tab[62]['datatype']      = 'text';
+      $tab[] = [
+         'id'                 => '63',
+         'table'              => $this->getTable(),
+         'field'              => 'backoutplancontent',
+         'name'               => __('Backup plan'),
+         'massiveaction'      => false,
+         'datatype'           => 'text'
+      ];
 
-      $tab[63]['table']         = $this->getTable();
-      $tab[63]['field']         = 'backoutplancontent';
-      $tab[63]['name']          = __('Backup plan');
-      $tab[63]['massiveaction'] = false;
-      $tab[63]['datatype']      = 'text';
+      $tab[] = [
+         'id'                 => '67',
+         'table'              => $this->getTable(),
+         'field'              => 'checklistcontent',
+         'name'               => __('Checklist'),
+         'massiveaction'      => false,
+         'datatype'           => 'text'
+      ];
 
-      $tab[64]['table']         = $this->getTable();
-      $tab[64]['field']         = 'checklistcontent';
-      $tab[64]['name']          = __('Checklist');
-      $tab[64]['massiveaction'] = false;
-      $tab[64]['datatype']      = 'text';
+      $tab = array_merge($tab, Notepad::getSearchOptionsToAddNew());
 
-      $tab += Notepad::getSearchOptionsToAdd();
+      $tab = array_merge($tab, ChangeValidation::getSearchOptionsToAddNew());
 
-      $tab += ChangeValidation::getSearchOptionsToAdd();
+      $tab = array_merge($tab, ChangeTask::getSearchOptionsToAddNew());
 
-      $tab += ChangeTask::getSearchOptionsToAdd();
+      $tab = array_merge($tab, $this->getSearchOptionsSolution());
 
-      $tab += $this->getSearchOptionsSolution();
-
-      $tab += ChangeCost::getSearchOptionsToAdd();
+      $tab = array_merge($tab, ChangeCost::getSearchOptionsToAddNew());
 
       return $tab;
    }
@@ -480,12 +493,12 @@ class Change extends CommonITILObject {
                    self::APPROVAL      => __('Approval'),
                    self::ACCEPTED      => _x('status', 'Accepted'),
                    self::WAITING       => __('Pending'),
-                   self::TEST          => _x('change','Test'),
+                   self::TEST          => _x('change', 'Test'),
                    self::QUALIFICATION => __('Qualification'),
                    self::SOLVED        => __('Applied'),
                    self::OBSERVED      => __('Review'),
                    self::CLOSED        => _x('status', 'Closed'),
-   );
+      );
 
       if ($withmetaforsearch) {
          $tab['notold']    = _x('status', 'Not solved');
@@ -559,7 +572,7 @@ class Change extends CommonITILObject {
       global $CFG_GLPI, $DB;
 
       if (!static::canView()) {
-        return false;
+         return false;
       }
 
       // In percent
@@ -639,7 +652,6 @@ class Change extends CommonITILObject {
 
       $this->showFormHeader($options);
 
-
       echo "<tr class='tab_bg_1'>";
       echo "<th class='left' width='$colsize1%'>".__('Opening date')."</th>";
       echo "<td class='left' width='$colsize2%'>";
@@ -658,7 +670,7 @@ class Change extends CommonITILObject {
                                             'timestep'   => 1,
                                             'maybeempty' => false));
       echo "</td>";
-      echo "<th width='$colsize1%'>".__('Due date')."</th>";
+      echo "<th width='$colsize1%'>".__('Time to resolve')."</th>";
       echo "<td width='$colsize2%' class='left'>";
 
       if ($this->fields["due_date"] == 'NULL') {
@@ -758,7 +770,7 @@ class Change extends CommonITILObject {
       echo "</tr>";
       echo "</table>";
 
-      $this->showActorsPartForm($ID,$options);
+      $this->showActorsPartForm($ID, $options);
 
       echo "<table class='tab_cadre_fixe' id='mainformtable3'>";
       echo "<tr class='tab_bg_1'>";
@@ -1005,7 +1017,7 @@ class Change extends CommonITILObject {
                echo "<table class='tab_cadre_fixe'>";
                echo "<tr class='tab_bg_1'><th>".__('Last changes')."</th></tr>";
                echo "<tr class='tab_bg_1'><td class='center'>";
-               _e('Child groups');
+               echo __('Child groups');
                Dropdown::showYesNo('tree', $tree, -1,
                                    array('on_change' => 'reloadTab("start=0&tree="+this.value)'));
             } else {
@@ -1035,14 +1047,13 @@ class Change extends CommonITILObject {
             break;
       }
 
-
       $query = "SELECT ".self::getCommonSelect()."
                 FROM `glpi_changes`
                 LEFT JOIN `glpi_changes_items`
                   ON (`glpi_changes`.`id` = `glpi_changes_items`.`changes_id`) ".
                 self::getCommonLeftJoin()."
                 WHERE $restrict ".
-                      getEntitiesRestrictRequest("AND","glpi_changes")."
+                      getEntitiesRestrictRequest("AND", "glpi_changes")."
                 ORDER BY $order
                 LIMIT ".intval($_SESSION['glpilist_limit']);
       $result = $DB->query($query);
@@ -1066,9 +1077,9 @@ class Change extends CommonITILObject {
          echo "<tr><th colspan='$colspan'>";
 
          //TRANS : %d is the number of problems
-         echo sprintf(_n('Last %d change','Last %d changes',$number), $number);
-//             echo "<span class='small_space'><a href='".$CFG_GLPI["root_doc"]."/front/ticket.php?".
-//                    Toolbox::append_params($options,'&amp;')."'>".__('Show all')."</a></span>";
+         echo sprintf(_n('Last %d change', 'Last %d changes', $number), $number);
+         // echo "<span class='small_space'><a href='".$CFG_GLPI["root_doc"]."/front/ticket.php?".
+         //            Toolbox::append_params($options,'&amp;')."'>".__('Show all')."</a></span>";
 
          echo "</th></tr>";
 
@@ -1115,7 +1126,7 @@ class Change extends CommonITILObject {
 
          echo "<div class='spaced'><table class='tab_cadre_fixe'>";
          echo "<tr><th colspan='$colspan'>";
-         _e('Changes on linked items');
+         echo __('Changes on linked items');
 
          echo "</th></tr>";
          if ($number > 0) {
@@ -1136,5 +1147,12 @@ class Change extends CommonITILObject {
    }
 
 
+   /**
+    * Display debug information for current object
+    *
+    * @since version 0.90.2
+    **/
+   function showDebug() {
+      NotificationEvent::debugEvent($this);
+   }
 }
-?>

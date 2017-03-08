@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -111,7 +110,7 @@ if (isset($_POST["type"])
                   echo __('Email followup').'&nbsp;';
                   $rand = Dropdown::showYesNo('_itil_'.$_POST["actortype"].'[use_notification]', $_POST["use_notif"]);
                   echo '<br>';
-                  printf(__('%1$s: %2$s'),__('Email'),
+                  printf(__('%1$s: %2$s'), __('Email'),
                          "<input type='text' size='25' name='_itil_".$_POST["actortype"].
                            "[alternative_email]'>");
                }
@@ -121,10 +120,10 @@ if (isset($_POST["type"])
 
          case "group" :
             $cond = '`is_requester`';
-            if ($_POST["actortype"] == 'assign')  {
+            if ($_POST["actortype"] == 'assign') {
                $cond = '`is_assign`';
             }
-            
+
             $param = array('name'      => '_itil_'.$_POST["actortype"].'[groups_id]',
                            'entity'    => $_POST['entity_restrict'],
                            'condition' => $cond,
@@ -194,7 +193,7 @@ if (isset($_POST["type"])
                   echo __('Email followup').'&nbsp;';
                   $rand = Dropdown::showYesNo('_itil_'.$_POST["actortype"].'[use_notification]', $_POST['use_notif']);
                   echo '<br>';
-                   printf(__('%1$s: %2$s'),__('Email'),
+                   printf(__('%1$s: %2$s'), __('Email'),
                           "<input type='text' size='25' name='_itil_".$_POST["actortype"].
                               "[alternative_email]'>");
                }
@@ -206,4 +205,3 @@ if (isset($_POST["type"])
       }
    }
 }
-?>

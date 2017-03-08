@@ -1,42 +1,43 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 
+use Glpi\Event;
+
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -103,10 +104,10 @@ class Toolbox {
 
       if ($str{0} >= "\xc3") {
          return (($str{1} >= "\xa0") ? ($str{0}.chr(ord($str{1})-32))
-                                     : ($str{0}.$str{1})).substr($str,2);
+                                     : ($str{0}.$str{1})).substr($str, 2);
       }
       return ucfirst($str);
-    }
+   }
 
 
    /**
@@ -125,7 +126,7 @@ class Toolbox {
       $pos = self::strpos(self::strtolower($str), $shortcut);
       if ($pos !== false) {
          return self::substr($str, 0, $pos).
-                "<u>". self::substr($str, $pos,1)."</u>".
+                "<u>". self::substr($str, $pos, 1)."</u>".
                 self::substr($str, $pos+1);
       }
       return $str;
@@ -243,7 +244,7 @@ class Toolbox {
    **/
    static function encodeInUtf8($string, $from_charset="ISO-8859-1") {
 
-      if (strcmp($from_charset,"auto") == 0) {
+      if (strcmp($from_charset, "auto") == 0) {
          $from_charset = mb_detect_encoding($string);
       }
       return mb_convert_encoding($string, "UTF-8", $from_charset);
@@ -273,15 +274,14 @@ class Toolbox {
    **/
    static function encrypt($string, $key) {
 
-     $result = '';
-     for($i=0 ; $i<strlen($string) ; $i++) {
-       $char    = substr($string, $i, 1);
-       $keychar = substr($key, ($i % strlen($key))-1, 1);
-       $char    = chr(ord($char)+ord($keychar));
-       $result .= $char;
-     }
-
-     return base64_encode($result);
+      $result = '';
+      for ($i=0; $i<strlen($string); $i++) {
+         $char    = substr($string, $i, 1);
+         $keychar = substr($key, ($i % strlen($key))-1, 1);
+         $char    = chr(ord($char)+ord($keychar));
+         $result .= $char;
+      }
+      return base64_encode($result);
    }
 
 
@@ -295,17 +295,17 @@ class Toolbox {
    **/
    static function decrypt($string, $key) {
 
-     $result = '';
-     $string = base64_decode($string);
+      $result = '';
+      $string = base64_decode($string);
 
-     for($i=0 ; $i<strlen($string) ; $i++) {
-       $char    = substr($string, $i, 1);
-       $keychar = substr($key, ($i % strlen($key))-1, 1);
-       $char    = chr(ord($char)-ord($keychar));
-       $result .= $char;
-     }
+      for ($i=0; $i<strlen($string); $i++) {
+         $char    = substr($string, $i, 1);
+         $keychar = substr($key, ($i % strlen($key))-1, 1);
+         $char    = chr(ord($char)-ord($keychar));
+         $result .= $char;
+      }
 
-     return Toolbox::unclean_cross_side_scripting_deep($result);
+      return Toolbox::unclean_cross_side_scripting_deep($result);
    }
 
 
@@ -328,7 +328,7 @@ class Toolbox {
                   ? array_map(array(__CLASS__, 'clean_cross_side_scripting_deep'), $value)
                   : (is_null($value)
                         ? NULL : (is_resource($value)
-                                     ? $value : str_replace($in,$out,$value)));
+                                     ? $value : str_replace($in, $out, $value)));
 
       return $value;
    }
@@ -352,7 +352,7 @@ class Toolbox {
                   ? array_map(array(__CLASS__, 'unclean_cross_side_scripting_deep'), $value)
                   : (is_null($value)
                         ? NULL : (is_resource($value)
-                                     ? $value : str_replace($out,$in,$value)));
+                                     ? $value : str_replace($out, $in, $value)));
 
       return $value;
    }
@@ -370,6 +370,7 @@ class Toolbox {
     * @see clean_cross_side_scripting_deep
    **/
    static function unclean_html_cross_side_scripting_deep($value) {
+      include_once(GLPI_HTMLAWED);
 
       $in  = array('<', '>');
       $out = array('&lt;', '&gt;');
@@ -378,9 +379,7 @@ class Toolbox {
                   ? array_map(array(__CLASS__, 'unclean_html_cross_side_scripting_deep'), $value)
                   : (is_null($value)
                       ? NULL : (is_resource($value)
-                                  ? $value : str_replace($out,$in,$value)));
-
-      include_once(GLPI_HTMLAWED);
+                                  ? $value : str_replace($out, $in, $value)));
 
       // revert unclean inside <pre>
       $count = preg_match_all('/(<pre[^>]*>)(.*?)(<\/pre>)/is', $value, $matches);
@@ -394,6 +393,7 @@ class Toolbox {
       $config                      = array('safe'=>1);
       $config["elements"]          = "*+iframe";
       $config["direct_list_nest"]  = 1;
+
       $value                       = htmLawed($value, $config);
 
       return $value;
@@ -420,14 +420,14 @@ class Toolbox {
       }
 
       if ($tps && function_exists('memory_get_usage')) {
-         $msg .= ' ('.number_format(microtime(true)-$tps,3).'", '.
-                      number_format(memory_get_usage()/1024/1024,2).'Mio)';
+         $msg .= ' ('.number_format(microtime(true)-$tps, 3).'", '.
+                      number_format(memory_get_usage()/1024/1024, 2).'Mio)';
       }
       $msg .= "\n  ";
 
       foreach (func_get_args() as $arg) {
          if (is_array($arg) || is_object($arg)) {
-            $msg .= str_replace("\n", "\n  ",print_r($arg, true));
+            $msg .= str_replace("\n", "\n  ", print_r($arg, true));
          } else if (is_null($arg)) {
             $msg .= 'NULL ';
          } else if (is_bool($arg)) {
@@ -438,7 +438,7 @@ class Toolbox {
       }
 
       $tps = microtime(true);
-      self::logInFile('php-errors', $msg."\n",true);
+      self::logInFile('php-errors', $msg."\n", true);
    }
 
 
@@ -535,33 +535,31 @@ class Toolbox {
    static function userErrorHandlerNormal($errno, $errmsg, $filename, $linenum, $vars) {
 
       // Date et heure de l'erreur
-      $errortype = array(E_ERROR           => 'Error',
-                         E_WARNING         => 'Warning',
-                         E_PARSE           => 'Parsing Error',
-                         E_NOTICE          => 'Notice',
-                         E_CORE_ERROR      => 'Core Error',
-                         E_CORE_WARNING    => 'Core Warning',
-                         E_COMPILE_ERROR   => 'Compile Error',
-                         E_COMPILE_WARNING => 'Compile Warning',
-                         E_USER_ERROR      => 'User Error',
-                         E_USER_WARNING    => 'User Warning',
-                         E_USER_NOTICE     => 'User Notice',
-                         E_STRICT          => 'Runtime Notice',
-                         // Need php 5.2.0
-                         4096 /*E_RECOVERABLE_ERROR*/  => 'Catchable Fatal Error',
-                         // Need php 5.3.0
-                         8192 /* E_DEPRECATED */       => 'Deprecated function',
-                         16384 /* E_USER_DEPRECATED */ => 'User deprecated function');
-      // Les niveaux qui seront enregistrés
+      $errortype = array(E_ERROR             => 'Error',
+                         E_WARNING           => 'Warning',
+                         E_PARSE             => 'Parsing Error',
+                         E_NOTICE            => 'Notice',
+                         E_CORE_ERROR        => 'Core Error',
+                         E_CORE_WARNING      => 'Core Warning',
+                         E_COMPILE_ERROR     => 'Compile Error',
+                         E_COMPILE_WARNING   => 'Compile Warning',
+                         E_USER_ERROR        => 'User Error',
+                         E_USER_WARNING      => 'User Warning',
+                         E_USER_NOTICE       => 'User Notice',
+                         E_STRICT            => 'Runtime Notice',
+                         E_RECOVERABLE_ERROR => 'Catchable Fatal Error',
+                         E_DEPRECATED        => 'Deprecated function',
+                         E_USER_DEPRECATED   => 'User deprecated function');
+      // Les niveaux qui seront enregistr??s
       $user_errors = array(E_USER_ERROR, E_USER_NOTICE, E_USER_WARNING);
 
       $err = '  *** PHP '.$errortype[$errno] . "($errno): $errmsg\n";
-      if (in_array($errno, $user_errors)) {
+      if (in_array($errno, $user_errors) && function_exists('wddx_serialize_value')) {
          $err .= "Variables:".wddx_serialize_value($vars, "Variables")."\n";
       }
 
       $skip = array('Toolbox::backtrace()');
-      if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
+      if (isset($_SESSION['glpi_use_mode']) && $_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
          $hide   = "Toolbox::userErrorHandlerDebug()";
          $skip[] = "Toolbox::userErrorHandlerNormal()";
       } else {
@@ -572,6 +570,21 @@ class Toolbox {
 
       // Save error
       self::logInFile("php-errors", $err);
+
+      // For unit test
+      if (class_exists('GlpitestPHPerror')) {
+         if (in_array($errno, [E_ERROR, E_USER_ERROR])) {
+            throw new GlpitestPHPerror($err);
+         }
+         /* for tuture usage
+         if (in_array($errno, [E_STRICT, E_WARNING, E_CORE_WARNING, E_USER_WARNING, E_DEPRECATED, E_USER_DEPRECATED])) {
+             throw new GlpitestPHPwarning($err);
+         }
+         if (in_array($errno, [E_NOTICE, E_USER_NOTICE])) {
+            throw new GlpitestPHPnotice($err);
+         }
+         */
+      }
 
       return $errortype[$errno];
    }
@@ -651,15 +664,16 @@ class Toolbox {
     *
     * @param $file      string: storage filename
     * @param $filename  string: file title
+    * @param $mime      string: file mime type
     *
     * @return nothing
    **/
-   static function sendFile($file, $filename) {
+   static function sendFile($file, $filename, $mime = null) {
 
       // Test securite : document in DOC_DIR
       $tmpfile = str_replace(GLPI_DOC_DIR, "", $file);
 
-      if (strstr($tmpfile,"../") || strstr($tmpfile,"..\\")) {
+      if (strstr($tmpfile, "../") || strstr($tmpfile, "..\\")) {
          Event::log($file, "sendFile", 1, "security",
                     $_SESSION["glpiname"]." try to get a non standard file.");
          die("Security attack!!!");
@@ -669,39 +683,53 @@ class Toolbox {
          die("Error file $file does not exist");
       }
 
-      $splitter = explode("/", $file);
-      $mime     = "application/octetstream";
+      // if $mime is defined, ignore mime type by extension
+      if ($mime === null && preg_match('/\.(...)$/', $file, $regs)) {
+         $mimeTypeMap = [
+            'sql' => 'text/x-sql',
+            'xml' => 'text/xml',
+            'csv' => 'text/csv',
+            'svg' => 'image/svg+xml',
+            'png' => 'image/png',
+         ];
 
-      if (preg_match('/\.(...)$/', $file, $regs)) {
-         switch ($regs[1]) {
-            case "sql" :
-               $mime = "text/x-sql";
-               break;
+         $ext = strtolower($regs[1]);
 
-            case "xml" :
-               $mime = "text/xml";
-               break;
-
-            case "csv" :
-               $mime = "text/csv";
-               break;
-
-            case "svg" :
-               $mime = "image/svg+xml";
-               break;
-
-            case "png" :
-               $mime = "image/png";
-               break;
+         if (isset($mimeTypeMap[$ext])) {
+            $mime = $mimeTypeMap[$ext];
+         } else {
+            $mime = 'application/octetstream';
          }
       }
 
+      // don't download picture files, see them inline
+      $attachment = "";
+      // if not begin 'image/'
+      if (strncmp($mime, 'image/', 6) !== 0) {
+         $attachment = ' attachment;';
+      }
+
+      $etag = md5_file($file);
+      $lastModified = filemtime($file);
+
       // Now send the file with header() magic
-      header("Expires: Mon, 26 Nov 1962 00:00:00 GMT");
+      header("Last-Modified: ".gmdate("D, d M Y H:i:s", $lastModified)." GMT");
+      header("Etag: $etag");
       header('Pragma: private'); /// IE BUG + SSL
       header('Cache-control: private, must-revalidate'); /// IE BUG + SSL
-      header("Content-disposition: filename=\"$filename\"");
+      header("Content-disposition:$attachment filename=\"$filename\"");
       header("Content-type: ".$mime);
+
+      // HTTP_IF_NONE_MATCH takes precedence over HTTP_IF_MODIFIED_SINCE
+      // http://tools.ietf.org/html/rfc7232#section-3.3
+      if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+         http_response_code(304); //304 - Not Modified
+         exit;
+      }
+      if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && @strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $lastModified) {
+         http_response_code(304); //304 - Not Modified
+         exit;
+      }
 
       readfile($file) or die ("Error opening file $file");
    }
@@ -764,10 +792,9 @@ class Toolbox {
          if (is_array($v)) {
             $params[] = self::append_params($v, $separator,
                                             (empty($parent) ? rawurlencode($k)
-                                                            : $parent .'['.rawurlencode($k).']'));
+                                                            : $parent . '%5B' . rawurlencode($k) . '%5D'));
          } else {
-            $params[] = (!empty($parent) ? $parent . '[' . rawurlencode($k) . ']'
-                                         : rawurlencode($k)) . '=' . rawurlencode($v);
+            $params[] = (!empty($parent) ? $parent . '%5B' . rawurlencode($k) . '%5D' : rawurlencode($k)) . '=' . rawurlencode($v);
          }
       }
       return implode($separator, $params);
@@ -777,11 +804,13 @@ class Toolbox {
    /**
     * Compute PHP memory_limit
     *
+    * @param $ininame String name of the ini ooption to retrieve (since 9.1)
+    *
     * @return memory limit
    **/
-   static function getMemoryLimit() {
+   static function getMemoryLimit($ininame='memory_limit') {
 
-      $mem = ini_get("memory_limit");
+      $mem = ini_get($ininame);
       preg_match("/([-0-9]+)([KMG]*)/", $mem, $matches);
       $mem = "";
 
@@ -852,8 +881,8 @@ class Toolbox {
       echo "<tr class='tab_bg_1'><td class='b left'>".__('Testing PHP Parser')."</td>";
 
       // PHP Version  - exclude PHP3, PHP 4 and zend.ze1 compatibility
-      if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
-         // PHP > 5.4 ok, now check PHP zend.ze1_compatibility_mode
+      if (version_compare(PHP_VERSION, GLPI_MIN_PHP) >= 0) {
+         // PHP version ok, now check PHP zend.ze1_compatibility_mode
          if (ini_get("zend.ze1_compatibility_mode") == 1) {
             $error = 2;
             echo "<td class='red'>
@@ -862,29 +891,15 @@ class Toolbox {
                  "</td>";
          } else {
             echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-                       __s('PHP version is at least 5.4.0 - Perfect!')."\"
-                       title=\"".__s('PHP version is at least 5.4.0 - Perfect!')."\"></td>";
+                       sprintf(__s('PHP version is at least %s - Perfect!'), GLPI_MIN_PHP)."\"
+                       title=\"".sprintf(__s('PHP version is at least %s - Perfect!'), GLPI_MIN_PHP)."\"></td>";
          }
 
       } else { // PHP <5
          $error = 2;
          echo "<td class='red'>
                <img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-                __('You must install at least PHP 5.4.0.')."</td>";
-      }
-      echo "</tr>";
-
-      // Check for mysql extension ni php
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('MySQL Improved extension test')."</td>";
-      if (class_exists("mysqli")) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png'
-                    alt=\"". __s('Ok - the MySQLi class exist - Perfect!')."\"
-                    title=\"". __s('Ok - the MySQLi class exist - Perfect!')."\"></td>";
-      } else {
-         echo "<td class='red'>";
-         echo "<img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-               __('You must install the MySQL Improved extension for PHP.')."</td>";
-         $error = 2;
+                sprintf(__('You must install at least PHP %s.'), GLPI_MIN_PHP)."</td>";
       }
       echo "</tr>";
 
@@ -939,116 +954,10 @@ class Toolbox {
       }
       echo "</tr>";
 
-      // Test for sybase extension loaded or not.
-      echo "<tr class='tab_bg_1'>";
-      echo "<td class='left b'>".__('magic_quotes_sybase extension test')."</td>";
-
-      if (ini_get('magic_quotes_sybase')) {
-         echo "<td class='red'>";
-         echo "<img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-               __('GLPI does not work with the magic_quotes_sybase option. Please turn it off and retry').
-               "</td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-              __s("The magic_quotes_sybase option isn't active on your server - Perfect!").
-              "\" title=\"".
-              __s("The magic_quotes_sybase option isn't active on your server - Perfect!").
-              "\"></td>";
+      $suberr = Config::checkExtensions();
+      if ($suberr > $error) {
+         $error = $suberr;
       }
-      echo "</tr>";
-
-      // Test for ctype extension loaded or not (forhtmlawed)
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('Test ctype functions')."</td>";
-
-      if (!function_exists('ctype_digit')) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-                    __("GLPI can't work correctly without the ctype functions")."></td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-                    __s('The functionality is found - Perfect!')."\" title=\"".
-                    __s('The functionality is found - Perfect!')."\"></td>";
-      }
-      echo "</tr>";
-
-      // Test for fileinfo extension loaded or not
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('Fileinfo extension test')."</td>";
-
-      if (!class_exists('finfo')) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-                    __("Fileinfo extension of your parser PHP is not installed")."</td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-                    __s('The functionality is found - Perfect!')."\" title=\"".
-                    __s('The functionality is found - Perfect!')."\"></td>";
-      }
-      echo "</tr>";
-
-      // Test for json_encode function.
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('Test json functions')."</td>";
-
-      if (!function_exists('json_encode') || !function_exists('json_decode')) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-                    __("GLPI can't work correctly without the json_encode and json_decode functions").
-                   "</td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-               __s('The functionality is found - Perfect!'). "\" title=\"".
-               __s('The functionality is found - Perfect!')."\"></td>";
-      }
-      echo "</tr>";
-
-      // Test for mbstring extension.
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('Mbstring extension test')."</td>";
-
-      if (!extension_loaded('mbstring')) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-               __('Mbstring extension of your parser PHP is not installed')."></td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-               __s('The functionality is found - Perfect!'). "\" title=\"".
-               __s('The functionality is found - Perfect!')."\"></td>";
-      }
-      echo "</tr>";
-
-      // Test for GD extension.
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('GD extension test')."</td>";
-
-      if (!extension_loaded('gd')) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-                     __('GD extension of your parser PHP is not installed')."></td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-                     __s('The functionality is found - Perfect!'). "\" title=\"".
-                     __s('The functionality is found - Perfect!')."\"></td>";
-      }
-      echo "</tr>";
-
-      // Test for GD extension.
-      echo "<tr class='tab_bg_1'><td class='left b'>".__('Zlib extension test')."</td>";
-
-      if (!extension_loaded('zlib')) {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ko_min.png'>".
-                     __('Zlib extension of your parser PHP is not installed')."></td>";
-         $error = 2;
-
-      } else {
-         echo "<td><img src='".$CFG_GLPI['root_doc']."/pics/ok_min.png' alt=\"".
-                     __s('The functionality is found - Perfect!'). "\" title=\"".
-                     __s('The functionality is found - Perfect!')."\"></td>";
-      }
-      echo "</tr>";
 
       // memory test
       echo "<tr class='tab_bg_1'><td class='left b'>".__('Allocated memory test')."</td>";
@@ -1113,8 +1022,10 @@ class Toolbox {
          // This is not a SELinux system
          return 0;
       }
-
       $mode = exec("/usr/sbin/getenforce");
+      if (empty($mode)) {
+         $mode = "Unknown";
+      }
       //TRANS: %s is mode name (Permissive, Enforcing of Disabled)
       $msg  = sprintf(__('SELinux mode is %s'), $mode);
       if ($fordebug) {
@@ -1136,11 +1047,18 @@ class Toolbox {
       // Enforcing mode will block some feature (notif, ...)
       // Permissive mode will write lot of stuff in audit.log
 
+      if (!file_exists('/usr/sbin/getenforce')) {
+         // should always be there
+         return 0;
+      }
       $bools = array('httpd_can_network_connect', 'httpd_can_network_connect_db',
                      'httpd_can_sendmail');
       $msg2 = __s('Some features may require this to be on');
       foreach ($bools as $bool) {
          $state = exec('/usr/sbin/getsebool '.$bool);
+         if (empty($state)) {
+            $state = "$bool --> unkwown";
+         }
          //TRANS: %s is an option name
          $msg = sprintf(__('SELinux boolean configuration for %s'), $state);
          if ($fordebug) {
@@ -1295,11 +1213,11 @@ class Toolbox {
             || ($img_height > $max_size)) {
             $source_aspect_ratio = $img_width / $img_height;
             if ($source_aspect_ratio < 1) {
-            $new_width  = $max_size * $source_aspect_ratio;
-            $new_height = $max_size;
+               $new_width  = $max_size * $source_aspect_ratio;
+               $new_height = $max_size;
             } else {
-            $new_width  = $max_size;
-            $new_height = $max_size / $source_aspect_ratio;
+               $new_width  = $max_size;
+               $new_height = $max_size / $source_aspect_ratio;
             }
          }
       }
@@ -1327,7 +1245,7 @@ class Toolbox {
             return false;
       }
 
-      //create new img ressource for store thumbnail
+      //create new img resource for store thumbnail
       $source_dest = imagecreatetruecolor($new_width, $new_height);
 
       //resize image
@@ -1493,7 +1411,7 @@ class Toolbox {
       }
 
       return 0;
-}
+   }
 
 
    /**
@@ -1510,11 +1428,15 @@ class Toolbox {
       $dir = ($full ? $CFG_GLPI['root_doc'] : '');
 
       if ($plug = isPluginItemType($itemtype)) {
+         /* PluginFooBar => /plugins/foo/front/bar */
          $dir .= "/plugins/".strtolower($plug['plugin']);
-         $item = strtolower($plug['class']);
+         $item = str_replace('\\', '/', strtolower($plug['class']));
 
       } else { // Standard case
          $item = strtolower($itemtype);
+         if (substr($itemtype, 0, \strlen(NS_GLPI)) === NS_GLPI) {
+            $item = str_replace('\\', '/', substr($item, \strlen(NS_GLPI)));
+         }
       }
 
       return "$dir/front/$item.form.php";
@@ -1536,7 +1458,7 @@ class Toolbox {
 
       if ($plug = isPluginItemType($itemtype)) {
          $dir .=  "/plugins/".strtolower($plug['plugin']);
-         $item = strtolower($plug['class']);
+         $item = str_replace('\\', '/', strtolower($plug['class']));
 
       } else { // Standard case
          if ($itemtype == 'Cartridge') {
@@ -1546,6 +1468,9 @@ class Toolbox {
             $itemtype = 'ConsumableItem';
          }
          $item = strtolower($itemtype);
+         if (substr($itemtype, 0, \strlen(NS_GLPI)) === NS_GLPI) {
+            $item = str_replace('\\', '/', substr($item, \strlen(NS_GLPI)));
+         }
       }
 
       return "$dir/front/$item.php";
@@ -1572,20 +1497,23 @@ class Toolbox {
    /**
     * Get a random string
     *
-    * @param $length integer: length of the random string
+    * @param integer $length of the random string
+    * @param boolean $high strength of the random source (since 9.2)
     *
     * @return random string
    **/
-   static function getRandomString($length) {
+   static function getRandomString($length, $high=false) {
 
-      $alphabet  = "1234567890abcdefghijklmnopqrstuvwxyz";
-      $rndstring = "";
-
-      for ($a=0 ; $a<=$length ; $a++) {
-         $b          = rand(0, strlen($alphabet) - 1);
-         $rndstring .= $alphabet[$b];
+      $factory = new RandomLib\Factory();
+      if ($high) {
+         /* Notice "High" imply mcrypt extension, unwanted for now
+            See https://github.com/ircmaxell/RandomLib/issues/57 */
+         $generator = $factory->getMediumStrengthGenerator();
+      } else {
+         $generator = $factory->getLowStrengthGenerator();
       }
-      return $rndstring;
+
+      return $generator->generateString($length, RandomLib\Generator::CHAR_LOWER + RandomLib\Generator::CHAR_DIGITS);
    }
 
 
@@ -1627,9 +1555,9 @@ class Toolbox {
    /**
     * Get a web page. Use proxy if configured
     *
-    * @param $url    string   to retrieve
-    * @param $msgerr string   set if problem encountered (default NULL)
-    * @param $rec    integer  internal use only Must be 0 (default 0)
+    * @param string  $url    URL to retrieve
+    * @param string  $msgerr set if problem encountered (default NULL)
+    * @param integer $rec    internal use only Must be 0 (default 0)
     *
     * @return content of the page (or empty)
    **/
@@ -1639,127 +1567,76 @@ class Toolbox {
       $content = "";
       $taburl  = parse_url($url);
 
-      // Connection directe
-      if (empty($CFG_GLPI["proxy_name"])) {
-         $hostscheme  = '';
-         $defaultport = 80;
-         // Manage standard HTTPS port : scheme detection or port 443
-         if ((isset($taburl["scheme"]) && $taburl["scheme"]=='https')
-            || (isset($taburl["port"]) && $taburl["port"]=='443')) {
-            $hostscheme  = 'ssl://';
-            $defaultport = 443;
-         }
-         if ($fp = @fsockopen($hostscheme.$taburl["host"],
-                              (isset($taburl["port"]) ? $taburl["port"] : $defaultport),
-                              $errno, $errstr, 1)) {
+      $hostscheme  = '';
+      $defaultport = 80;
 
-            if (isset($taburl["path"]) && ($taburl["path"] != '/')) {
-               $toget = $taburl["path"];
-               if (isset($taburl["query"])) {
-                  $toget .= '?'.$taburl["query"];
-               }
-               // retrieve path + args
-               $request = "GET $toget HTTP/1.1\r\n";
-            } else {
-               $request = "GET / HTTP/1.1\r\n";
-            }
-
-            $request .= "Host: ".$taburl["host"]."\r\n";
-         } else {
-            if (isset($msgerr)) {
-               //TRANS: %s is the error string
-               $msgerr = sprintf(__('Connection failed. If you use a proxy, please configure it. (%s)'),
-                                 $errstr);
-            }
-            return "";
-         }
-
-      } else { // Connection using proxy
-         $fp = fsockopen($CFG_GLPI["proxy_name"], $CFG_GLPI["proxy_port"], $errno, $errstr, 1);
-
-         if ($fp) {
-            $request  = "GET $url HTTP/1.1\r\n";
-            $request .= "Host: ".$taburl["host"]."\r\n";
-            if (!empty($CFG_GLPI["proxy_user"])) {
-               $request .= "Proxy-Authorization: Basic " . base64_encode ($CFG_GLPI["proxy_user"].":".
-                           self::decrypt($CFG_GLPI["proxy_passwd"], GLPIKEY)) . "\r\n";
-            }
-
-         } else {
-            if (isset($msgerr)) {
-               //TRANS: %s is the error string
-               $msgerr = sprintf(__('Failed to connect to the proxy server (%s)'), $errstr);
-            }
-            return "";
-         }
+      // Manage standard HTTPS port : scheme detection or port 443
+      if ((isset($taburl["scheme"]) && $taburl["scheme"]=='https')
+         || (isset($taburl["port"]) && $taburl["port"]=='443')) {
+         $hostscheme  = 'ssl://';
+         $defaultport = 443;
       }
 
-      $request .= "User-Agent: GLPI/".trim($CFG_GLPI["version"])."\r\n";
-      $request .= "Connection: Close\r\n\r\n";
+      $ch = curl_init($url);
+      $opts = [
+         CURLOPT_URL             => $url,
+         CURLOPT_USERAGENT       => "GLPI/".trim($CFG_GLPI["version"]),
+         CURLOPT_RETURNTRANSFER  => 1
+      ];
 
-      fwrite($fp, $request);
+      if (!empty($CFG_GLPI["proxy_name"])) {
+         // Connection using proxy
+         $opts += [
+            CURLOPT_PROXY           => $CFG_GLPI['proxy_name'],
+            CURLOPT_PROXYPORT       => $CFG_GLPI['proxy_port'],
+            CURLOPT_PROXYTYPE       => CURLPROXY_HTTP,
+            CURLOPT_HTTPPROXYTUNNEL => 1
+         ];
 
-      $header = true ;
-      $redir  = false;
-      $errstr = "";
-      while (!feof($fp)) {
-         if ($buf = fgets($fp, 1024)) {
-            if ($header) {
-
-               if (strlen(trim($buf)) == 0) {
-                  // Empty line = end of header
-                  $header = false;
-
-               } else if ($redir && preg_match("/^Location: (.*)$/", $buf, $rep)) {
-                  if ($rec < 9) {
-                     $desturl = trim($rep[1]);
-                     $taburl2 = parse_url($desturl);
-
-                     if (isset($taburl2['host'])) {
-                        // Redirect to another host
-                        return (self::getURLContent($desturl, $errstr, $rec+1));
-                     }
-                     // redirect to same host
-                     return (self::getURLContent((isset($taburl['scheme'])?$taburl['scheme']:'http').
-                                                 "://".$taburl['host'].
-                                                 (isset($taburl['port'])?':'.$taburl['port']:'').
-                                                  $desturl, $errstr, $rec+1));
-                  }
-
-                  $errstr = "Too deep";
-                  break;
-
-               } else if (preg_match("/^HTTP.*200.*OK/", $buf)) {
-                  // HTTP 200 = OK
-
-               } else if (preg_match("/^HTTP.*302/", $buf)) {
-                  // HTTP 302 = Moved Temporarily
-                  $redir = true;
-
-               } else if (preg_match("/^HTTP/", $buf)) {
-                  // Other HTTP status = error
-                  $errstr = trim($buf);
-                  break;
-               }
-
-            } else {
-               // Body
-               $content .= $buf;
-            }
+         if (!empty($CFG_GLPI["proxy_user"])) {
+            $opts += [
+               CURLOPT_PROXYAUTH => CURLAUTH_BASIC,
+               CURLOPT_PROXYUSERPWD => $CFG_GLPI["proxy_user"] . ":" . self::decrypt($CFG_GLPI["proxy_passwd"], GLPIKEY)
+            ];
          }
-      } // eof
 
-      fclose($fp);
+      }
 
-      if (empty($content) && isset($msgerr)) {
-         if (empty($errstr)) {
-            $msgerr = __('No data available on the web site');
+      curl_setopt_array($ch, $opts);
+      $content = curl_exec($ch);
+      $errstr = curl_error($ch);
+      curl_close($ch);
+
+      if ($errstr) {
+         if (empty($CFG_GLPI["proxy_name"])) {
+            //TRANS: %s is the error string
+            $msgerr = sprintf(
+               __('Connection failed. If you use a proxy, please configure it. (%s)'),
+               $errstr
+            );
          } else {
             //TRANS: %s is the error string
-            $msgerr = sprintf(__('Impossible to connect to site (%s)'),$errstr);
+            $msgerr = sprintf(
+               __('Failed to connect to the proxy server (%s)'),
+               $errstr
+            );
          }
+         return '';
+      }
+
+      if (empty($content)) {
+         $msgerr = __('No data available on the web site');
       }
       return $content;
+   }
+
+   /**
+    * Returns whether this is an AJAX (XMLHttpRequest) request.
+    *
+    * @return boolean whether this is an AJAX (XMLHttpRequest) request.
+    */
+   static function isAjax() {
+      return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
    }
 
 
@@ -1820,15 +1697,23 @@ class Toolbox {
              && !empty($_SESSION["glpiactiveprofile"]["interface"])) {
             $decoded_where = rawurldecode($where);
             // redirect to URL : URL must be rawurlencoded
-            if ($link = preg_match('/https?:\/\/.+/',$decoded_where)) {
-               Html::redirect($decoded_where);
+            if ($link = preg_match('/(https?:\/\/[^\/]+)\/.+/', $decoded_where, $matches)) {
+               if ($matches[1] !== $CFG_GLPI['url_base']) {
+                  Session::addMessageAfterRedirect('Redirection failed');
+                  if ($_SESSION["glpiactiveprofile"]["interface"] === "helpdesk") {
+                     Html::redirect($CFG_GLPI["root_doc"]."/front/helpdesk.public.php");
+                  } else {
+                     Html::redirect($CFG_GLPI["root_doc"]."/front/central.php");
+                  }
+               } else {
+                  Html::redirect($decoded_where);
+               }
             }
             // Redirect based on GLPI_ROOT : URL must be rawurlencoded
             if ($decoded_where[0] == '/') {
-//                echo $decoded_where;exit();
+               // echo $decoded_where;exit();
                Html::redirect($CFG_GLPI["root_doc"].$decoded_where);
             }
-
 
             $data = explode("_", $where);
             $forcetab = '';
@@ -1853,14 +1738,14 @@ class Toolbox {
                                && $item->isEntityAssign()) {
                               if ($item->getFromDB($data[1])) {
                                  if (!Session::haveAccessToEntity($item->getEntityID())) {
-                                    Session::changeActiveEntities($item->getEntityID(),1);
+                                    Session::changeActiveEntities($item->getEntityID(), 1);
                                  }
                               }
                            }
                            Html::redirect($CFG_GLPI["root_doc"]."/front/ticket.form.php?id=".
                                           $data[1]."&$forcetab");
-                        // redirect to list
-                        } else if (!empty($data[0])) {
+
+                        } else if (!empty($data[0])) { // redirect to list
                            if ($item = getItemForItemtype($data[0])) {
                               Html::redirect($item->getSearchURL()."?$forcetab");
                            }
@@ -1871,6 +1756,11 @@ class Toolbox {
 
                      case "preference" :
                         Html::redirect($CFG_GLPI["root_doc"]."/front/preference.php?$forcetab");
+                        break;
+
+                     case "reservation" :
+                        Html::redirect($CFG_GLPI["root_doc"]."/front/reservation.form.php?id=".
+                                       $data[1]."&$forcetab");
                         break;
 
                      default :
@@ -1901,14 +1791,14 @@ class Toolbox {
                               if ($item->isEntityAssign()) {
                                  if ($item->getFromDB($data[1])) {
                                     if (!Session::haveAccessToEntity($item->getEntityID())) {
-                                       Session::changeActiveEntities($item->getEntityID(),1);
+                                       Session::changeActiveEntities($item->getEntityID(), 1);
                                     }
                                  }
                               }
                               Html::redirect($item->getFormURL()."?id=".$data[1]."&$forcetab");
                            }
-                        // redirect to list
-                        } else if (!empty($data[0])) {
+
+                        } else if (!empty($data[0])) { // redirect to list
                            if ($item = getItemForItemtype($data[0])) {
                               Html::redirect($item->getSearchURL()."?$forcetab");
                            }
@@ -1934,9 +1824,10 @@ class Toolbox {
    static function return_bytes_from_ini_vars($val) {
 
       $val  = trim($val);
-      $last = self::strtolower($val{strlen($val)-1});
+      $last = self::strtolower($val[strlen($val)-1]);
+      $val  = (int)$val;
 
-      switch($last) {
+      switch ($last) {
          // Le modifieur 'G' est disponible depuis PHP 5.1.0
          case 'g' :
             $val *= 1024;
@@ -1969,12 +1860,12 @@ class Toolbox {
    static function parseMailServerConnectString($value, $forceport=false) {
 
       $tab = array();
-      if (strstr($value,":")) {
+      if (strstr($value, ":")) {
          $tab['address'] = str_replace("{", "", preg_replace("/:.*/", "", $value));
          $tab['port']    = preg_replace("/.*:/", "", preg_replace("/\/.*/", "", $value));
 
       } else {
-         if (strstr($value,"/")) {
+         if (strstr($value, "/")) {
             $tab['address'] = str_replace("{", "", preg_replace("/\/.*/", "", $value));
          } else {
             $tab['address'] = str_replace("{", "", preg_replace("/}.*/", "", $value));
@@ -1984,13 +1875,13 @@ class Toolbox {
       $tab['mailbox'] = preg_replace("/.*}/", "", $value);
 
       $tab['type']    = '';
-      if (strstr($value,"/imap")) {
+      if (strstr($value, "/imap")) {
          $tab['type'] = 'imap';
-      } else if (strstr($value,"/pop")) {
+      } else if (strstr($value, "/pop")) {
          $tab['type'] = 'pop';
       }
       $tab['ssl'] = false;
-      if (strstr($value,"/ssl")) {
+      if (strstr($value, "/ssl")) {
          $tab['ssl'] = true;
       }
 
@@ -2011,29 +1902,29 @@ class Toolbox {
          }
       }
       $tab['tls'] = '';
-      if (strstr($value,"/tls")) {
+      if (strstr($value, "/tls")) {
          $tab['tls'] = true;
       }
-      if (strstr($value,"/notls")) {
+      if (strstr($value, "/notls")) {
          $tab['tls'] = false;
       }
       $tab['validate-cert'] = '';
-      if (strstr($value,"/validate-cert")) {
+      if (strstr($value, "/validate-cert")) {
          $tab['validate-cert'] = true;
       }
-      if (strstr($value,"/novalidate-cert")) {
+      if (strstr($value, "/novalidate-cert")) {
          $tab['validate-cert'] = false;
       }
       $tab['norsh'] = '';
-      if (strstr($value,"/norsh")) {
+      if (strstr($value, "/norsh")) {
          $tab['norsh'] = true;
       }
       $tab['secure'] = '';
-      if (strstr($value,"/secure")) {
+      if (strstr($value, "/secure")) {
          $tab['secure'] = true;
       }
       $tab['debug'] = '';
-      if (strstr($value,"/debug")) {
+      if (strstr($value, "/debug")) {
          $tab['debug'] = true;
       }
 
@@ -2062,8 +1953,7 @@ class Toolbox {
       echo "</td></tr>\n";
 
       echo "<tr class='tab_bg_1'><td>" . __('Connection options') . "</td><td>";
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/imap' => __('IMAP'),
                      //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/pop' => __('POP'),);
@@ -2071,18 +1961,18 @@ class Toolbox {
       $svalue = (!empty($tab['type'])?'/'.$tab['type']:'');
 
       Dropdown::showFromArray('server_type', $values,
-                              array('value' => $svalue));
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+                              array('value'               => $svalue,
+                                    'display_emptychoice' => true));
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/ssl' => __('SSL'));
 
       $svalue = ($tab['ssl']?'/ssl':'');
 
       Dropdown::showFromArray('server_ssl', $values,
-                              array('value' => $svalue));
+                              array('value'               => $svalue,
+                                    'display_emptychoice' => true));
 
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/tls' => __('TLS'),
                      //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/notls' => __('NO-TLS'),);
@@ -2096,11 +1986,11 @@ class Toolbox {
       }
 
       Dropdown::showFromArray('server_tls', $values,
-                              array('value' => $svalue,
-                                    'width' => '14%'));
+                              array('value'               => $svalue,
+                                    'width'               => '14%',
+                                    'display_emptychoice' => true));
 
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/novalidate-cert' => __('NO-VALIDATE-CERT'),
                      //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/validate-cert' => __('VALIDATE-CERT'),);
@@ -2114,36 +2004,36 @@ class Toolbox {
       }
 
       Dropdown::showFromArray('server_cert', $values,
-                              array('value' => $svalue));
+                              array('value'               => $svalue,
+                                    'display_emptychoice' => true));
 
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/norsh' => __('NORSH'));
 
       $svalue = ($tab['norsh'] === true?'/norsh':'');
 
       Dropdown::showFromArray('server_rsh', $values,
-                              array('value' => $svalue));
+                              array('value'               => $svalue,
+                                    'display_emptychoice' => true));
 
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/secure' => __('SECURE'));
 
       $svalue = ($tab['secure'] === true?'/secure':'');
 
       Dropdown::showFromArray('server_secure', $values,
-                              array('value' => $svalue));
+                              array('value'               => $svalue,
+                                    'display_emptychoice' => true));
 
-      $values = array(Dropdown::EMPTY_VALUE,
-                     //TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
+      $values = array(//TRANS: imap_open option see http://www.php.net/manual/en/function.imap-open.php
                      '/debug' => __('DEBUG'));
 
       $svalue = ($tab['debug'] === true?'/debug':'');
 
       Dropdown::showFromArray('server_debug', $values,
-                              array('value' => $svalue,
-                                    'width' => '12%'));
-
+                              array('value'               => $svalue,
+                                    'width'               => '12%',
+                                    'display_emptychoice' => true));
 
       echo "<input type=hidden name=imap_string value='".$value."'>";
       echo "</td></tr>\n";
@@ -2186,7 +2076,7 @@ class Toolbox {
       if (isset($input['server_ssl']) && !empty($input['server_ssl'])) {
          $out .= $input['server_ssl'];
       }
-      if (isset($input['server_cert'])
+      if (isset($input['server_cert']) && !empty($input['server_cert'])
           && (!empty($input['server_ssl']) || !empty($input['server_tls']))) {
          $out .= $input['server_cert'];
       }
@@ -2315,6 +2205,45 @@ class Toolbox {
 
 
    /**
+    * Create the GLPI default schema
+    *
+    * @since 9.1
+    *
+    * @param $lang
+    *
+    * @return nothing
+   **/
+   static function createSchema($lang='en_GB') {
+      global $CFG_GLPI, $DB;
+
+      include_once (GLPI_CONFIG_DIR . "/config_db.php");
+
+      $DB = new DB();
+      if (!$DB->runFile(GLPI_ROOT ."/install/mysql/glpi-" . GLPI_SCHEMA_VERSION . "-empty.sql")) {
+         echo "Errors occurred inserting default database";
+      } else {
+         // update default language
+         Config::setConfigurationValues(
+            'core',
+            array(
+               'language' => $lang,
+               'version'  => GLPI_VERSION
+            )
+         );
+         $query = "UPDATE `glpi_users`
+                   SET `language` = NULL";
+         $DB->queryOrDie($query, "4203");
+
+         if (defined('GLPI_SYSTEM_CRON')) {
+            // Downstream packages may provide a good system cron
+            $query = "UPDATE `glpi_crontasks` SET `mode`=2 WHERE `name`!='watcher' AND (`allowmode` & 2)";
+            $DB->queryOrDie($query, "4203");
+         }
+      }
+   }
+
+
+   /**
     * Save a configuration file
     *
     * @since version 0.84
@@ -2367,7 +2296,7 @@ class Toolbox {
    static function decodeArrayFromInput($value) {
 
       if ($dec = base64_decode($value)) {
-         if ($ret = json_decode($dec,true)) {
+         if ($ret = json_decode($dec, true)) {
             return $ret;
          }
       }
@@ -2385,16 +2314,45 @@ class Toolbox {
    static function checkValidReferer() {
       global $CFG_GLPI;
 
-      if (!isset($_SERVER['HTTP_REFERER'])
-          || !is_array($url = parse_url($_SERVER['HTTP_REFERER']))
-          || !isset($url['host'])
+      $isvalidReferer = true;
+
+      if (!isset($_SERVER['HTTP_REFERER'])) {
+         if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
+            Html::displayErrorAndDie(__("No HTTP_REFERER found in request. Reload previous page before doing action again."),
+                                  true);
+            $isvalidReferer = false;
+         }
+      } else if (!is_array($url = parse_url($_SERVER['HTTP_REFERER']))) {
+         if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
+            Html::displayErrorAndDie(__("Error when parsing HTTP_REFERER. Reload previous page before doing action again."),
+                                  true);
+            $isvalidReferer = false;
+         }
+      }
+
+      if (!isset($url['host'])
           || (($url['host'] != $_SERVER['SERVER_NAME'])
-              && (!isset($_SERVER['HTTP_X_FORWARDED_SERVER'])
-                  || ($url['host'] != $_SERVER['HTTP_X_FORWARDED_SERVER'])))
-          || !isset($url['path'])
+            && (!isset($_SERVER['HTTP_X_FORWARDED_SERVER'])
+               || ($url['host'] != $_SERVER['HTTP_X_FORWARDED_SERVER'])))) {
+         if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
+            Html::displayErrorAndDie(__("None or Invalid host in HTTP_REFERER. Reload previous page before doing action again."),
+                                  true);
+            $isvalidReferer = false;
+         }
+      }
+
+      if (!isset($url['path'])
           || (!empty($CFG_GLPI['root_doc'])
-              && (strpos($url['path'], $CFG_GLPI['root_doc']) !== 0))) {
-         Html::displayErrorAndDie(__("The action you have requested is not allowed. Reload previous page before doing action again."),
+            && (strpos($url['path'], $CFG_GLPI['root_doc']) !== 0))) {
+         if ($_SESSION['glpi_use_mode'] == Session::DEBUG_MODE) {
+            Html::displayErrorAndDie(__("None or Invalid path in HTTP_REFERER. Reload previous page before doing action again."),
+                                  true);
+            $isvalidReferer = false;
+         }
+      }
+
+      if (!$isvalidReferer && $_SESSION['glpi_use_mode'] != Session::DEBUG_MODE) {
+            Html::displayErrorAndDie(__("The action you have requested is not allowed. Reload previous page before doing action again."),
                                   true);
       }
    }
@@ -2455,5 +2413,257 @@ class Toolbox {
       return ($mime);
    }
 
+
+   /**
+    * Summary of in_array_recursive
+    *
+    * @since version 9.1
+    *
+    * @param mixed $needle
+    * @param array $haystack
+    * @param bool  $strict: If strict is set to TRUE then it will also
+    *              check the types of the needle in the haystack.
+    * @return bool
+    */
+   static function in_array_recursive($needle, $haystack, $strict = false) {
+
+      $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($haystack));
+
+      foreach ($it AS $element) {
+         if ($strict) {
+            if ($element === $needle) {
+               return true;
+            }
+         } else {
+            if ($element == $needle) {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+
+   /**
+    * Sanitize received values
+    *
+    * @param array $array
+    *
+    * @return array
+    */
+   static public function sanitize($array) {
+      $array = array_map('Toolbox::addslashes_deep', $array);
+      $array = array_map('Toolbox::clean_cross_side_scripting_deep', $array);
+      return $array;
+   }
+
+   /**
+    * Remove accentued characters and return lower case string
+    *
+    * @param string $string String to handle
+    *
+    * @return string
+    */
+   public static function removeHtmlSpecialChars($string) {
+      $string = htmlentities($string, ENT_NOQUOTES, 'utf-8');
+      $string = preg_replace(
+         '#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#',
+         '\1',
+         $string
+      );
+      $string = preg_replace('#&([A-za-z]{2})(?:lig);#', '\1', $string);
+      $string = preg_replace('#&[^;]+;#', '', $string);
+      return self::strtolower($string, 'UTF-8');
+   }
+
+   /**
+    * Slugify
+    *
+    * @param string $string String to slugify
+    *
+    * @return string
+    */
+   public static function slugify($string) {
+      $string = str_replace(' ', '-', self::strtolower($string, 'UTF-8'));
+      $string = self::removeHtmlSpecialChars($string);
+      $string = preg_replace('~[^0-9a-z]+~i', '-', $string);
+      return trim($string, '-');
+   }
+
+   /**
+    * Convert tag to image
+    *
+    * @since version 9.2
+    *
+    * @param string $content_text   text content of input
+    * @param CommonDBTM $item       Glpi item where to convert image tag to image document
+    * @param array $doc_data        list of filenames and tags
+    *
+    * @return string                the $content_text param after parsing
+   **/
+   static function convertTagToImage($content_text, CommonDBTM $item, $doc_data=array()) {
+      global $CFG_GLPI;
+
+      $document = new Document();
+      $matches  = array();
+      // If no doc data available we match all tags in content
+      if (!count($doc_data)) {
+         preg_match_all('/'.Document::getImageTag('(([a-z0-9]+|[\.\-]?)+)').'/', $content_text,
+                        $matches, PREG_PATTERN_ORDER);
+         if (isset($matches[1]) && count($matches[1])) {
+            $doc_data = $doc->find("`tag` IN('".implode("','", array_unique($matches[1]))."')");
+         }
+      }
+
+      if (count($doc_data)) {
+         foreach ($doc_data as $id => $image) {
+            if (isset($image['tag'])) {
+               // Add only image files : try to detect mime type
+               if ($document->getFromDB($id)
+                   && strpos($document->fields['mime'], 'image/') !== false) {
+                  // Replace tags by image in textarea
+                  $ticket_url_param = "";
+                  if ($item instanceof Ticket) {
+                     $ticket_url_param = "&tickets_id=".$item->fields['id'];
+                  }
+                  $img = "<img alt='".$image['tag']."' src='".$CFG_GLPI['root_doc'].
+                          "/front/document.send.php?docid=".$id.$ticket_url_param."'/>";
+
+                  // 1 - Replace direct tag (with prefix and suffix) by the image
+                  $content_text = preg_replace('/'.Document::getImageTag($image['tag']).'/',
+                                               Html::entities_deep($img), $content_text);
+
+                  // 2 - Replace img with tag in id attribute by the image
+                  preg_match_all("/<img.*".$image['tag'].".*>/Uim",
+                                 Html::entity_decode_deep($content_text), $matches);
+                  foreach ($matches[0] as $match_img) {
+                     //retrieve dimensions
+                     $width = $height = 50;
+                     preg_match_all('/(width|height)=\\\"([^"]*)\\\"/i', $match_img, $attributes);
+                     if (isset($attributes[1][0])) {
+                        ${$attributes[1][0]} = $attributes[2][0];
+                     }
+                     if (isset($attributes[1][0])) {
+                        ${$attributes[1][1]} = $attributes[2][1];
+                     }
+
+                     // replace image
+                     $new_image =  Html::convertTagFromRichTextToImageTag($image['tag'],
+                                                                          $width, $height);
+                     $content_text = preg_replace("/<img([^>]*?)(".$image['tag'].")([^<]*?)>/Uim",
+                                                  $new_image,
+                                                  Html::entity_decode_deep($content_text));
+                     $content_text = Html::entities_deep($content_text);
+                  }
+
+                  // Replace <br> TinyMce bug
+                  $content_text = str_replace(array('&gt;rn&lt;','&gt;\r\n&lt;','&gt;\r&lt;','&gt;\n&lt;'),
+                                              '&gt;&lt;', $content_text);
+
+                  // If the tag is from another ticket : link document to ticket
+                  if ($item instanceof Ticket
+                     && $item->getID()
+                     && isset($image['tickets_id'])
+                     && $image['tickets_id'] != $item->getID()) {
+                     $docitem = new Document_Item();
+                     $docitem->add(array('documents_id'  => $image['id'],
+                                         '_do_notif'     => false,
+                                         '_disablenotif' => true,
+                                         'itemtype'      => $item->getType(),
+                                         'items_id'      => $item->fields['id']));
+                  }
+               } else {
+                  // Remove tag
+                  $content_text = preg_replace('/'.Document::getImageTag($image['tag']).'/',
+                                               '', $content_text);
+               }
+            }
+         }
+      }
+
+      return $content_text;
+   }
+
+   /**
+    * Convert image to tag
+    *
+    * @since version 9.2
+    *
+    * @param $content_html   html content of input
+    * @param $force_update   force update of content in item (false by default)
+    *
+    * @return html content
+   **/
+   static function convertImageToTag($content_html, $force_update=false) {
+
+      if (!empty($content_html)) {
+         preg_match_all("/alt\s*=\s*['|\"](.+?)['|\"]/", $content_html, $matches, PREG_PATTERN_ORDER);
+         if (isset($matches[1]) && count($matches[1])) {
+            // Get all image src
+            foreach ($matches[1] as $src) {
+               // Set tag if image matches
+               $content_html = preg_replace(array("/<img.*alt=['|\"]".$src."['|\"][^>]*\>/", "/<object.*alt=['|\"]".$src."['|\"][^>]*\>/"), Document::getImageTag($src), $content_html);
+            }
+         }
+
+         return $content_html;
+      }
+   }
+
+   /**
+    * Delete tag or image from ticket content
+    *
+    * @since version 9.2
+    *
+    * @param string $content   html content of input
+    * @param array $tags       list of tags to clen
+    *
+    * @return html content
+   **/
+   static function cleanTagOrImage($content, array $tags) {
+      global $CFG_GLPI;
+
+      // RICH TEXT : delete img tag
+      if ($CFG_GLPI["use_rich_text"]) {
+         $content = Html::entity_decode_deep($content);
+
+         foreach ($tags as $tag) {
+            $content = preg_replace("/<img.*alt=['|\"]".$tag."['|\"][^>]*\>/", "<p></p>", $content);
+         }
+
+      } else { // SIMPLE TEXT : delete tag
+         foreach ($tags as $tag) {
+            $content = preg_replace('/'.Document::getImageTag($tag).'/', '\r\n', $content);
+         }
+      }
+
+      return $content;
+   }
+
+   /**
+    * Decode JSON in GLPI
+    * Because json can have been modified from addslashes_deep
+    *
+    * @param string $encoded Encoded JSON
+    *
+    * @return mixed
+    */
+   static public function jsonDecode($encoded) {
+      if (!is_string($encoded)) {
+         Toolbox::logDebug('Only strings can be json to decode!');
+         return $encoded;
+      }
+
+      $json = json_decode($encoded);
+
+      if (json_last_error() != JSON_ERROR_NONE) {
+         //something went wrong... Try to stripslashes before decoding.
+         $json = json_decode(self::stripslashes_deep($encoded));
+         if (json_last_error() != JSON_ERROR_NONE) {
+            Toolbox::logDebug('Unable to decode JSON string! Is this really JSON?');
+            return $encoded;
+         }
+      }
+
+      return $json;
+   }
 }
-?>

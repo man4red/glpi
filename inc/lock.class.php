@@ -1,38 +1,37 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -195,7 +194,6 @@ class Lock {
          }
       }
 
-
       $first  = true;
       $item   = new NetworkPort();
       $params = array('is_dynamic' => 1,
@@ -274,10 +272,10 @@ class Lock {
       $nb    = 0;
       foreach ($types as $old => $type) {
          $nb += countElementsInTable(getTableForItemType($type),
-                                     "`items_id`='$ID'
-                                         AND `itemtype`='$itemtype'
-                                         AND `is_dynamic`='1'
-                                         AND `is_deleted`='1'");
+                                     ['items_id'   => $ID,
+                                      'itemtype'   => $itemtype,
+                                      'is_dynamic' => 1,
+                                      'is_deleted' => 1 ]);
       }
       if ($nb) {
          $header = true;
@@ -438,7 +436,7 @@ class Lock {
 
          default :
             // Devices
-            if (preg_match('/^Item\_Device/',$itemtype)) {
+            if (preg_match('/^Item\_Device/', $itemtype)) {
                $condition = array('itemtype'   => $baseitemtype,
                                   'is_dynamic' => 1,
                                   'is_deleted' => 1);
@@ -493,7 +491,7 @@ class Lock {
                            'Device'                 => _n('Component', 'Components', Session::getPluralNumber()),
                            'ComputerVirtualMachine' => _n('Virtual machine', 'Virtual machines', Session::getPluralNumber()));
 
-            _e('Select the type of the item that must be unlock');
+            echo __('Select the type of the item that must be unlock');
             echo "<br><br>\n";
 
             Dropdown::showFromArray('attached_item', $types,
@@ -501,7 +499,7 @@ class Lock {
                                           'size'     => 5,
                                           'values'   => array_keys($types)));
 
-            echo "<br><br>".Html::submit(_x('button','Post'), array('name' => 'massiveaction'));
+            echo "<br><br>".Html::submit(_x('button', 'Post'), array('name' => 'massiveaction'));
             return true;
       }
       return false;
@@ -553,8 +551,6 @@ class Lock {
             }
             return;
       }
-      parent::processMassiveActionsForOneItemtype($ma, $baseitem, $ids);
    }
 
 }
-?>

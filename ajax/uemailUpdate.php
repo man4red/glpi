@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 $AJAX_INCLUDE = 1;
-if (strpos($_SERVER['PHP_SELF'],"uemailUpdate.php")) {
+if (strpos($_SERVER['PHP_SELF'], "uemailUpdate.php")) {
    include ('../inc/includes.php');
    header("Content-Type: text/html; charset=UTF-8");
    Html::header_nocache();
@@ -47,12 +46,16 @@ Session::checkLoginUser();
 if ((isset($_POST['field']) && ($_POST["value"] > 0))
     || (isset($_POST['allow_email']) && $_POST['allow_email'])) {
 
+   if (preg_match('/[^a-z_\-0-9]/i', $_POST['field'])) {
+      throw new \RuntimeException('Invalid field provided!');
+   }
+
    $default_email = "";
    $emails        = array();
    if (isset($_POST['typefield']) && ($_POST['typefield'] == 'supplier')) {
       $supplier = new Supplier();
       if ($supplier->getFromDB($_POST["value"])) {
-      $default_email = $supplier->fields['email'];
+         $default_email = $supplier->fields['email'];
       }
    } else {
       $user          = new User();
@@ -74,10 +77,15 @@ if ((isset($_POST['field']) && ($_POST["value"] > 0))
       $default_notif = $_POST['use_notification'][$user_index];
    }
 
-   if (isset($_POST['alternative_email'][$user_index]) 
+   if (isset($_POST['alternative_email'][$user_index])
        && !empty($_POST['alternative_email'][$user_index])
        && empty($default_email)) {
-      $default_email = $_POST['alternative_email'][$user_index];
+
+      if (NotificationMail::isUserAddressValid($_POST['alternative_email'][$user_index])) {
+         $default_email = $_POST['alternative_email'][$user_index];
+      } else {
+         throw new \RuntimeException('Invalid email provided!');
+      }
    }
 
    $rand = Dropdown::showYesNo($_POST['field'].'[use_notification][]', $default_notif);
@@ -111,9 +119,8 @@ if ((isset($_POST['field']) && ($_POST["value"] > 0))
    }
 
    echo '<br>';
-   printf(__('%1$s: %2$s'),__('Email'), $email_string);
+   printf(__('%1$s: %2$s'), __('Email'), $email_string);
 
 }
 
 Ajax::commonDropdownUpdateItem($_POST);
-?>

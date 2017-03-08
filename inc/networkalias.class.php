@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
 */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -79,9 +78,11 @@ class NetworkAlias extends FQDNLabel {
    static function getInternetNameFromID($ID) {
 
       $networkAlias = new self();
-      if ($networkalias->can($ID, READ))
-         return FQDNLabel::getInternetNameFromLabelAndDomainID($this->fields["name"],
-                                                               $this->fields["fqdns_id"]);
+      if ($networkalias->can($ID, READ)) {
+         return FQDNLabel::getInternetNameFromLabelAndDomainID(
+                 $networkAlias->fields["name"],
+                 $networkAlias->fields["fqdns_id"]);
+      }
       return "";
    }
 
@@ -386,7 +387,7 @@ class NetworkAlias extends FQDNLabel {
          $order = "alias";
       }
 
-      $number = countElementsInTable($alias->getTable(), "`fqdns_id`='".$item->getID()."'");
+      $number = countElementsInTable($alias->getTable(), ['fqdns_id' => $item->getID() ]);
 
       echo "<br><div class='center'>";
 
@@ -423,7 +424,7 @@ class NetworkAlias extends FQDNLabel {
                    OFFSET $start";
 
          foreach ($DB->request($query) as $data) {
-            Session::addToNavigateListItems($alias->getType(),$data["alias_id"]);
+            Session::addToNavigateListItems($alias->getType(), $data["alias_id"]);
             if ($address->getFromDB($data["address_id"])) {
                echo "<tr class='tab_bg_1'>";
                echo "<td><a href='".$alias->getFormURL().'?id='.$data['alias_id']."'>" .
@@ -466,12 +467,12 @@ class NetworkAlias extends FQDNLabel {
             switch ($item->getType()) {
                case 'NetworkName' :
                   $nb = countElementsInTable($this->getTable(),
-                                             "networknames_id='".$item->getID()."'");
+                                            ['networknames_id' => $item->getID() ]);
                   break;
 
                case 'FQDN' :
                   $nb = countElementsInTable($this->getTable(),
-                                             "fqdns_id='".$item->getID()."'");
+                                            ['fqdns_id' => $item->getID() ]);
             }
          }
          return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
@@ -480,22 +481,26 @@ class NetworkAlias extends FQDNLabel {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                      = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => 'glpi_fqdns',
+         'field'              => 'fqdn',
+         'name'               => FQDN::getTypeName(1),
+         'datatype'           => 'string'
+      ];
 
-      $tab[12]['table']         = 'glpi_fqdns';
-      $tab[12]['field']         = 'fqdn';
-      $tab[12]['name']          = FQDN::getTypeName(1);
-      $tab[12]['datatype']      = 'string';
-
-      $tab[20]['table']         = 'glpi_networknames';
-      $tab[20]['field']         = 'name';
-      $tab[20]['name']          = NetworkName::getTypeName(1);
-      $tab[20]['massiveaction'] = false;
-      $tab[20]['datatype']      = 'dropdown';
+      $tab[] = [
+         'id'                 => '20',
+         'table'              => 'glpi_networknames',
+         'field'              => 'name',
+         'name'               => NetworkName::getTypeName(1),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
 }
-?>

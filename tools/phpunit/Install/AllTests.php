@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 include("../../install/update_0723_078.php");
 include("../../install/update_078_0781.php");
@@ -91,18 +90,18 @@ class Install extends PHPUnit_Framework_TestCase {
       $DB->connect();
 
       // Old devicetype for compatibility
-      define("MOBOARD_DEVICE",1);
-      define("PROCESSOR_DEVICE",2);
-      define("RAM_DEVICE",3);
-      define("HDD_DEVICE",4);
-      define("NETWORK_DEVICE",5);
-      define("DRIVE_DEVICE",6);
-      define("CONTROL_DEVICE",7);
-      define("GFX_DEVICE",8);
-      define("SND_DEVICE",9);
-      define("PCI_DEVICE",10);
-      define("CASE_DEVICE",11);
-      define("POWER_DEVICE",12);
+      define("MOBOARD_DEVICE", 1);
+      define("PROCESSOR_DEVICE", 2);
+      define("RAM_DEVICE", 3);
+      define("HDD_DEVICE", 4);
+      define("NETWORK_DEVICE", 5);
+      define("DRIVE_DEVICE", 6);
+      define("CONTROL_DEVICE", 7);
+      define("GFX_DEVICE", 8);
+      define("SND_DEVICE", 9);
+      define("PCI_DEVICE", 10);
+      define("CASE_DEVICE", 11);
+      define("POWER_DEVICE", 12);
 
       // Install a fresh 0.72.3 DB
       $res = $DB->runFile(GLPI_ROOT ."/install/mysql/glpi-0.72.3-empty.sql");
@@ -250,4 +249,3 @@ class Install_AllTests  {
       return $suite;
    }
 }
-?>

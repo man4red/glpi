@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Class DeviceProcessor
@@ -65,36 +64,56 @@ class DeviceProcessor extends CommonDevice {
                                      'type'  => 'integer'),
                                array('name'  => 'nbthreads_default',
                                      'label' => __('Number of threads'),
-                                     'type'  => 'integer')
+                                     'type'  => 'integer'),
+                               array('name'  => 'deviceprocessormodels_id',
+                                     'label' => __('Model'),
+                                     'type'  => 'dropdownValue')
                            ));
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
-      $tab                 = parent::getSearchOptions();
+      $tab[] = [
+         'id'                 => '11',
+         'table'              => $this->getTable(),
+         'field'              => 'frequency_default',
+         'name'               => __('Frequency by default'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[11]['table']    = $this->getTable();
-      $tab[11]['field']    = 'frequency_default';
-      $tab[11]['name']     = __('Frequency by default');
-      $tab[11]['datatype'] = 'string';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'frequence',
+         'name'               => __('Frequency'),
+         'datatype'           => 'string'
+      ];
 
-      $tab[12]['table']    = $this->getTable();
-      $tab[12]['field']    = 'frequence';
-      $tab[12]['name']     = __('Frequency');
-      $tab[12]['datatype'] = 'string';
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => $this->getTable(),
+         'field'              => 'nbcores_default',
+         'name'               => __('Number of cores'),
+         'datatype'           => 'integer'
+      ];
 
+      $tab[] = [
+         'id'                 => '14',
+         'table'              => $this->getTable(),
+         'field'              => 'nbthreads_default',
+         'name'               => __('Number of threads'),
+         'datatype'           => 'integer'
+      ];
 
-
-      $tab[13]['table']    = $this->getTable();
-      $tab[13]['field']    = 'nbcores_default';
-      $tab[13]['name']     = __('Number of cores');
-      $tab[13]['datatype'] = 'integer';
-
-      $tab[14]['table']    = $this->getTable();
-      $tab[14]['field']    = 'nbthreads_default';
-      $tab[14]['name']     = __('Number of threads');
-      $tab[14]['datatype'] = 'integer';
+      $tab[] = [
+         'id'                 => '15',
+         'table'              => 'glpi_deviceprocessormodels',
+         'field'              => 'name',
+         'name'               => __('Model'),
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -192,4 +211,3 @@ class DeviceProcessor extends CommonDevice {
    }
 
 }
-?>

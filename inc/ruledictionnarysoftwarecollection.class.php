@@ -1,41 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class RuleDictionnarySoftwareCollection extends RuleCollection {
@@ -99,7 +98,7 @@ class RuleDictionnarySoftwareCollection extends RuleCollection {
       echo "<tr><td class='tab_bg_2 center' colspan='2'>";
       echo "<input type='submit' name='replay_rule' value=\""._sx('button', 'Post')."\"
              class='submit'>";
-      echo "<input type='hidden' name='replay_confirm' value='replay_confirm'";
+      echo "<input type='hidden' name='replay_confirm' value='replay_confirm'>";
       echo "</td></tr>";
       echo "</table>\n";
       echo "</div>\n";
@@ -164,7 +163,7 @@ class RuleDictionnarySoftwareCollection extends RuleCollection {
             //Replay software dictionnary rules
             $res_rule = $this->processAllRules($input, array(), array());
 
-            if ((isset($res_rule["name"]) && ($res_rule["name"] != $input["name"]))
+            if ((isset($res_rule["name"]) && (strtolower($res_rule["name"]) != strtolower($input["name"])))
                 || (isset($res_rule["version"]) && ($res_rule["version"] != ''))
                 || (isset($res_rule['new_entities_id'])
                     && ($res_rule['new_entities_id'] != $input['entities_id']))
@@ -290,7 +289,7 @@ class RuleDictionnarySoftwareCollection extends RuleCollection {
       }
 
       //Software's name has changed or entity
-      if ((isset($res_rule["name"]) && ($res_rule["name"] != $name))
+      if ((isset($res_rule["name"]) && (strtolower($res_rule["name"]) != strtolower($name)))
             //Entity has changed, and new entity is a parent of the current one
           || (!isset($res_rule["name"])
               && isset($res_rule['new_entities_id'])
@@ -491,4 +490,3 @@ class RuleDictionnarySoftwareCollection extends RuleCollection {
    }
 
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -48,7 +47,7 @@ abstract class CommonITILActor extends CommonDBRelation {
    // items_id_1, items_id_2, itemtype_1 and itemtype_2 are defined inside the inherited classes
    static public $checkItem_2_Rights  = self::DONT_CHECK_ITEM_RIGHTS;
    static public $logs_for_item_2     = false;
-   var $auto_message_on_action        = false;
+   public $auto_message_on_action     = false;
 
    // Requester
    const REQUESTER = 1;
@@ -203,7 +202,7 @@ abstract class CommonITILActor extends CommonDBRelation {
                $emailtab[''] = $new_email;
             }
          }
-         Dropdown::showFromArray("alternative_email",$emailtab,
+         Dropdown::showFromArray("alternative_email", $emailtab,
                                  array('value'   => $this->fields['alternative_email']));
       } else {
          echo "<input type='text' size='40' name='alternative_email' value='".
@@ -213,7 +212,7 @@ abstract class CommonITILActor extends CommonDBRelation {
 
       echo "<tr class='tab_bg_2'>";
       echo "<td class='center' colspan='2'>";
-      echo "<input type='submit' name='update' value=\""._sx('button','Save')."\" class='submit'>";
+      echo "<input type='submit' name='update' value=\""._sx('button', 'Save')."\" class='submit'>";
       echo "<input type='hidden' name='id' value='$ID'>";
       echo "</td></tr>";
 
@@ -277,7 +276,7 @@ abstract class CommonITILActor extends CommonDBRelation {
 
       echo "<tr class='tab_bg_2'>";
       echo "<td class='center' colspan='2'>";
-      echo "<input type='submit' name='update' value=\""._sx('button','Save')."\" class='submit'>";
+      echo "<input type='submit' name='update' value=\""._sx('button', 'Save')."\" class='submit'>";
       echo "<input type='hidden' name='id' value='$ID'>";
       echo "</td></tr>";
 
@@ -290,10 +289,6 @@ abstract class CommonITILActor extends CommonDBRelation {
       global $CFG_GLPI;
 
       $donotif = $CFG_GLPI["use_mailing"];
-
-//       if (isset($this->input["_no_notif"]) && $this->input["_no_notif"]) {
-//          $donotif = false;
-//       }
 
       $item = $this->getConnexityItem(static::$itemtype_1, static::getItilObjectForeignKey());
 
@@ -351,14 +346,32 @@ abstract class CommonITILActor extends CommonDBRelation {
       }
       $item->updateDateMod($this->fields[static::getItilObjectForeignKey()], $no_stat_computation);
 
-      // Check object status and update it if needed
-      if (!isset($this->input['_from_object'])) {
-         if ($item->getFromDB($this->fields[static::getItilObjectForeignKey()])) {
-            if (in_array($item->fields["status"], $item->getNewStatusArray())
-                && in_array(CommonITILObject::ASSIGNED, array_keys($item->getAllStatusArray()))) {
-               $item->update(array('id'     => $item->getID(),
-                                   'status' => CommonITILObject::ASSIGNED));
+      if ($item->getFromDB($this->fields[static::getItilObjectForeignKey()])) {
+         // Check object status and update it if needed
+         if (!isset($this->input['_from_object'])
+             && in_array($item->fields["status"], $item->getNewStatusArray())
+             && in_array(CommonITILObject::ASSIGNED, array_keys($item->getAllStatusArray()))) {
+            $item->update(array('id'     => $item->getID(),
+                                'status' => CommonITILObject::ASSIGNED));
+         }
+
+         // raise notification for this actor addition
+         if (!isset($this->input['_disablenotif'])) {
+            $string_type = "";
+            switch ($this->input['type']) {
+               case self::REQUESTER:
+                  $string_type = "requester";
+                  break;
+               case self::OBSERVER:
+                  $string_type = "observer";
+                  break;
+               case self::ASSIGN:
+                  $string_type = "assign";
+                  break;
             }
+            // example for event: assign_group
+            $event = $string_type."_".strtolower($this::$itemtype_2);
+            NotificationEvent::raiseEvent($event, $item);
          }
       }
 
@@ -366,4 +379,3 @@ abstract class CommonITILActor extends CommonDBRelation {
    }
 
 }
-?>

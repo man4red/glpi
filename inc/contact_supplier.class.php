@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 class Contact_Supplier extends CommonDBRelation{
@@ -51,7 +50,7 @@ class Contact_Supplier extends CommonDBRelation{
 
 
    static function getTypeName($nb=0) {
-      return _n('Link Contact/Supplier','Links Contact/Supplier',$nb);
+      return _n('Link Contact/Supplier', 'Links Contact/Supplier', $nb);
    }
 
    function getForbiddenStandardMassiveAction() {
@@ -59,15 +58,6 @@ class Contact_Supplier extends CommonDBRelation{
       $forbidden   = parent::getForbiddenStandardMassiveAction();
       $forbidden[] = 'update';
       return $forbidden;
-   }
-
-   /**
-    * Get search function for the class
-    *
-    * @return array of search option
-   **/
-   function getSearchOptions() {
-      return parent::getSearchOptions();
    }
 
 
@@ -166,7 +156,7 @@ class Contact_Supplier extends CommonDBRelation{
                 LEFT JOIN `glpi_entities` ON (`glpi_entities`.`id`=`glpi_suppliers`.`entities_id`)
                 WHERE `glpi_contacts_suppliers`.`contacts_id` = '$instID'
                       AND `glpi_contacts_suppliers`.`suppliers_id` = `glpi_suppliers`.`id`".
-                      getEntitiesRestrictRequest(" AND","glpi_suppliers",'','',true) ."
+                      getEntitiesRestrictRequest(" AND", "glpi_suppliers", '', '', true) ."
                 ORDER BY `glpi_entities`.`completename`, `name`";
 
       $result = $DB->query($query);
@@ -194,7 +184,7 @@ class Contact_Supplier extends CommonDBRelation{
                                   'entity'      => $contact->fields["entities_id"],
                                   'entity_sons' => $contact->fields["is_recursive"]));
          echo "</td><td class='center'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</td></tr>";
 
          echo "</table>";
@@ -246,7 +236,7 @@ class Contact_Supplier extends CommonDBRelation{
             if (!empty($website)) {
                $website = $data["website"];
 
-               if (!preg_match("?https*://?",$website)) {
+               if (!preg_match("?https*://?", $website)) {
                   $website = "http://".$website;
                }
                $website = "<a target=_blank href='$website'>".$data["website"]."</a>";
@@ -271,7 +261,6 @@ class Contact_Supplier extends CommonDBRelation{
          }
          echo $header_begin.$header_bottom.$header_end;
       }
-
 
       echo "</table>";
       if ($canedit && $number) {
@@ -331,7 +320,7 @@ class Contact_Supplier extends CommonDBRelation{
                                  'entity_sons' => $supplier->fields["is_recursive"]));
 
          echo "</td><td class='center'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</td></tr>";
 
          echo "</table>";
@@ -379,7 +368,7 @@ class Contact_Supplier extends CommonDBRelation{
          foreach ($contacts as $data) {
             $ID                = $data["ID_ent"];
             $used[$data["id"]] = $data["id"];
-            Session::addToNavigateListItems('Contact',$data["id"]);
+            Session::addToNavigateListItems('Contact', $data["id"]);
 
             echo "<tr class='tab_bg_1".($data["is_deleted"]?"_2":"")."'>";
             if ($canedit) {
@@ -413,4 +402,3 @@ class Contact_Supplier extends CommonDBRelation{
       echo "</div>";
    }
 }
-?>

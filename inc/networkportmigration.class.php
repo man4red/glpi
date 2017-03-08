@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// NetworkPortMigration class : class of unknown objects defined inside the NetworkPort before 0.84
@@ -216,15 +215,15 @@ class NetworkPortMigration extends CommonDBChild {
             printf(__('Network port information conflicting with %s'), $network->getLink());
          } else {
             if (!isset($address) || !isset($netmask)) {
-               _e('Invalid address or netmask');
+               echo __('Invalid address or netmask');
             } else {
-               _e('No conflicting network');
+               echo __('No conflicting network');
             }
             echo "&nbsp;<a href='".Toolbox::getItemTypeFormURL('IPNetwork')."'>" .
                   __('you may have to add a network')."</a>";
          }
          echo "</td></tr>\n";
-       }
+      }
 
       if ($this->fields['invalid_gateway'] == 1) {
          $number_real_errors ++;
@@ -250,26 +249,26 @@ class NetworkPortMigration extends CommonDBChild {
             echo "<a href='".$networkPort->getLinkURL()."'>".
                    __('Add a correct IP to the network port') . "</a>";
          } else {
-            _e('Unknown network port');
+            echo __('Unknown network port');
          }
          echo "</td></tr>\n";
       }
 
-       if ($number_real_errors == 0) {
+      if ($number_real_errors == 0) {
          echo "<tr class='tab_bg_1'><th colspan='3'>" .
               __('I don\'t understand why this migration error is not deleted.');
          echo "</th><th>";
          Html::showSimpleForm($this->getFormURL(), 'delete', __('You can delete this migration error'),
                            array('id' => $this->getID()));
          echo "</th></tr>\n";
-       } else {
+      } else {
          echo "<tr class='tab_bg_1'><th>" . __('At all events') . "</th>\n";
          echo "<td colspan='3'>";
          Html::showSimpleForm($this->getFormURL(), 'delete', __('You can delete this migration error'),
                array('id' => $this->getID()));
 
          echo "</td></tr>\n";
-       }
+      }
 
       echo "<tr class='tab_bg_1'><td colspan='4'>&nbsp;</td></tr>\n";
 
@@ -307,7 +306,7 @@ class NetworkPortMigration extends CommonDBChild {
             $row = $DB->fetch_assoc($result);
             echo $row['name'];
          } else {
-            _e('Unknown interface');
+            echo __('Unknown interface');
          }
       }
       echo "</$interface_cell>";
@@ -346,7 +345,7 @@ class NetworkPortMigration extends CommonDBChild {
             Dropdown::showItemTypes('transform_to', NetworkPort::getNetworkPortInstantiations(),
                                     array('value' => 'NetworkPortEthernet'));
             echo "<br><br>";
-            echo Html::submit(_x('button','Post'), array('name' => 'massiveaction'))."</span>";
+            echo Html::submit(_x('button', 'Post'), array('name' => 'massiveaction'))."</span>";
             return true;
       }
       return parent::showMassiveActionsSubForm($ma);
@@ -405,47 +404,63 @@ class NetworkPortMigration extends CommonDBChild {
    }
 
 
-   function getSearchOptions() {
-      global $CFG_GLPI;
-
-      $tab         = parent::getSearchOptions();
+   function getSearchOptionsNew() {
+      $tab = parent::getSearchOptionsNew();
 
       $optionIndex = 10;
       // From 10 to 14
       foreach (self::getMotives() as $motive => $name) {
-         $tab[$optionIndex]['table']      = $this->getTable();
-         $tab[$optionIndex]['field']      = $motive;
-         $tab[$optionIndex]['name']       = $name;
-         $tab[$optionIndex]['datatype']   = 'bool';
+         $tab[] = [
+            'id'                 => $optionIndex,
+            'table'              => $this->getTable(),
+            'field'              => $motive,
+            'name'               => $name,
+            'datatype'           => 'bool'
+         ];
 
          $optionIndex ++;
       }
 
-      $tab[20]['table']         = $this->getTable();
-      $tab[20]['field']         = 'ip';
-      $tab[20]['datatype']      = 'ip';
-      $tab[20]['name']          = IPAddress::getTypeName(1);
+      $tab[] = [
+         'id'                 => '20',
+         'table'              => $this->getTable(),
+         'field'              => 'ip',
+         'datatype'           => 'ip',
+         'name'               => IPAddress::getTypeName(1)
+      ];
 
-      $tab[21]['table']         = $this->getTable();
-      $tab[21]['field']         = 'netmask';
-      $tab[21]['datatype']      = 'string';
-      $tab[21]['name']          = IPNetmask::getTypeName(1);
+      $tab[] = [
+         'id'                 => '21',
+         'table'              => $this->getTable(),
+         'field'              => 'netmask',
+         'datatype'           => 'string',
+         'name'               => IPNetmask::getTypeName(1)
+      ];
 
-      $tab[22]['table']         = $this->getTable();
-      $tab[22]['field']         = 'subnet';
-      $tab[22]['datatype']      = 'string';
-      $tab[22]['name']          = __('Network address');
+      $tab[] = [
+         'id'                 => '22',
+         'table'              => $this->getTable(),
+         'field'              => 'subnet',
+         'datatype'           => 'string',
+         'name'               => __('Network address')
+      ];
 
-      $tab[23]['table']         = $this->getTable();
-      $tab[23]['field']         = 'gateway';
-      $tab[23]['datatype']      = 'string';
-      $tab[23]['name']          = IPAddress::getTypeName(1);
+      $tab[] = [
+         'id'                 => '23',
+         'table'              => $this->getTable(),
+         'field'              => 'gateway',
+         'datatype'           => 'string',
+         'name'               => IPAddress::getTypeName(1)
+      ];
 
       if (TableExists('glpi_networkinterfaces')) {
-         $tab[24]['table']         = 'glpi_networkinterfaces';
-         $tab[24]['field']         = 'name';
-         $tab[24]['datatype']      = 'dropdown';
-         $tab[24]['name']          = __('Network interface');
+         $tab[] = [
+            'id'                 => '24',
+            'table'              => 'glpi_networkinterfaces',
+            'field'              => 'name',
+            'datatype'           => 'dropdown',
+            'name'               => __('Network interface')
+         ];
       }
 
       return $tab;
@@ -469,4 +484,3 @@ class NetworkPortMigration extends CommonDBChild {
    }
 
 }
-?>

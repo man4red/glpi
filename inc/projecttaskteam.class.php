@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -37,7 +36,7 @@
 
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 //!  ProjectTaskTeam Class
@@ -50,18 +49,18 @@ if (!defined('GLPI_ROOT')) {
 class ProjectTaskTeam extends CommonDBRelation {
 
    // From CommonDBTM
-   public $dohistory                   = true;
-   var $no_form_page                   = true;
+   public $dohistory                  = true;
+   public $no_form_page               = true;
 
    // From CommonDBRelation
-   static public $itemtype_1             = 'ProjectTask';
-   static public $items_id_1             = 'projecttasks_id';
+   static public $itemtype_1          = 'ProjectTask';
+   static public $items_id_1          = 'projecttasks_id';
 
    static public $itemtype_2          = 'itemtype';
    static public $items_id_2          = 'items_id';
    static public $checkItem_2_Rights  = self::DONT_CHECK_ITEM_RIGHTS;
 
-   static public $available_types      = array('User', 'Group', 'Supplier', 'Contact');
+   static public $available_types     = array('User', 'Group', 'Supplier', 'Contact');
 
 
    /**
@@ -108,9 +107,7 @@ class ProjectTaskTeam extends CommonDBRelation {
    **/
    static function countForProject(Project $item) {
 
-      $restrict = "`glpi_projecttaskteams`.`projecttasks_id` = '".$item->getField('id') ."'";
-
-      return countElementsInTable(array('glpi_projecttaskteams'), $restrict);
+      return countElementsInTable(array('glpi_projecttaskteams'), ['glpi_projecttaskteams.projecttasks_id' => $item->getField('id')]);
    }
 
 
@@ -155,4 +152,3 @@ class ProjectTaskTeam extends CommonDBRelation {
    }
 
 }
-?>

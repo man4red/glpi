@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -130,7 +129,7 @@ class Report extends CommonGLPI{
          $file          = $report_list["$val"]["file"];
          $key           = $CFG_GLPI["root_doc"]."/front/".$file;
          $values[$key]  = $name;
-         if (stripos($_SERVER['REQUEST_URI'],$key) !== false) {
+         if (stripos($_SERVER['REQUEST_URI'], $key) !== false) {
             $selected = $key;
          }
       }
@@ -153,13 +152,13 @@ class Report extends CommonGLPI{
       foreach ($optgroup as $opt => $title) {
          $group = $title;
          foreach ($names as $key => $val) {
-             if ($opt == $val["plug"]) {
+            if ($opt == $val["plug"]) {
                $file                  = $CFG_GLPI["root_doc"]."/plugins/".$key;
                $values[$group][$file] = $val["name"];
-               if (stripos($_SERVER['REQUEST_URI'],$file) !== false) {
+               if (stripos($_SERVER['REQUEST_URI'], $file) !== false) {
                   $selected = $file;
                }
-             }
+            }
          }
       }
 
@@ -180,10 +179,10 @@ class Report extends CommonGLPI{
    static function showDefaultReport() {
       global $DB;
 
-      # Title
+      // Title
       echo "<span class='big b'>GLPI ".Report::getTypeName(Session::getPluralNumber())."</span><br><br>";
 
-      # 1. Get counts of itemtype
+      // 1. Get counts of itemtype
       $items     = array('Computer', 'Monitor', 'NetworkEquipment', 'Peripheral', 'Phone',
                          'Printer', 'Software');
 
@@ -207,9 +206,9 @@ class Report extends CommonGLPI{
                    FROM `".$table_item."`
                    $join
                    $where ".
-                         getEntitiesRestrictRequest("AND",$table_item);
+                         getEntitiesRestrictRequest("AND", $table_item);
          $result = $DB->query($query);
-         $number = $DB->result($result,0,0);
+         $number = $DB->result($result, 0, 0);
 
          echo "<tr class='tab_bg_2'><td>".$itemtype::getTypeName(Session::getPluralNumber())."</td>";
          echo "<td class='numeric'>$number</td></tr>";
@@ -217,8 +216,7 @@ class Report extends CommonGLPI{
 
       echo "<tr class='tab_bg_1'><td colspan='2' class='b'>".__('Operating system')."</td></tr>";
 
-
-      # 2. Get some more number data (operating systems per computer)
+      // 2. Get some more number data (operating systems per computer)
 
       $where = "WHERE `is_deleted` = '0'
                       AND `is_template` = '0' ";
@@ -228,7 +226,7 @@ class Report extends CommonGLPI{
                 LEFT JOIN `glpi_operatingsystems`
                    ON (`glpi_computers`.`operatingsystems_id` = `glpi_operatingsystems`.`id`)
                 $where ".
-                        getEntitiesRestrictRequest("AND","glpi_computers")."
+                        getEntitiesRestrictRequest("AND", "glpi_computers")."
                 GROUP BY `glpi_operatingsystems`.`name`";
       $result = $DB->query($query);
 
@@ -240,7 +238,7 @@ class Report extends CommonGLPI{
          echo "<td class='numeric'>".$data['count']."</td></tr>";
       }
 
-      # Get counts of types
+      // Get counts of types
 
       $val   = array_flip($items);
       unset($val["Software"]);
@@ -271,7 +269,7 @@ class Report extends CommonGLPI{
                          ON (`".$table_item."`.`".$typefield."` = `".$type_table."`.`id`)
                    $join
                    $where ".
-                          getEntitiesRestrictRequest("AND",$table_item)."
+                          getEntitiesRestrictRequest("AND", $table_item)."
                    GROUP BY `".$type_table."`.`name`";
          $result = $DB->query($query);
 
@@ -310,6 +308,7 @@ class Report extends CommonGLPI{
                        PORT_1.`id` AS id_1,
                        PORT_1.`name` AS port_1,
                        PORT_1.`mac` AS mac_1,
+                       PORT_1.`logical_number` AS logical_1,
                        GROUP_CONCAT(ADDR_1.`name` SEPARATOR ',') AS ip_1,
                        PORT_2.`itemtype` AS itemtype_2,
                        PORT_2.`items_id` AS items_id_2,
@@ -368,6 +367,7 @@ class Report extends CommonGLPI{
          }
          echo "<th>".__('Device type')."</th>";
          echo "<th>".__('Device name')."</th>";
+         echo "<th>".__('Port Number')."</th>";
          echo "<th>".NetworkPort::getTypeName(1)."</th>";
          echo "<th>".__('MAC address')."</th>";
          echo "<th>".IPAddress::getTypeName(0)."</th>";
@@ -383,10 +383,10 @@ class Report extends CommonGLPI{
 
             // To ensure that the NetworkEquipment remain the first item, we test its type
             if ($line['itemtype_2'] == 'NetworkEquipment') {
-              $idx = 2;
-           } else {
-              $idx = 1;
-           }
+               $idx = 2;
+            } else {
+               $idx = 1;
+            }
 
             if (!empty($extra)) {
                echo "<td>".(empty($line['extra']) ? NOT_AVAILABLE : $line['extra'])."</td>";
@@ -406,6 +406,7 @@ class Report extends CommonGLPI{
                echo "<td> ".NOT_AVAILABLE." </td>";
                echo "<td> ".NOT_AVAILABLE." </td>";
             }
+            echo "<td>".(empty($line["logical_$idx"]) ? NOT_AVAILABLE : $line["logical_$idx"])."</td>";
             echo "<td>".(empty($line["port_$idx"]) ? NOT_AVAILABLE : $line["port_$idx"])."</td>";
             echo "<td>".(empty($line["mac_$idx"]) ? NOT_AVAILABLE : $line["mac_$idx"])."</td>";
             echo "<td>".(empty($line["ip_$idx"]) ? NOT_AVAILABLE : $line["ip_$idx"])."</td>";
@@ -453,4 +454,3 @@ class Report extends CommonGLPI{
    }
 
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -77,8 +76,8 @@ class Item_Ticket extends CommonDBRelation{
       $ticket = new Ticket();
       // Not item linked for closed tickets
       if ($ticket->getFromDB($this->fields['tickets_id'])
-          && in_array($ticket->fields['status'],$ticket->getClosedStatusArray())) {
-        return false;
+          && in_array($ticket->fields['status'], $ticket->getClosedStatusArray())) {
+         return false;
       }
 
       return parent::canCreateItem();
@@ -126,10 +125,9 @@ class Item_Ticket extends CommonDBRelation{
    function prepareInputForAdd($input) {
 
       // Avoid duplicate entry
-      $restrict = " `tickets_id` = '".$input['tickets_id']."'
-                   AND `itemtype` = '".$input['itemtype']."'
-                   AND `items_id` = '".$input['items_id']."'";
-      if (countElementsInTable($this->getTable(), $restrict) > 0) {
+      if (countElementsInTable($this->getTable(), ['tickets_id' => $input['tickets_id'],
+                                                   'itemtype'   => $input['itemtype'],
+                                                   'items_id'   => $input['items_id']]) > 0) {
          return false;
       }
 
@@ -174,9 +172,193 @@ class Item_Ticket extends CommonDBRelation{
 
       $nb = countElementsInTable(array('glpi_items_tickets', 'glpi_tickets'), $restrict);
 
-      return $nb ;
+      return $nb;
    }
 
+   /**
+    * Print the HTML ajax associated item add
+    *
+    * @param $ticket Ticket object
+    * @param $options   array of possible options:
+    *    - id                  : ID of the ticket
+    *    - _users_id_requester : ID of the requester user
+    *    - items_id            : array of elements (itemtype => array(id1, id2, id3, ...))
+    *
+    * @return Nothing (display)
+   **/
+   static function itemAddForm(Ticket $ticket, $options=array()) {
+      global $CFG_GLPI;
+
+      $params = array('id'                  => (isset($ticket->fields['id'])
+                                                && $ticket->fields['id'] != '')
+                                                   ? $ticket->fields['id']
+                                                   : 0,
+                      '_users_id_requester' => 0,
+                      'items_id'            => array(),
+                      'itemtype'            => '',
+                      '_canupdate'          => false);
+
+      $opt = array();
+
+      foreach ($options as $key => $val) {
+         if (!empty($val)) {
+            $params[$key] = $val;
+         }
+      }
+
+      if (!$ticket->can($params['id'], READ)) {
+         return false;
+      }
+
+      $canedit = ($ticket->can($params['id'], UPDATE)
+                  && $params['_canupdate']);
+
+      // Ticket update case
+      if ($params['id'] > 0) {
+         // Get requester
+         $class        = new $ticket->userlinkclass();
+         $tickets_user = $class->getActors($params['id']);
+         if (isset($tickets_user[CommonITILActor::REQUESTER])
+             && (count($tickets_user[CommonITILActor::REQUESTER]) == 1)) {
+            foreach ($tickets_user[CommonITILActor::REQUESTER] as $user_id_single) {
+               $params['_users_id_requester'] = $user_id_single['users_id'];
+            }
+         }
+
+         // Get associated elements for ticket
+         $used = self::getUsedItems($params['id']);
+         foreach ($used as $itemtype => $items) {
+            foreach ($items as $items_id) {
+               if (!isset($params['items_id'][$itemtype])
+                   || !in_array($items_id, $params['items_id'][$itemtype])) {
+                  $params['items_id'][$itemtype][] = $items_id;
+               }
+            }
+         }
+      }
+
+      // Get ticket template
+      $tt = new TicketTemplate();
+      if (isset($options['_tickettemplate'])) {
+         $tt                  = $options['_tickettemplate'];
+         if (isset($tt->fields['id'])) {
+            $opt['templates_id'] = $tt->fields['id'];
+         }
+      } else if (isset($options['templates_id'])) {
+         $tt->getFromDBWithDatas($options['templates_id']);
+         if (isset($tt->fields['id'])) {
+            $opt['templates_id'] = $tt->fields['id'];
+         }
+      }
+
+      $rand  = mt_rand();
+      $count = 0;
+
+      echo "<div id='itemAddForm$rand'>";
+
+      // Show associated item dropdowns
+      if ($canedit) {
+         echo "<div style='float:left'>";
+         $p = array('used'       => $params['items_id'],
+                    'rand'       => $rand,
+                    'tickets_id' => $params['id']);
+         // My items
+         if ($params['_users_id_requester'] > 0) {
+            Item_Ticket::dropdownMyDevices($params['_users_id_requester'], $ticket->fields["entities_id"], $params['itemtype'], 0, $p);
+         }
+         // Global search
+         Item_Ticket::dropdownAllDevices("itemtype", $params['itemtype'], 0, 1, $params['_users_id_requester'], $ticket->fields["entities_id"], $p);
+         echo "<span id='item_ticket_selection_information'></span>";
+         echo "</div>";
+
+         // Add button
+         echo "<a href='javascript:itemAction$rand(\"add\");' class='vsubmit' style='float:left'>"._sx('button', 'Add')."</a>";
+      }
+
+      // Display list
+      echo "<div style='clear:both;'>";
+
+      if (!empty($params['items_id'])) {
+         // No delete if mandatory and only one item
+         $delete = true;
+         $cpt = 0;
+         foreach ($params['items_id'] as $itemtype => $items) {
+            foreach ($items as $items_id) {
+               $cpt++;
+            }
+         }
+
+         if ($cpt == 1 && isset($tt->mandatory['items_id'])) {
+            $delete = false;
+         }
+         foreach ($params['items_id'] as $itemtype => $items) {
+            foreach ($items as $items_id) {
+               if (($count < 5 && $params['id']) || $params['id'] == 0) {
+                  echo Item_Ticket::showItemToAdd($params['id'], $itemtype, $items_id, array('rand' => $rand, 'delete' => $delete));
+               }
+               $count++;
+            }
+         }
+      }
+
+      if ($count == 0) {
+         echo "<input type='hidden' value='0' name='items_id'>";
+      }
+
+      if ($params['id'] > 0 && $count > 5) {
+         echo "<i><a href='".$ticket->getFormURL()."?id=".$params['id']."&amp;forcetab=Item_Ticket$1'>"
+                  .__('Display all items')." (".$count.")</a></i>";
+      }
+      echo "</div>";
+
+      foreach (array('id', '_users_id_requester', 'items_id', 'itemtype', '_canupdate') as $key) {
+         $opt[$key] = $params[$key];
+      }
+
+      $js  = " function itemAction$rand(action, itemtype, items_id) {";
+      $js .= "    $.ajax({
+                     url: '".$CFG_GLPI['root_doc']."/ajax/itemTicket.php',
+                     dataType: 'html',
+                     data: {'action'     : action,
+                            'rand'       : $rand,
+                            'params'     : ".json_encode($opt).",
+                            'my_items'   : $('#dropdown_my_items$rand').val(),
+                            'itemtype'   : (itemtype === undefined) ? $('#dropdown_itemtype$rand').val() : itemtype,
+                            'items_id'   : (items_id === undefined) ? $('#dropdown_add_items_id$rand').val() : items_id},
+                     success: function(response) {";
+      $js .= "          $(\"#itemAddForm$rand\").html(response);";
+      $js .= "       }";
+      $js .= "    });";
+      $js .= " }";
+      echo Html::scriptBlock($js);
+      echo "</div>";
+   }
+
+
+   static function showItemToAdd($tickets_id, $itemtype, $items_id, $options) {
+      global $CFG_GLPI;
+
+      $params = array('rand' => mt_rand(), 'delete' => true);
+
+      foreach ($options as $key => $val) {
+         $params[$key] = $val;
+      }
+
+      $result = "";
+
+      if ($item = getItemForItemtype($itemtype)) {
+         $item->getFromDB($items_id);
+         $result =  "<div id='".$itemtype."_".$items_id."'>";
+         $result .= $item->getTypeName(1)." : ".$item->getLink(array('comments' => true));
+         $result .= "<input type='hidden' value='$items_id' name='items_id[$itemtype][$items_id]'>";
+         if ($params['delete']) {
+            $result .= " <img src=\"".$CFG_GLPI['root_doc']."/pics/delete.png\" onclick=\"itemAction".$params['rand']."('delete', '$itemtype', '$items_id');\">";
+         }
+         $result .= "</div>";
+      }
+
+      return $result;
+   }
 
    /**
     * Print the HTML array for Items linked to a ticket
@@ -194,7 +376,7 @@ class Item_Ticket extends CommonDBRelation{
          return false;
       }
 
-      $canedit = ($ticket->canEdit($instID)
+      $canedit = ($ticket->canAddItem($instID)
                   && isset($_SESSION["glpiactiveprofile"])
                   && $_SESSION["glpiactiveprofile"]["interface"] == "central");
       $rand    = mt_rand();
@@ -206,7 +388,6 @@ class Item_Ticket extends CommonDBRelation{
 
       $result = $DB->query($query);
       $number = $DB->numrows($result);
-
 
       if ($canedit) {
          echo "<div class='firstbloc'>";
@@ -229,7 +410,7 @@ class Item_Ticket extends CommonDBRelation{
          }
 
          if ($dev_user_id > 0) {
-            self::dropdownMyDevices($dev_user_id, $ticket->fields["entities_id"], null, 0, $instID);
+            self::dropdownMyDevices($dev_user_id, $ticket->fields["entities_id"], null, 0, array('tickets_id' => $instID));
          }
 
          $data =  array_keys(getAllDatasFromTable('glpi_items_tickets'));
@@ -240,7 +421,7 @@ class Item_Ticket extends CommonDBRelation{
             }
          }
 
-         self::dropdownAllDevices("itemtype", null, 0, 1, $dev_user_id, $ticket->fields["entities_id"], $instID);
+         self::dropdownAllDevices("itemtype", null, 0, 1, $dev_user_id, $ticket->fields["entities_id"], array('tickets_id' => $instID));
          echo "<span id='item_ticket_selection_information'></span>";
          echo "</td><td class='center' width='30%'>";
          echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
@@ -272,11 +453,15 @@ class Item_Ticket extends CommonDBRelation{
       $header_end .= "<th>".__('Entity')."</th>";
       $header_end .= "<th>".__('Name')."</th>";
       $header_end .= "<th>".__('Serial number')."</th>";
-      $header_end .= "<th>".__('Inventory number')."</th></tr>";
+      $header_end .= "<th>".__('Inventory number')."</th>";
+      if ($canedit && $number) {
+         $header_end .= "<th width='10'>".__('Update the item')."</th>";
+      }
+      echo "<tr>";
       echo $header_begin.$header_top.$header_end;
 
       $totalnb = 0;
-      for ($i=0 ; $i<$number ; $i++) {
+      for ($i=0; $i<$number; $i++) {
          $itemtype = $DB->result($result, $i, "itemtype");
          if (!($item = getItemForItemtype($itemtype))) {
             continue;
@@ -310,13 +495,13 @@ class Item_Ticket extends CommonDBRelation{
             $result_linked = $DB->query($query);
             $nb            = $DB->numrows($result_linked);
 
-            for ($prem=true ; $data=$DB->fetch_assoc($result_linked) ; $prem=false) {
+            for ($prem=true; $data=$DB->fetch_assoc($result_linked); $prem=false) {
                $name = $data["name"];
                if ($_SESSION["glpiis_ids_visible"]
                    || empty($data["name"])) {
                   $name = sprintf(__('%1$s (%2$s)'), $name, $data["id"]);
                }
-               if($_SESSION['glpiactiveprofile']['interface'] != 'helpdesk') {
+               if ($_SESSION['glpiactiveprofile']['interface'] != 'helpdesk') {
                   $link     = $itemtype::getFormURLWithID($data['id']);
                   $namelink = "<a href=\"".$link."\">".$name."</a>";
                } else {
@@ -343,6 +528,12 @@ class Item_Ticket extends CommonDBRelation{
                     "</td>";
                echo "<td class='center'>".
                       (isset($data["otherserial"])? "".$data["otherserial"]."" :"-")."</td>";
+               if ($canedit) {
+                  echo "<td width='10'>";
+                  Html::showMassiveActionCheckBox($itemtype, $data["id"]);
+                  echo "</td>";
+               }
+
                echo "</tr>";
             }
             $totalnb += $nb;
@@ -373,7 +564,7 @@ class Item_Ticket extends CommonDBRelation{
                    && (count($_SESSION["glpiactiveprofile"]["helpdesk_item_type"]) > 0)) {
                   if ($_SESSION['glpishow_count_on_tabs']) {
                      $nb = countElementsInTable('glpi_items_tickets',
-                                                "`tickets_id` = '".$item->getID()."'");
+                                                ['tickets_id' => $item->getID() ]);
                   }
                   return self::createTabEntry(_n('Item', 'Items', Session::getPluralNumber()), $nb);
                }
@@ -402,28 +593,38 @@ class Item_Ticket extends CommonDBRelation{
     * @param $admin              is an admin access ? (default 0)
     * @param $users_id           user ID used to display my devices (default 0
     * @param $entity_restrict    Restrict to a defined entity (default -1)
-    * @param $tickets_id         Id of the ticket
+    * @param $options   array of possible options:
+    *    - tickets_id : ID of the ticket
+    *    - used       : ID of the requester user
+    *    - multiple   : allow multiple choice
+    *    - rand       : random number
     *
     * @return nothing (print out an HTML select box)
    **/
    static function dropdownAllDevices($myname, $itemtype, $items_id=0, $admin=0, $users_id=0,
-                                      $entity_restrict=-1, $tickets_id=0) {
+                                      $entity_restrict=-1,$options=array()) {
       global $CFG_GLPI, $DB;
 
-      $used = self::getUsedItems($tickets_id);
+      $params = array('tickets_id' => 0,
+                      'used'       => array(),
+                      'multiple'   => 0,
+                      'rand'       => mt_rand());
 
-      $rand = mt_rand();
+      foreach ($options as $key => $val) {
+         $params[$key] = $val;
+      }
+
+      $rand = $params['rand'];
 
       if ($_SESSION["glpiactiveprofile"]["helpdesk_hardware"] == 0) {
          echo "<input type='hidden' name='$myname' value=''>";
          echo "<input type='hidden' name='items_id' value='0'>";
 
       } else {
-         $rand = mt_rand();
          echo "<div id='tracking_all_devices$rand'>";
          if ($_SESSION["glpiactiveprofile"]["helpdesk_hardware"]&pow(2,
                                                                      Ticket::HELPDESK_ALL_HARDWARE)) {
-
+            // Display a message if view my hardware
             if ($users_id
                 &&($_SESSION["glpiactiveprofile"]["helpdesk_hardware"]&pow(2,
                                                                            Ticket::HELPDESK_MY_HARDWARE))) {
@@ -432,43 +633,47 @@ class Item_Ticket extends CommonDBRelation{
 
             $types = Ticket::getAllTypesForHelpdesk();
             $emptylabel = __('General');
-            if ($tickets_id > 0) {
+            if ($params['tickets_id'] > 0) {
                $emptylabel = Dropdown::EMPTY_VALUE;
             }
-            $rand       = Dropdown::showItemTypes($myname, array_keys($types),
-                                                  array('emptylabel' => $emptylabel,
-                                                        'value'      => $itemtype));
+            Dropdown::showItemTypes($myname, array_keys($types),
+                                    array('emptylabel' => $emptylabel,
+                                          'value'      => $itemtype,
+                                          'rand'       => $rand, 'display_emptychoice' => true));
             $found_type = isset($types[$itemtype]);
 
-            $params     = array('itemtype'        => '__VALUE__',
-                                'entity_restrict' => $entity_restrict,
-                                'admin'           => $admin,
-                                'used'            => $used,
-                                'myname'          => "items_id",);
+            $p = array('itemtype'        => '__VALUE__',
+                       'entity_restrict' => $entity_restrict,
+                       'admin'           => $admin,
+                       'used'            => $params['used'],
+                       'multiple'        => $params['multiple'],
+                       'rand'            => $rand,
+                       'myname'          => "add_items_id");
 
-            Ajax::updateItemOnSelectEvent("dropdown_$myname$rand","results_$myname$rand",
+            Ajax::updateItemOnSelectEvent("dropdown_$myname$rand", "results_$myname$rand",
                                           $CFG_GLPI["root_doc"].
                                              "/ajax/dropdownTrackingDeviceType.php",
-                                          $params);
+                                          $p);
             echo "<span id='results_$myname$rand'>\n";
 
             // Display default value if itemtype is displayed
             if ($found_type
                 && $itemtype) {
-                if (($item = getItemForItemtype($itemtype))
+               if (($item = getItemForItemtype($itemtype))
                     && $items_id) {
                   if ($item->getFromDB($items_id)) {
                      Dropdown::showFromArray('items_id', array($items_id => $item->getName()),
                                              array('value' => $items_id));
                   }
                } else {
-                  $params['itemtype'] = $itemtype;
+                  $p['itemtype'] = $itemtype;
                   echo "<script type='text/javascript' >\n";
+                  echo "$(function() {";
                   Ajax::updateItemJsCode("results_$myname$rand",
                                          $CFG_GLPI["root_doc"].
                                             "/ajax/dropdownTrackingDeviceType.php",
-                                         $params);
-                  echo '</script>';
+                                         $p);
+                  echo '});</script>';
                }
             }
             echo "</span>\n";
@@ -485,29 +690,36 @@ class Item_Ticket extends CommonDBRelation{
     * @param $entity_restrict restrict to a specific entity (default -1)
     * @param $itemtype        of selected item (default 0)
     * @param $items_id        of selected item (default 0)
-    * @param $tickets_id      Id of the ticket
+    * @param $options   array of possible options:
+    *    - used     : ID of the requester user
+    *    - multiple : allow multiple choice
     *
     * @return nothing (print out an HTML select box)
    **/
-   static function dropdownMyDevices($userID=0, $entity_restrict=-1, $itemtype=0, $items_id=0, $tickets_id=0) {
+   static function dropdownMyDevices($userID=0, $entity_restrict=-1, $itemtype=0, $items_id=0, $options=array()) {
       global $DB, $CFG_GLPI;
 
-      $used = self::getUsedItems($tickets_id);
+      $params = array('tickets_id' => 0,
+                      'used'       => array(),
+                      'multiple'   => false,
+                      'rand'       => mt_rand());
+
+      foreach ($options as $key => $val) {
+         $params[$key] = $val;
+      }
 
       if ($userID == 0) {
          $userID = Session::getLoginUserID();
       }
 
-      $rand        = mt_rand();
-      $already_add = $used;
+      $rand        = $params['rand'];
+      $already_add = $params['used'];
 
       if ($_SESSION["glpiactiveprofile"]["helpdesk_hardware"]&pow(2, Ticket::HELPDESK_MY_HARDWARE)) {
          $my_devices = array('' => __('General'));
-         if($tickets_id > 0) {
+         if ($params['tickets_id'] > 0) {
             $my_devices = array('' => Dropdown::EMPTY_VALUE);
          }
-
-         $my_item    = $itemtype.'_'.$items_id;
          $devices    = array();
 
          // My items
@@ -529,7 +741,7 @@ class Item_Ticket extends CommonDBRelation{
                   $query .= " AND `is_helpdesk_visible` = '1' ";
                }
 
-               $query .= getEntitiesRestrictRequest("AND",$itemtable,"",$entity_restrict,
+               $query .= getEntitiesRestrictRequest("AND", $itemtable, "", $entity_restrict,
                                                     $item->maybeRecursive())."
 
 
@@ -568,7 +780,7 @@ class Item_Ticket extends CommonDBRelation{
             $my_devices[__('My devices')] = $devices;
          }
          // My group items
-         if (Session::haveRight("show_group_hardware","1")) {
+         if (Session::haveRight("show_group_hardware", "1")) {
             $group_where = "";
             $query       = "SELECT `glpi_groups_users`.`groups_id`, `glpi_groups`.`name`
                             FROM `glpi_groups_users`
@@ -649,13 +861,13 @@ class Item_Ticket extends CommonDBRelation{
          }
          // Get linked items to computers
          if (isset($already_add['Computer']) && count($already_add['Computer'])) {
-            $search_computer = " XXXX IN (".implode(',',$already_add['Computer']).') ';
+            $search_computer = " XXXX IN (".implode(',', $already_add['Computer']).') ';
             $devices = array();
 
             // Direct Connection
             $types = array('Monitor', 'Peripheral', 'Phone', 'Printer');
             foreach ($types as $itemtype) {
-               if (in_array($itemtype,$_SESSION["glpiactiveprofile"]["helpdesk_item_type"])
+               if (in_array($itemtype, $_SESSION["glpiactiveprofile"]["helpdesk_item_type"])
                    && ($item = getItemForItemtype($itemtype))) {
                   $itemtable = getTableForItemType($itemtype);
                   if (!isset($already_add[$itemtype])) {
@@ -666,7 +878,7 @@ class Item_Ticket extends CommonDBRelation{
                             LEFT JOIN `$itemtable`
                                  ON (`glpi_computers_items`.`items_id` = `$itemtable`.`id`)
                             WHERE `glpi_computers_items`.`itemtype` = '$itemtype'
-                                  AND  ".str_replace("XXXX","`glpi_computers_items`.`computers_id`",
+                                  AND  ".str_replace("XXXX", "`glpi_computers_items`.`computers_id`",
                                                      $search_computer);
                   if ($item->maybeDeleted()) {
                      $query .= " AND `$itemtable`.`is_deleted` = '0' ";
@@ -674,14 +886,14 @@ class Item_Ticket extends CommonDBRelation{
                   if ($item->maybeTemplate()) {
                      $query .= " AND `$itemtable`.`is_template` = '0' ";
                   }
-                  $query .= getEntitiesRestrictRequest("AND",$itemtable,"",$entity_restrict)."
+                  $query .= getEntitiesRestrictRequest("AND", $itemtable, "", $entity_restrict)."
                             ORDER BY `$itemtable`.`name`";
 
                   $result = $DB->query($query);
                   if ($DB->numrows($result) > 0) {
                      $type_name = $item->getTypeName();
                      while ($data = $DB->fetch_assoc($result)) {
-                        if (!in_array($data["id"],$already_add[$itemtype])) {
+                        if (!in_array($data["id"], $already_add[$itemtype])) {
                            $output = $data["name"];
                            if (empty($output) || $_SESSION["glpiis_ids_visible"]) {
                               $output = sprintf(__('%1$s (%2$s)'), $output, $data['id']);
@@ -715,7 +927,7 @@ class Item_Ticket extends CommonDBRelation{
                                                  "`glpi_computers_softwareversions`.`computers_id`",
                                                  $search_computer)."
                                AND `glpi_softwares`.`is_helpdesk_visible` = '1' ".
-                               getEntitiesRestrictRequest("AND","glpi_softwares","",
+                               getEntitiesRestrictRequest("AND", "glpi_softwares", "",
                                                           $entity_restrict)."
                          ORDER BY `glpi_softwares`.`name`";
                $devices = array();
@@ -748,17 +960,15 @@ class Item_Ticket extends CommonDBRelation{
             }
          }
          echo "<div id='tracking_my_devices'>";
-         $rand = Dropdown::showFromArray('my_items', $my_devices);
+         Dropdown::showFromArray('my_items', $my_devices, array('rand' => $rand));
          echo "</div>";
-
 
          // Auto update summary of active or just solved tickets
          $params = array('my_items' => '__VALUE__');
 
-         Ajax::updateItemOnSelectEvent("dropdown_my_items$rand","item_ticket_selection_information",
+         Ajax::updateItemOnSelectEvent("dropdown_my_items$rand", "item_ticket_selection_information",
                                        $CFG_GLPI["root_doc"]."/ajax/ticketiteminformation.php",
                                        $params);
-
       }
    }
 
@@ -784,7 +994,7 @@ class Item_Ticket extends CommonDBRelation{
     *    - width        : specific width needed (default 80%)
     *
    **/
- static function dropdown($options = array()) {
+   static function dropdown($options = array()) {
       global $DB;
 
       // Default values
@@ -980,24 +1190,29 @@ class Item_Ticket extends CommonDBRelation{
       parent::processMassiveActionsForOneItemtype($ma, $item, $ids);
    }
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                          = array();
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => $this->getTable(),
+         'field'              => 'items_id',
+         'name'               => _n('Associated element', 'Associated elements', 2),
+         'datatype'           => 'specific',
+         'comments'           => true,
+         'nosort'             => true,
+         'additionalfields'   => ['itemtype']
+      ];
 
-      $tab[13]['table']             = 'glpi_items_tickets';
-      $tab[13]['field']             = 'items_id';
-      $tab[13]['name']              = _n('Associated element', 'Associated elements', 2);
-      $tab[13]['datatype']          = 'specific';
-      $tab[13]['comments']          = true;
-      $tab[13]['nosort']            = true;
-      $tab[13]['additionalfields']  = array('itemtype');
-
-      $tab[131]['table']            = 'glpi_items_tickets';
-      $tab[131]['field']            = 'itemtype';
-      $tab[131]['name']             = _n('Associated item type', 'Associated item types',2);
-      $tab[131]['datatype']         = 'itemtypename';
-      $tab[131]['itemtype_list']    = 'ticket_types';
-      $tab[131]['nosort']           = true;
+      $tab[] = [
+         'id'                 => '131',
+         'table'              => $this->getTable(),
+         'field'              => 'itemtype',
+         'name'               => _n('Associated item type', 'Associated item types', 2),
+         'datatype'           => 'itemtypename',
+         'itemtype_list'      => 'ticket_types',
+         'nosort'             => true
+      ];
 
       return $tab;
    }
@@ -1017,6 +1232,12 @@ class Item_Ticket extends CommonDBRelation{
       }
       switch ($field) {
          case 'items_id':
+            if (strpos($values[$field], "_") !== false) {
+               $item_itemtype      = explode("_", $values[$field]);
+               $values['itemtype'] = $item_itemtype[0];
+               $values[$field]     = $item_itemtype[1];
+            }
+
             if (isset($values['itemtype'])) {
                if (isset($options['comments']) && $options['comments']) {
                   $tmp = Dropdown::getDropdownName(getTableForItemtype($values['itemtype']),
@@ -1055,6 +1276,9 @@ class Item_Ticket extends CommonDBRelation{
                $options['name']  = $name;
                $options['value'] = $values[$field];
                return Dropdown::show($values['itemtype'], $options);
+            } else {
+               self::dropdownAllDevices($name, 0, 0);
+               return ' ';
             }
             break;
       }
@@ -1140,4 +1364,3 @@ class Item_Ticket extends CommonDBRelation{
       }
    }
 }
-?>

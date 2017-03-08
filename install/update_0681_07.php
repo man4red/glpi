@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -141,8 +140,6 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 delete is_template from glpi_contract_device");
    }
 
-
-
    //// ENTITY MANAGEMENT
 
    if (!TableExists("glpi_entities")) {
@@ -187,7 +184,7 @@ function update0681to07() {
 
    if ($result=$DB->query($query)) {
       if ($DB->numrows($result)>0) {
-         $IDprof = $DB->result($result,0,0);
+         $IDprof = $DB->result($result, 0, 0);
 
          $query = "SELECT `glpi_users`.`ID`
                    FROM `glpi_users`
@@ -207,7 +204,6 @@ function update0681to07() {
          }
       }
    }
-
 
    if (!FieldExists("glpi_users_profiles", "FK_entities", false)) {
       // Clean Datas
@@ -248,12 +244,12 @@ function update0681to07() {
                    "glpi_dropdown_netpoint", "glpi_enterprises", "glpi_groups", "glpi_monitors",
                    "glpi_networking", "glpi_peripherals", "glpi_phones", "glpi_printers",
                    "glpi_reminder", "glpi_software", "glpi_tracking");
-	// "glpi_kbitems","glpi_dropdown_kbcategories", -> easier to manage
-	// "glpi_followups" -> always link to tracking ?
-	// "glpi_licenses" -> always link to software ?
-	// "glpi_infocoms" -> always link to item ? PB on reports stats ?
-	// "glpi_links" -> global items easier to manage
-	// "glpi_reservation_item", "glpi_state_item" -> always link to item ? but info maybe needed
+    // "glpi_kbitems","glpi_dropdown_kbcategories", -> easier to manage
+    // "glpi_followups" -> always link to tracking ?
+    // "glpi_licenses" -> always link to software ?
+    // "glpi_infocoms" -> always link to item ? PB on reports stats ?
+    // "glpi_links" -> global items easier to manage
+    // "glpi_reservation_item", "glpi_state_item" -> always link to item ? but info maybe needed
 
    foreach ($tables as $tbl) {
       if (!FieldExists($tbl, "FK_entities", false)) {
@@ -303,7 +299,6 @@ function update0681to07() {
                 ADD INDEX (`recursive`)";
       $DB->queryOrDie($query, "0.7 add index recursive in glpi_users_profiles");
    }
-
 
    //// MULTIAUTH MANAGEMENT
 
@@ -379,7 +374,6 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 drop ldap fields from glpi_config");
    }
 
-
    if (!FieldExists("glpi_users", "id_auth", false)) {
       $query = "ALTER TABLE `glpi_users`
                 ADD `id_auth` INT NOT NULL DEFAULT '-1',
@@ -416,7 +410,6 @@ function update0681to07() {
                 DROP `imap_host`";
       $DB->queryOrDie($query, "0.7 drop mail fields from glpi_config");
    }
-
 
    // Clean state_item -> add a field from tables
    if (TableExists("glpi_state_item")) {
@@ -469,7 +462,6 @@ function update0681to07() {
                 VALUES ( 29, 3, 2, 0)";
       $DB->queryOrDie($query, "0.7 add defaul search for reservation");
    }
-
 
    // Add ticket_tco for hardwares
    $tco_tbl = array(SOFTWARE_TYPE   => 'glpi_software',
@@ -726,7 +718,6 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 add import_ip in glpi_ocs_link");
    }
 
-
    //// Enum clean
    // Enum 0-1
    $enum01          = array();
@@ -977,7 +968,7 @@ function update0681to07() {
          $query = "INSERT INTO `glpi_rules_criterias`
                           (`FK_rules`, `criteria`, `condition`, `pattern`)
                    VALUES (".$datas["ID"].", 'TAG', 0, '*')";
-         $DB->queryOrDie($query, "0.7 add default ocs criterias");
+         $DB->queryOrDie($query, "0.7 add default ocs criteria");
 
          $query = "INSERT INTO `glpi_rules_actions`
                           (`FK_rules`, `action_type`, `field`, `value`)
@@ -998,21 +989,21 @@ function update0681to07() {
          //Get the defaut rule's ID
          $datas = $DB->fetch_array($result);
 
-         //Criterias
+         //Criteria
          $query = "INSERT INTO `glpi_rules_criterias`
                           (`FK_rules`, `criteria`, `condition`, `pattern`)
                    VALUES (".$datas["ID"].", 'uid', 0, '*')";
-         $DB->queryOrDie($query, "0.7 add default right criterias");
+         $DB->queryOrDie($query, "0.7 add default right criteria");
 
          $query = "INSERT INTO `glpi_rules_criterias`
                           (`FK_rules`, `criteria`, `condition`, `pattern`)
                    VALUES (".$datas["ID"].", 'samaccountname', 0, '*')";
-         $DB->queryOrDie($query, "0.7 add default right criterias");
+         $DB->queryOrDie($query, "0.7 add default right criteria");
 
          $query = "INSERT INTO `glpi_rules_criterias`
                           (`FK_rules`, `criteria`, `condition`, `pattern`)
                    VALUES (".$datas["ID"].", 'MAIL_EMAIL', 0, '*')";
-         $DB->queryOrDie($query, "0.7 add default right criterias");
+         $DB->queryOrDie($query, "0.7 add default right criteria");
 
          //Action
          $query = "INSERT INTO `glpi_rules_actions`
@@ -1138,7 +1129,7 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 update recipient in glpi_tracking");
    }
 
-   if (!isIndex("glpi_tracking","recipient")) {
+   if (!isIndex("glpi_tracking", "recipient")) {
       $query = "ALTER TABLE `glpi_tracking`
                 ADD INDEX (`recipient`) ";
       $DB->queryOrDie($query, "0.7 add recipient index in glpi_tracking");
@@ -1267,7 +1258,6 @@ function update0681to07() {
       }
    }
 
-
    if (FieldExists("glpi_software", "version", false)) {
       $query = "ALTER TABLE `glpi_software`
                 DROP `version`";
@@ -1288,7 +1278,7 @@ function update0681to07() {
          if ($data['expire']=="") {
             $expire_search = " AND `glpi_licenses`.`expire` IS NULL";
          } else {
-            $expire_search = " AND `glpi_licenses`.`expireÈ = '".$data['expire']."'";
+            $expire_search = " AND `glpi_licenses`.`expire?? = '".$data['expire']."'";
          }
          $query = "SELECT `glpi_licenses`.`ID`
                    FROM `glpi_licenses`
@@ -1345,7 +1335,7 @@ function update0681to07() {
          $result2 = $DB->query($query2);
          if ($DB->numrows($result2)) {
             while ($data2=$DB->fetch_array($result2)) {
-               // Update réservations
+               // Update r??servations
                $query = "UPDATE `glpi_reservation_resa`
                          SET `id_item` = '$refID'
                          WHERE `id_item` = '".$data2['ID']."'";
@@ -1489,7 +1479,7 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 add timezone in glpi_auth_ldap");
    }
 
-   if (!FieldExists("glpi_ocs_config","glpi_link_enabled", false)) {
+   if (!FieldExists("glpi_ocs_config", "glpi_link_enabled", false)) {
       $query = "ALTER TABLE `glpi_ocs_config`
                 ADD COLUMN `glpi_link_enabled` int(1) NOT NULL,
                 ADD COLUMN `link_ip` int(1) NOT NULL,
@@ -1565,7 +1555,6 @@ function update0681to07() {
                    AND (`num` = 4)";
    $DB->queryOrDie($query, "0.7 clean glpi_display for glpi_users " . $DB->error());
 
-
    // Add fields to block auto updates on linked items
    if (!FieldExists("glpi_config", "autoupdate_link_contact", false)) {
       $query = "ALTER TABLE `glpi_config`
@@ -1591,7 +1580,6 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 add autoupdate_link_location in glpi_config");
    }
 
-
    // Flat dropdowntree
    if (!FieldExists("glpi_config", "flat_dropdowntree", false)) {
       $query = "ALTER TABLE `glpi_config`
@@ -1604,7 +1592,6 @@ function update0681to07() {
                 CHANGE `mailing_signature` `mailing_signature` TEXT NULL ";
       $DB->queryOrDie($query, "0.7 alter mailing signature in glpi_config");
    }
-
 
    //Software categories
    if (!TableExists("glpi_dropdown_software_category")) {
@@ -1678,7 +1665,7 @@ function update0681to07() {
       $DB->queryOrDie($query, "0.7 add list_limit_max in users");
    }
 
-    if (!FieldExists("glpi_config", "autoname_entity", false)) {
+   if (!FieldExists("glpi_config", "autoname_entity", false)) {
       $query = "ALTER TABLE `glpi_config`
                 ADD `autoname_entity` smallint(6) NOT NULL default '1' ";
       $DB->queryOrDie($query, "0.7 add autoname_entity in glpi_config");
@@ -1709,7 +1696,6 @@ function update0681to07() {
                 SET `show_assign_ticket` = `show_all_ticket`";
       $DB->queryOrDie($query, "0.7 update show_assign_ticket values in glpi_profiles");
    }
-
 
    if (!FieldExists("glpi_tracking", "assign_group", false)) {
       $query = "ALTER TABLE `glpi_tracking`
@@ -1867,7 +1853,7 @@ function update0681to07() {
 
 } // fin 0.7 #####################################################################################
 
-//######### Function comming from old tracking.function.php which is now deleted since GLPI 0.72
+//######### Function coming from old tracking.function.php which is now deleted since GLPI 0.72
 //######### Theses functionS were used during the migration process
 function computeTicketTco($item_type,$item) {
    global $DB;
@@ -1903,6 +1889,5 @@ function computeTicketTco($item_type,$item) {
  * @return total cost formatted string
 **/
 function trackingTotalCost($realtime, $cost_time, $cost_fixed, $cost_material) {
-   return Html::formatNumber(($realtime*$cost_time)+$cost_fixed+$cost_material,true);
+   return Html::formatNumber(($realtime*$cost_time)+$cost_fixed+$cost_material, true);
 }
-?>

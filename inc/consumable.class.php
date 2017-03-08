@@ -1,42 +1,43 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 
+use Glpi\Event;
+
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 //!  Consumable Class
@@ -49,7 +50,7 @@ class Consumable extends CommonDBChild {
 
    // From CommonDBTM
    static protected $forward_entity_to = array('Infocom');
-   var $no_form_page                   = true;
+   public $no_form_page                = true;
 
    static $rightname                   = 'consumable';
 
@@ -234,7 +235,7 @@ class Consumable extends CommonDBChild {
                 && !empty($input['give_itemtype'])) {
                foreach ($ids as $key) {
                   if ($item->can($key, UPDATE)) {
-                     if ($item->out($key, $input['give_itemtype'],$input["give_items_id"])) {
+                     if ($item->out($key, $input['give_itemtype'], $input["give_items_id"])) {
                         $ma->itemDone($item->getType(), $key, MassiveAction::ACTION_OK);
                      } else {
                         $ma->itemDone($item->getType(), $key, MassiveAction::ACTION_KO);
@@ -402,10 +403,10 @@ class Consumable extends CommonDBChild {
    static function getStatus($cID) {
 
       if (self::isNew($cID)) {
-         return _nx('consumable', 'New', 'New',1);
+         return _nx('consumable', 'New', 'New', 1);
 
       } else if (self::isOld($cID)) {
-         return _nx('consumable', 'Used', 'Used',1);
+         return _nx('consumable', 'Used', 'Used', 1);
       }
    }
 
@@ -435,7 +436,7 @@ class Consumable extends CommonDBChild {
          Dropdown::showNumber('to_add', array('value' => 1,
                                               'min'   => 1,
                                               'max'   => 100));
-         echo " <input type='submit' name='add_several' value=\""._sx('button','Add consumables')."\"
+         echo " <input type='submit' name='add_several' value=\""._sx('button', 'Add consumables')."\"
                 class='submit'>";
          echo "</td></tr>";
          echo "</table>";
@@ -639,7 +640,7 @@ class Consumable extends CommonDBChild {
       $types = array();
       $query = "SELECT *
                 FROM `glpi_consumableitems` ".
-                getEntitiesRestrictRequest("WHERE","glpi_consumableitems");
+                getEntitiesRestrictRequest("WHERE", "glpi_consumableitems");
 
       if ($result = $DB->query($query)) {
          if ($DB->numrows($result)) {
@@ -680,7 +681,7 @@ class Consumable extends CommonDBChild {
 
          foreach ($used as $itemtype_items_id => $val) {
             echo "<tr class='tab_bg_2'><td>";
-            list($itemtype,$items_id) = explode('####',$itemtype_items_id);
+            list($itemtype,$items_id) = explode('####', $itemtype_items_id);
             $item = new $itemtype();
             if ($item->getFromDB($items_id)) {
                //TRANS: %1$s is a type name - %2$s is a name
@@ -696,8 +697,8 @@ class Consumable extends CommonDBChild {
                $total[$id_type] += $val[$id_type];
                $tot             += $val[$id_type];
             }
-         echo "<td class='numeric'>".$tot."</td>";
-         echo "</tr>";
+            echo "<td class='numeric'>".$tot."</td>";
+            echo "</tr>";
          }
          echo "<tr class='tab_bg_1'><td class='b'>".__('Total')."</td>";
          $tot = 0;
@@ -736,21 +737,19 @@ class Consumable extends CommonDBChild {
    **/
    static function countForConsumableItem(ConsumableItem $item) {
 
-      $restrict = "`glpi_consumables`.`consumableitems_id` = '".$item->getField('id') ."'";
-
-      return countElementsInTable(array('glpi_consumables'), $restrict);
+      return countElementsInTable(array('glpi_consumables'), ['glpi_consumables.consumableitems_id' => $item->getField('id')]);
    }
 
 
    static function displayTabContentForItem(CommonGLPI $item, $tabnum=1, $withtemplate=0) {
 
-         switch ($item->getType()) {
-            case 'ConsumableItem' :
-               self::showAddForm($item);
-               self::showForConsumableItem($item);
-               self::showForConsumableItem($item, 1);
-               return true;
-         }
+      switch ($item->getType()) {
+         case 'ConsumableItem' :
+            self::showAddForm($item);
+            self::showForConsumableItem($item);
+            self::showForConsumableItem($item, 1);
+            return true;
+      }
    }
 
    function getRights($interface='central') {
@@ -758,4 +757,3 @@ class Consumable extends CommonDBChild {
       return $ci->getRights($interface);
    }
 }
-?>

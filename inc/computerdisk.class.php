@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -72,7 +71,7 @@ class ComputerDisk extends CommonDBChild {
          $nb = 0;
          if ($_SESSION['glpishow_count_on_tabs']) {
             $nb = countElementsInTable('glpi_computerdisks',
-                                       "computers_id = '".$item->getID()."' AND `is_deleted`='0'");
+                                       ['computers_id' => $item->getID(), 'is_deleted' => 0 ]);
          }
          return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
       }
@@ -101,6 +100,7 @@ class ComputerDisk extends CommonDBChild {
 
       $ong = array();
       $this->addDefaultFormTab($ong);
+      $this->addStandardTab('Log', $ong, $options);
 
       return $ong;
    }
@@ -171,7 +171,7 @@ class ComputerDisk extends CommonDBChild {
          if ($ID && $this->fields['is_dynamic']) {
             Plugin::doHook("autoinventory_information", $this);
          } else {
-            _e('No');
+            echo __('No');
          }
          echo "</td>";
       } else {
@@ -234,13 +234,12 @@ class ComputerDisk extends CommonDBChild {
       }
       $canedit = $comp->canEdit($ID);
 
-
       if ($canedit
           && !(!empty($withtemplate) && ($withtemplate == 2))) {
          echo "<div class='center firstbloc'>".
                "<a class='vsubmit' href='computerdisk.form.php?computers_id=$ID&amp;withtemplate=".
                   $withtemplate."'>";
-         _e('Add a volume');
+         echo __('Add a volume');
          echo "</a></div>\n";
       }
 
@@ -296,9 +295,9 @@ class ComputerDisk extends CommonDBChild {
                echo "<td>".$data['mountpoint']."</td>";
                echo "<td>".$data['fsname']."</td>";
                //TRANS: %s is a size
-               $tmp = sprintf(__('%s Mio'), Html::formatNumber($data['totalsize'], false, 0));
+               $tmp = Toolbox::getSize($data['totalsize'] * 1024 * 1024);
                echo "<td class='right'>$tmp<span class='small_space'></span></td>";
-               $tmp = sprintf(__('%s Mio'), Html::formatNumber($data['freesize'], false, 0));
+               $tmp = Toolbox::getSize($data['freesize'] * 1024 * 1024);
                echo "<td class='right'>$tmp<span class='small_space'></span></td>";
                echo "<td>";
                $percent = 0;
@@ -322,4 +321,3 @@ class ComputerDisk extends CommonDBChild {
    }
 
 }
-?>

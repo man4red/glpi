@@ -1,41 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -90,14 +89,14 @@ class RuleRight extends Rule {
       echo "<input type=hidden name='entities_id' value='-1'>";
       echo "<input type=hidden name='affectentity' value='$ID'>";
       echo "<input type=hidden name='_method' value='AddRule'>";
-      echo "<input type='submit' name='execute' value=\""._sx('button','Add')."\" class='submit'>";
+      echo "<input type='submit' name='execute' value=\""._sx('button', 'Add')."\" class='submit'>";
       echo "</td></tr>\n";
 
       echo "<tr class='tab_bg_1'>";
       echo "<td class='center'>"._n('Profile', 'Profiles', 1) . "</td><td>";
       Profile::dropdown();
       echo "</td><td><span class='small_space'>".__('Recursive') . "</span></td><td colspan='3'>";
-      Dropdown::showYesNo("is_recursive",0);
+      Dropdown::showYesNo("is_recursive", 0);
       echo "</td></tr>\n";
 
       echo "</table>";
@@ -315,7 +314,6 @@ class RuleRight extends Rule {
       $actions['_affect_entity_by_domain']['force_actions'] = array('regex_result');
       $actions['_affect_entity_by_domain']['duplicatewith'] = 'entities_id';
 
-
       $actions['_affect_entity_by_completename']['name']          = __('Entity from complete name');
       $actions['_affect_entity_by_completename']['type']          = 'text';
       $actions['_affect_entity_by_completename']['force_actions'] = array('regex_result');
@@ -349,7 +347,7 @@ class RuleRight extends Rule {
    function addSpecificCriteriasToArray(&$criterias) {
 
       $criterias['ldap'] = __('LDAP criteria');
-      foreach (getAllDatasFromTable('glpi_rulerightparameters', '', true) as $datas ) {
+      foreach (getAllDatasFromTable('glpi_rulerightparameters', '', true) as $datas) {
          $criterias[$datas["value"]]['name']      = $datas["name"];
          $criterias[$datas["value"]]['field']     = $datas["value"];
          $criterias[$datas["value"]]['linkfield'] = '';
@@ -358,4 +356,3 @@ class RuleRight extends Rule {
    }
 
 }
-?>

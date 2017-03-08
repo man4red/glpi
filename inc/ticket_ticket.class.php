@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Class Ticket links
@@ -70,7 +69,7 @@ class Ticket_Ticket extends CommonDBRelation {
             echo "&nbsp;<input type='text' name='tickets_id_1' value='' size='10'>\n";
             echo "<br><br>";
             echo "<br><br><input type='submit' name='massiveaction' class='submit' value='".
-                           _sx('button','Post')."'>";
+                           _sx('button', 'Post')."'>";
             return true;
       }
       return parent::showMassiveActionsSubForm($ma);
@@ -106,8 +105,8 @@ class Ticket_Ticket extends CommonDBRelation {
                            $ma->addMessage($item->getErrorMessage(ERROR_ON_ACTION));
                         }
                      } else {
-                      $ma->itemDone($item->getType(), $id, MassiveAction::ACTION_NORIGHT);
-                      $ma->addMessage($item->getErrorMessage(ERROR_RIGHT));
+                         $ma->itemDone($item->getType(), $id, MassiveAction::ACTION_NORIGHT);
+                         $ma->addMessage($item->getErrorMessage(ERROR_RIGHT));
                      }
                   }
                }
@@ -296,7 +295,7 @@ class Ticket_Ticket extends CommonDBRelation {
    }
 
 
-  /**
+   /**
     * Affect the same solution for duplicates tickets
     *
     * @param $ID ID of the ticket id
@@ -326,4 +325,3 @@ class Ticket_Ticket extends CommonDBRelation {
       }
    }
 }
-?>

@@ -1,42 +1,41 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
-* @brief 
+* @brief
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// NetworkPortWifi class : wifi instantitation of NetworkPort
@@ -52,13 +51,13 @@ class NetworkPortWifi extends NetworkPortInstantiation {
 
    function getNetworkCardInterestingFields() {
       return array('link.`mac`' => 'mac');
-  }
+   }
 
 
    /**
     * @see NetworkPortInstantiation::showInstantiationForm()
    **/
-   function showInstantiationForm(NetworkPort $netport, $options=array(), $recursiveItems) {
+   function showInstantiationForm(NetworkPort $netport, $options, $recursiveItems) {
 
       if (!$options['several']) {
          echo "<tr class='tab_bg_1'>\n";
@@ -131,34 +130,48 @@ class NetworkPortWifi extends NetworkPortInstantiation {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab = array();
-      $tab['common']            = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[10]['table']         = $this->getTable();
-      $tab[10]['field']         = 'mac';
-      $tab[10]['name']          = __('MAC');
-      $tab[10]['massiveaction'] = false;
-      $tab[10]['datatype']      = 'mac';
+      $tab[] = [
+         'id'                 => '10',
+         'table'              => $this->getTable(),
+         'field'              => 'mac',
+         'name'               => __('MAC'),
+         'massiveaction'      => false,
+         'datatype'           => 'mac'
+      ];
 
-      $tab[11]['table']         = $this->getTable();
-      $tab[11]['field']         = 'mode';
-      $tab[11]['name']          = __('Wifi mode');
-      $tab[11]['massiveaction'] = false;
-      $tab[11]['datatype']      = 'specific';
+      $tab[] = [
+         'id'                 => '11',
+         'table'              => $this->getTable(),
+         'field'              => 'mode',
+         'name'               => __('Wifi mode'),
+         'massiveaction'      => false,
+         'datatype'           => 'specific'
+      ];
 
-      $tab[12]['table']         = $this->getTable();
-      $tab[12]['field']         = 'version';
-      $tab[12]['name']          = __('Wifi protocol version');
-      $tab[12]['massiveaction'] = false;
-      $tab[11]['datatype']      = 'specific';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'version',
+         'name'               => __('Wifi protocol version'),
+         'massiveaction'      => false
+      ];
 
-      $tab[13]['table']         = 'glpi_wifinetworks';
-      $tab[13]['field']         = 'name';
-      $tab[13]['name']          = WifiNetwork::getTypeName(1);
-      $tab[13]['massiveaction'] = false;
-      $tab[13]['datatype']      = 'dropdown';
+      $tab[] = [
+         'id'                 => '13',
+         'table'              => 'glpi_wifinetworks',
+         'field'              => 'name',
+         'name'               => WifiNetwork::getTypeName(1),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -221,31 +234,39 @@ class NetworkPortWifi extends NetworkPortInstantiation {
    /**
     * @param $tab          array
     * @param $joinparams   array
-    * @param $itemtype
    **/
-   static function getSearchOptionsToAddForInstantiation(array &$tab, array $joinparams,
-                                                         $itemtype) {
+   static function getSearchOptionsToAddForInstantiation(array &$tab, array $joinparams) {
 
-      $tab[157]['table']         = 'glpi_wifinetworks';
-      $tab[157]['field']         = 'name';
-      $tab[157]['name']          = WifiNetwork::getTypeName(1);
-      $tab[157]['forcegroupby']  = true;
-      $tab[157]['massiveaction'] = false;
-      $tab[157]['joinparams']    = array('jointype'   => 'standard',
-                                         'beforejoin' => array('table' => 'glpi_networkportwifis',
-                                                               'joinparams'
-                                                                       => $joinparams));
+      $tab[] = [
+         'id'                 => '157',
+         'table'              => 'glpi_wifinetworks',
+         'field'              => 'name',
+         'name'               => WifiNetwork::getTypeName(1),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'joinparams'         => [
+            'jointype'           => 'standard',
+            'beforejoin'         => [
+               'table'              => 'glpi_networkportwifis',
+               'joinparams'         => $joinparams
+            ]
+         ]
+      ];
 
-      $tab[158]['table']         = 'glpi_wifinetworks';
-      $tab[158]['field']         = 'essid';
-      $tab[158]['name']          = __('ESSID');
-      $tab[158]['forcegroupby']  = true;
-      $tab[158]['massiveaction'] = false;
-      $tab[158]['joinparams']    = array('jointype'   => 'standard',
-                                         'beforejoin' => array('table' => 'glpi_networkportwifis',
-                                                               'joinparams'
-                                                                       => $joinparams));
+      $tab[] = [
+         'id'                 => '158',
+         'table'              => 'glpi_wifinetworks',
+         'field'              => 'essid',
+         'name'               => __('ESSID'),
+         'forcegroupby'       => true,
+         'massiveaction'      => false,
+         'joinparams'         => [
+            'jointype'           => 'standard',
+            'beforejoin'         => [
+               'table'              => 'glpi_networkportwifis',
+               'joinparams'         => $joinparams
+            ]
+         ]
+      ];
    }
-
 }
-?>

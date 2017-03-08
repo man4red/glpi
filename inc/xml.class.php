@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -44,7 +43,7 @@
 // ----------------------------------------------------------------------
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -52,15 +51,15 @@ if (!defined('GLPI_ROOT')) {
 class XML {
 
    /// Array of SQL requests to export
-   var $SqlString    = "";
+   public $SqlString    = "";
    /// 1 there is a problem !!!
-   var $IsError      = 0;
+   public $IsError      = 0;
    /// If there is an error, this string explains it
-   var $ErrorString  = "NO errors ;)";
+   public $ErrorString  = "NO errors;)";
    /// Which format do you want your XML ?
-   var $Type         = 1;
+   public $Type         = 1;
    ///path where the file will be saved.
-   var $FilePath;
+   public $FilePath;
 
    // HERE I explain $Type
 
@@ -128,7 +127,7 @@ class XML {
    function DoXML() {
       global $DB;
 
-      $fp = fopen($this->FilePath,'wb');
+      $fp = fopen($this->FilePath, 'wb');
       fputs($fp, "<?xml version=\"1.0\"?>\n");
       fputs($fp, "<dataxml>\n");
 
@@ -145,12 +144,12 @@ class XML {
             $this->ErrorString = "Error in SQL Query: ".$strqry;
             return -1;
          }
-         // OK... let's create XML ;)
+         // OK... let's create XML;)
          fputs($fp, "   <fields>\n");
          $i = 0;
          $FieldsVector = array();
          while ($i < $DB->num_fields ($result)) {
-            $name = $DB->field_name($result,$i);
+            $name = $DB->field_name($result, $i);
             fputs($fp, "      <field>".$name."</field>\n");
             $FieldsVector[] = $name;
             $i++;
@@ -161,7 +160,7 @@ class XML {
          fputs($fp, "   <rows>\n");
          while ($row = $DB->fetch_row($result)) {
             fputs($fp, "      <row>\n");
-            for ($j=0 ; $j<$i ; $j++) {
+            for ($j=0; $j<$i; $j++) {
                $FieldName  = "";   // Name of TAG
                $Attributes = "";
                switch ($this->Type) {
@@ -191,10 +190,10 @@ class XML {
          $DB->free_result($result);
       }
       fputs($fp, "</dataxml>");
-      //OK free ...  ;)
+      //OK free ...;)
       fclose($fp);
 
    } // End  Function : DoXML
+
 } // Fine Class XML
 
-?>

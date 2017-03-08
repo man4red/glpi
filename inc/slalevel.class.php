@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -103,17 +102,19 @@ class SlaLevel extends RuleTicket {
 
 
    /**
-    * @param $sla SLA object
+    * @param $slt SLT object
+    *
+    * @since version 9.1 (before showForSLA)
    **/
-   function showForSLA(SLA $sla) {
+   function showForSLT(SLT $slt) {
       global $DB;
 
-      $ID = $sla->getField('id');
-      if (!$sla->can($ID, READ)) {
+      $ID = $slt->getField('id');
+      if (!$slt->can($ID, READ)) {
          return false;
       }
 
-      $canedit = $sla->can($ID, UPDATE);
+      $canedit = $slt->can($ID, UPDATE);
 
       $rand    = mt_rand();
 
@@ -126,19 +127,19 @@ class SlaLevel extends RuleTicket {
          echo "<tr class='tab_bg_1'><th colspan='7'>".__('Add an escalation level')."</tr>";
 
          echo "<tr class='tab_bg_2'><td class='center'>".__('Name')."";
-         echo "<input type='hidden' name='slas_id' value='$ID'>";
-         echo "<input type='hidden' name='entities_id' value='".$sla->getEntityID()."'>";
-         echo "<input type='hidden' name='is_recursive' value='".$sla->isRecursive()."'>";
+         echo "<input type='hidden' name='slts_id' value='$ID'>";
+         echo "<input type='hidden' name='entities_id' value='".$slt->getEntityID()."'>";
+         echo "<input type='hidden' name='is_recursive' value='".$slt->isRecursive()."'>";
          echo "<input type='hidden' name='match' value='AND'>";
          echo "</td><td><input  name='name' value=''>";
          echo "</td><td class='center'>".__('Execution')."</td><td>";
 
-         $resolution_time = $sla->getResolutionTime();
+         $delay = $slt->getSLTTime();
          self::dropdownExecutionTime('execution_time',
                                      array('max_time'
-                                             => $resolution_time,
+                                             => $delay,
                                            'used'
-                                             => self::getAlreadyUsedExecutionTime($sla->fields['id'])));
+                                             => self::getAlreadyUsedExecutionTime($slt->fields['id'])));
 
          echo "</td><td class='center'>".__('Active')."</td><td>";
          Dropdown::showYesNo("is_active", 1);
@@ -153,7 +154,7 @@ class SlaLevel extends RuleTicket {
 
       $query = "SELECT *
                 FROM `glpi_slalevels`
-                WHERE `slas_id` = '$ID'
+                WHERE `slts_id` = '$ID'
                 ORDER BY `execution_time`";
       $result  = $DB->query($query);
       $numrows = $DB->numrows($result);
@@ -177,8 +178,8 @@ class SlaLevel extends RuleTicket {
       echo "</tr>";
       Session::initNavigateListItems('SlaLevel',
       //TRANS: %1$s is the itemtype name, %2$s is the name of the item (used for headings of a list)
-                                     sprintf(__('%1$s = %2$s'), SLA::getTypeName(1),
-                                             $sla->getName()));
+                                     sprintf(__('%1$s = %2$s'), SLT::getTypeName(1),
+                                             $slt->getName()));
 
       while ($data = $DB->fetch_assoc($result)) {
          Session::addToNavigateListItems('SlaLevel', $data["id"]);
@@ -202,12 +203,12 @@ class SlaLevel extends RuleTicket {
          echo "</td>";
          echo "<td>".(($data["execution_time"] <> 0)
                         ?Html::timestampToString($data["execution_time"], false)
-                        :__('Due date'))."</td>";
+                        :__('Time to resolve'))."</td>";
          echo "<td>".Dropdown::getYesNo($data["is_active"])."</td>";
          echo "</tr>";
 
          echo "<tr class='tab_bg_1'><td colspan='2'>";
-         $this->getRuleWithCriteriasAndActions($data['id'],1,1);
+         $this->getRuleWithCriteriasAndActions($data['id'], 1, 1);
          $this->showCriteriasList($data["id"], array('readonly' => true));
          echo "</td><td colspan='2'>";
          $this->showActionsList($data["id"], array('readonly' => true));
@@ -228,8 +229,8 @@ class SlaLevel extends RuleTicket {
 
       $actions                            = parent::getActions();
 
-      unset($actions['slas_id']);
-      $actions['recall']['name']          = __('Automatic reminders of SLA');
+      unset($actions['slts_id']);
+      $actions['recall']['name']          = __('Automatic reminders of SLT');
       $actions['recall']['type']          = 'yesonly';
       $actions['recall']['force_actions'] = array('send');
 
@@ -255,7 +256,7 @@ class SlaLevel extends RuleTicket {
 
       $actions                      = parent::getActions();
 
-      unset($actions['slas_id']);
+      unset($actions['slts_id']);
       // Could not be used as criteria
       unset($actions['users_id_validate_requester_supervisor']);
       unset($actions['users_id_validate_assign_supervisor']);
@@ -279,7 +280,7 @@ class SlaLevel extends RuleTicket {
    **/
    function showForm($ID, $options=array()) {
 
-      $canedit = $this->can('sla',UPDATE);
+      $canedit = $this->can('sla', UPDATE);
 
       $this->initForm($ID, $options);
       $this->showFormHeader($options);
@@ -294,22 +295,22 @@ class SlaLevel extends RuleTicket {
       Dropdown::showYesNo("is_active", $this->fields["is_active"]);
       echo"</td></tr>\n";
 
-      $sla = new SLA();
-      $sla->getFromDB($this->fields['slas_id']);
+      $slt = new SLT();
+      $slt->getFromDB($this->fields['slts_id']);
 
       echo "<tr class='tab_bg_1'>";
-      echo "<td>".SLA::getTypeName(1)."</td>";
-      echo "<td>".$sla->getLink()."</td>";
+      echo "<td>".SLT::getTypeName(1)."</td>";
+      echo "<td>".$slt->getLink()."</td>";
       echo "<td>".__('Execution')."</td>";
       echo "<td>";
 
-      $resolution_time = $sla->getResolutionTime();
+      $delay = $slt->getSLTTime();
 
       self::dropdownExecutionTime('execution_time',
                                   array('max_time'
-                                             => $resolution_time,
+                                             => $delay,
                                         'used'
-                                             => self::getAlreadyUsedExecutionTime($sla->fields['id']),
+                                             => self::getAlreadyUsedExecutionTime($slt->fields['id']),
                                         'value'
                                              => $this->fields['execution_time']));
       echo "</td></tr>\n";
@@ -326,7 +327,7 @@ class SlaLevel extends RuleTicket {
 
 
    /**
-    * Dropdown execution time for SLA
+    * Dropdown execution time for SLT
     *
     * @param $name      string   name of the select
     * @param $options   array    of possible options:
@@ -353,41 +354,41 @@ class SlaLevel extends RuleTicket {
       }
 
       $possible_values = array();
-      for ($i=10 ; $i<60 ; $i+=10) {
-         if (!in_array($i*MINUTE_TIMESTAMP,$p['used'])) {
-            $possible_values[$i*MINUTE_TIMESTAMP] = sprintf(_n('+ %d minute','+ %d minutes',$i), $i);
+      for ($i=10; $i<60; $i+=10) {
+         if (!in_array($i*MINUTE_TIMESTAMP, $p['used'])) {
+            $possible_values[$i*MINUTE_TIMESTAMP] = sprintf(_n('+ %d minute', '+ %d minutes', $i), $i);
          }
-         if (!in_array(-$i*MINUTE_TIMESTAMP,$p['used'])) {
+         if (!in_array(-$i*MINUTE_TIMESTAMP, $p['used'])) {
             if ($p['max_time'] >= $i*MINUTE_TIMESTAMP) {
-               $possible_values[-$i*MINUTE_TIMESTAMP] = sprintf(_n('- %d minute','- %d minutes',$i), $i);
+               $possible_values[-$i*MINUTE_TIMESTAMP] = sprintf(_n('- %d minute', '- %d minutes', $i), $i);
             }
          }
       }
 
-      for ($i=1 ; $i<24 ; $i++) {
-         if (!in_array($i*HOUR_TIMESTAMP,$p['used'])) {
-            $possible_values[$i*HOUR_TIMESTAMP] = sprintf(_n('+ %d hour','+ %d hours',$i), $i);
+      for ($i=1; $i<24; $i++) {
+         if (!in_array($i*HOUR_TIMESTAMP, $p['used'])) {
+            $possible_values[$i*HOUR_TIMESTAMP] = sprintf(_n('+ %d hour', '+ %d hours', $i), $i);
          }
-         if (!in_array(-$i*HOUR_TIMESTAMP,$p['used'])) {
+         if (!in_array(-$i*HOUR_TIMESTAMP, $p['used'])) {
             if ($p['max_time'] >= $i*HOUR_TIMESTAMP) {
-               $possible_values[-$i*HOUR_TIMESTAMP] = sprintf(_n('- %d hour','- %d hours',$i),
+               $possible_values[-$i*HOUR_TIMESTAMP] = sprintf(_n('- %d hour', '- %d hours', $i),
                                                               $i);
             }
          }
       }
 
-      for ($i=1 ; $i<30 ; $i++) {
-         if (!in_array($i*DAY_TIMESTAMP,$p['used'])) {
-            $possible_values[$i*DAY_TIMESTAMP] = sprintf(_n('+ %d day','+ %d days',$i), $i);
+      for ($i=1; $i<30; $i++) {
+         if (!in_array($i*DAY_TIMESTAMP, $p['used'])) {
+            $possible_values[$i*DAY_TIMESTAMP] = sprintf(_n('+ %d day', '+ %d days', $i), $i);
          }
-         if (!in_array(-$i*DAY_TIMESTAMP,$p['used'])) {
+         if (!in_array(-$i*DAY_TIMESTAMP, $p['used'])) {
             if ($p['max_time'] >= $i*DAY_TIMESTAMP) {
-               $possible_values[-$i*DAY_TIMESTAMP] = sprintf(_n('- %d day','- %d days',$i), $i);
+               $possible_values[-$i*DAY_TIMESTAMP] = sprintf(_n('- %d day', '- %d days', $i), $i);
             }
          }
       }
-      if (!in_array(0,$p['used'])) {
-         $possible_values[0] = __('Due date');
+      if (!in_array(0, $p['used'])) {
+         $possible_values[0] = __('Time to resolve');
       }
       ksort($possible_values);
 
@@ -396,19 +397,19 @@ class SlaLevel extends RuleTicket {
 
 
    /**
-    * Get already used execution time for a SLA
+    * Get already used execution time for a SLT
     *
-    * @param $slas_id   integer  id of the SLA
+    * @param $slts_id   integer  id of the SLT
     *
     * @return array of already used execution times
    **/
-   static function getAlreadyUsedExecutionTime($slas_id) {
+   static function getAlreadyUsedExecutionTime($slts_id) {
       global $DB;
 
       $result = array();
       $query  = "SELECT DISTINCT `execution_time`
                  FROM `glpi_slalevels`
-                 WHERE `slas_id` = '$slas_id';";
+                 WHERE `slts_id` = '$slts_id';";
 
       foreach ($DB->request($query) as $data) {
          $result[$data['execution_time']] = $data['execution_time'];
@@ -418,24 +419,26 @@ class SlaLevel extends RuleTicket {
 
 
    /**
-    * Get first level for a SLA
+    * Get first level for a SLT
     *
-    * @param $slas_id   integer  id of the SLA
+    * @param $slts_id   integer  id of the SLT
+    *
+    * @since version 9.1 (before getFirst SlaLevel)
     *
     * @return id of the sla level : 0 if not exists
    **/
-   static function getFirstSlaLevel($slas_id) {
+   static function getFirstSltLevel($slts_id) {
       global $DB;
 
       $query = "SELECT `id`
                 FROM `glpi_slalevels`
-                WHERE `slas_id` = '$slas_id'
+                WHERE `slts_id` = '$slts_id'
                      AND `is_active` = 1
                 ORDER BY `execution_time` ASC LIMIT 1;";
 
       if ($result = $DB->query($query)) {
          if ($DB->numrows($result)) {
-            return $DB->result($result,0,0);
+            return $DB->result($result, 0, 0);
          }
       }
       return 0;
@@ -443,14 +446,14 @@ class SlaLevel extends RuleTicket {
 
 
    /**
-    * Get next level for a SLA
+    * Get next level for a SLT
     *
-    * @param $slas_id         integer id of the SLA
-    * @param $slalevels_id    integer id of the current SLA level
+    * @param $slts_id         integer id of the SLT
+    * @param $slalevels_id    integer id of the current SLT level
     *
     * @return id of the sla level : 0 if not exists
    **/
-   static function getNextSlaLevel($slas_id, $slalevels_id) {
+   static function getNextSltLevel($slts_id, $slalevels_id) {
       global $DB;
 
       $query = "SELECT `execution_time`
@@ -459,19 +462,19 @@ class SlaLevel extends RuleTicket {
 
       if ($result = $DB->query($query)) {
          if ($DB->numrows($result)) {
-            $execution_time = $DB->result($result,0,0);
+            $execution_time = $DB->result($result, 0, 0);
 
             $query = "SELECT `id`
                       FROM `glpi_slalevels`
-                       WHERE `slas_id` = '$slas_id'
+                       WHERE `slts_id` = '$slts_id'
                              AND `id` <> '$slalevels_id'
                              AND `execution_time` > '$execution_time'
                              AND `is_active` = 1
-                      ORDER BY `execution_time` ASC LIMIT 1 ;";
+                      ORDER BY `execution_time` ASC LIMIT 1;";
 
             if ($result = $DB->query($query)) {
                if ($DB->numrows($result)) {
-                  return $DB->result($result,0,0);
+                  return $DB->result($result, 0, 0);
                }
             }
          }
@@ -485,9 +488,9 @@ class SlaLevel extends RuleTicket {
       if (!$withtemplate) {
          $nb = 0;
          switch ($item->getType()) {
-            case 'SLA' :
+            case 'SLT' :
                if ($_SESSION['glpishow_count_on_tabs']) {
-                  $nb =  countElementsInTable($this->getTable(), "`slas_id` = '".$item->getID()."'");
+                  $nb =  countElementsInTable($this->getTable(), ['slts_id' => $item->getID()]);
                }
                return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
          }
@@ -498,12 +501,11 @@ class SlaLevel extends RuleTicket {
 
    static function displayTabContentForItem(CommonGLPI $item, $tabnum=1, $withtemplate=0) {
 
-      if ($item->getType() == 'SLA') {
+      if ($item->getType() == 'SLT') {
          $slalevel = new self();
-         $slalevel->showForSLA($item);
+         $slalevel->showForSLT($item);
       }
       return true;
    }
 
 }
-?>

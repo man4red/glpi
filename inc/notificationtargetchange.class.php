@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -47,9 +46,9 @@ if (!defined('GLPI_ROOT')) {
 **/
 class NotificationTargetChange extends NotificationTargetCommonITILObject {
 
-   var $private_profiles = array();
+   public $private_profiles = array();
 
-   public $html_tags     = array('##change.solution.description##');
+   public $html_tags        = array('##change.solution.description##');
 
 
    /**
@@ -67,6 +66,8 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
                       'delete_task'       => __('Deletion of a task'),
                       'closed'            => __('Closure of a change'),
                       'delete'            => __('Deleting a change'));
+
+      $events = array_merge($events, parent::getEvents());
       asort($events);
       return $events;
    }
@@ -88,9 +89,15 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
       $datas['##change.globalvalidation##']
                      = ChangeValidation::getStatus($item->getField('global_validation'));
 
-//       $datas["##problem.impacts##"]  = $item->getField('impactcontent');
-//       $datas["##problem.causes##"]   = $item->getField('causecontent');
-//       $datas["##problem.symptoms##"] = $item->getField('symptomcontent');
+      $datas['##change.impactcontent##']      = $item->getField("impactcontent");
+      $datas['##change.controlistcontent##']  = $item->getField("controlistcontent");
+      $datas['##change.rolloutplancontent##'] = $item->getField("rolloutplancontent");
+      $datas['##change.backoutplancontent##'] = $item->getField("backoutplancontent");
+      $datas['##change.checklistcontent##']   = $item->getField("checklistcontent");
+
+      // $datas["##problem.impacts##"]  = $item->getField('impactcontent');
+      // $datas["##problem.causes##"]   = $item->getField('causecontent');
+      // $datas["##problem.symptoms##"] = $item->getField('symptomcontent');
 
       // Complex mode
       if (!$simple) {
@@ -146,7 +153,7 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
          $datas['##change.numberofproblems##'] = count($datas['problems']);
 
          $restrict = "`changes_id` = '".$item->getField('id')."'";
-         $items    = getAllDatasFromTable('glpi_changes_items',$restrict);
+         $items    = getAllDatasFromTable('glpi_changes_items', $restrict);
 
          $datas['items'] = array();
          if (count($items)) {
@@ -211,7 +218,7 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
 
          $restrict .= " ORDER BY `submission_date` DESC, `id` ASC";
 
-         $validations = getAllDatasFromTable('glpi_changevalidations',$restrict);
+         $validations = getAllDatasFromTable('glpi_changevalidations', $restrict);
          $datas['validations'] = array();
          foreach ($validations as $validation) {
             $tmp = array();
@@ -262,11 +269,16 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
       parent::getTags();
 
       //Locales
-      $tags = array('change.numberoftickets'   => _x('quantity', 'Number of tickets'),
-                    'change.numberofproblems'  => _x('quantity', 'Number of problems'),
-//                     'problem.impacts'           => __('Impacts'),
-//                     'problem.causes'            => __('Causes'),
-//                     'problem.symptoms'          => __('Symptoms'),
+      $tags = array('change.numberoftickets'    => _x('quantity', 'Number of tickets'),
+                    'change.numberofproblems'   => _x('quantity', 'Number of problems'),
+                    'change.impactcontent'      => __('Impact'),
+                    'change.controlistcontent'  => __('Control list'),
+                    'change.rolloutplancontent' => __('Deployment plan'),
+                    'change.backoutplancontent' => __('Backup plan'),
+                    'change.checklistcontent'   => __('Checklist'),
+                    // 'problem.impacts'           => __('Impacts'),
+                    // 'problem.causes'            => __('Causes'),
+                    // 'problem.symptoms'          => __('Symptoms'),
                     'item.name'                 => __('Associated item'),
                     'item.serial'               => __('Serial number'),
                     'item.otherserial'          => __('Inventory number'),
@@ -303,7 +315,7 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
          $this->addTagToList(array('tag'    => $tag,
                                    'label'  => $label,
                                    'value'  => true,
-                                   'events' => array('validation', 'validation')));
+                                   'events' => array('validation', 'validation_answer')));
       }
 
       //Tags without lang for validation
@@ -320,14 +332,15 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
                                    'label' => $label,
                                    'value' => true,
                                    'lang'  => false,
-                                   'events' => array('validation', 'validation')));
+                                   'events' => array('validation', 'validation_answer')));
       }
 
-
       //Foreach global tags
-      $tags = array('tickets'  => _n('Ticket', 'Tickets', Session::getPluralNumber()),
-                    'problems' => _n('Problem', 'Problems', Session::getPluralNumber()),
-                    'items'    => _n('Item', 'Items', Session::getPluralNumber()));
+      $tags = array('tickets'     => _n('Ticket', 'Tickets', Session::getPluralNumber()),
+                    'problems'    => _n('Problem', 'Problems', Session::getPluralNumber()),
+                    'items'       => _n('Item', 'Items', Session::getPluralNumber()),
+                    'validations' => _n('Validation', 'Validations', Session::getPluralNumber()),
+                    'documents'   => _n('Document', 'Documents', Session::getPluralNumber()));
 
       foreach ($tags as $tag => $label) {
          $this->addTagToList(array('tag'     => $tag,
@@ -370,6 +383,4 @@ class NotificationTargetChange extends NotificationTargetCommonITILObject {
       asort($this->tag_descriptions);
    }
 
-
 }
-?>

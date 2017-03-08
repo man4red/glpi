@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// ProjectCost class
@@ -95,7 +94,7 @@ class ProjectCost extends CommonDBChild {
       if (($item->getType() == 'Project') && Project::canView()) {
          $nb = 0;
          if ($_SESSION['glpishow_count_on_tabs']) {
-            $nb = countElementsInTable('glpi_projectcosts', "projects_id = '".$item->getID()."'");
+            $nb = countElementsInTable('glpi_projectcosts', ['projects_id' => $item->getID()]);
          }
          return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
       }
@@ -115,60 +114,81 @@ class ProjectCost extends CommonDBChild {
    }
 
 
-   /**
-    * @since version 0.85
-    *
-    * @see CommonDBTM::getSearchOptions()
-   **/
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                          = array();
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab['common']                = __('Characteristics');
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'name',
+         'name'               => __('Title'),
+         'searchtype'         => 'contains',
+         'datatype'           => 'itemlink',
+         'massiveaction'      => false
+      ];
 
-      $tab[1]['table']              = $this->getTable();
-      $tab[1]['field']              = 'name';
-      $tab[1]['name']               =  __('Title');
-      $tab[1]['searchtype']         = 'contains';
-      $tab[1]['datatype']           = 'itemlink';
-      $tab[1]['massiveaction']      = false;
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[2]['table']              = $this->getTable();
-      $tab[2]['field']              = 'id';
-      $tab[2]['name']               = __('ID');
-      $tab[2]['massiveaction']      = false;
-      $tab[2]['datatype']           = 'number';
+      $tab[] = [
+         'id'                 => '16',
+         'table'              => $this->getTable(),
+         'field'              => 'comment',
+         'name'               => __('Comments'),
+         'datatype'           => 'text'
+      ];
 
-      $tab[16]['table']             = $this->getTable();
-      $tab[16]['field']             = 'comment';
-      $tab[16]['name']              = __('Comments');
-      $tab[16]['datatype']          = 'text';
+      $tab[] = [
+         'id'                 => '12',
+         'table'              => $this->getTable(),
+         'field'              => 'begin_date',
+         'name'               => __('Begin date'),
+         'datatype'           => 'datetime'
+      ];
 
-      $tab[12]['table']             = $this->getTable();
-      $tab[12]['field']             = 'begin_date';
-      $tab[12]['name']              = __('Begin date');
-      $tab[12]['datatype']          = 'datetime';
+      $tab[] = [
+         'id'                 => '10',
+         'table'              => $this->getTable(),
+         'field'              => 'end_date',
+         'name'               => __('End date'),
+         'datatype'           => 'datetime'
+      ];
 
-      $tab[10]['table']             = $this->getTable();
-      $tab[10]['field']             = 'end_date';
-      $tab[10]['name']              = __('End date');
-      $tab[10]['datatype']          = 'datetime';
+      $tab[] = [
+         'id'                 => '14',
+         'table'              => $this->getTable(),
+         'field'              => 'cost',
+         'name'               => __('Cost'),
+         'datatype'           => 'decimal'
+      ];
 
-      $tab[14]['table']              = $this->getTable();
-      $tab[14]['field']              = 'cost';
-      $tab[14]['name']               = __('Cost');
-      $tab[14]['datatype']           = 'decimal';
+      $tab[] = [
+         'id'                 => '18',
+         'table'              => 'glpi_budgets',
+         'field'              => 'name',
+         'name'               => _n('Budget', 'Budgets', 1),
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[18]['table']             = 'glpi_budgets';
-      $tab[18]['field']             = 'name';
-      $tab[18]['name']              = _n('Budget', 'Budgets', 1);
-      $tab[18]['datatype']          = 'dropdown';
-
-      $tab[80]['table']             = 'glpi_entities';
-      $tab[80]['field']             = 'completename';
-      $tab[80]['name']              = __('Entity');
-      $tab[80]['massiveaction']     = false;
-      $tab[80]['datatype']          = 'dropdown';
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown'
+      ];
 
       return $tab;
    }
@@ -267,7 +287,7 @@ class ProjectCost extends CommonDBChild {
       echo "<td>".__('Name')."</td>";
       echo "<td>";
       echo "<input type='hidden' name='projects_id' value='".$this->fields['projects_id']."'>";
-      Html::autocompletionTextField($this,'name');
+      Html::autocompletionTextField($this, 'name');
       echo "</td>";
       echo "<td>".__('Cost')."</td>";
       echo "<td>";
@@ -360,12 +380,11 @@ class ProjectCost extends CommonDBChild {
             echo "<th>".__('Cost')."</th>";
             echo "</tr>";
 
-         Session::initNavigateListItems(__CLASS__,
+            Session::initNavigateListItems(__CLASS__,
                               //TRANS : %1$s is the itemtype name,
                               //        %2$s is the name of the item (used for headings of a list)
                                         sprintf(__('%1$s = %2$s'),
                                                 Project::getTypeName(1), $project->getName()));
-
 
             while ($data = $DB->fetch_assoc($result)) {
                echo "<tr class='tab_bg_2' ".
@@ -412,8 +431,7 @@ class ProjectCost extends CommonDBChild {
       $ticketcost = TicketCost::showForObject($project);
       echo "</div>";
       echo "<div class='b'>";
-      printf(__('%1$s: %2$s'), __('Total cost'),$total+$ticketcost);
+      printf(__('%1$s: %2$s'), __('Total cost'), $total+$ticketcost);
       echo "</div>";
    }
 }
-?>

@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -46,11 +45,10 @@ class Bookmark extends CommonDBTM {
 
    // From CommonGLPI
    public $taborientation          = 'horizontal';
+   public  $auto_message_on_action = false;
+   protected $displaylist          = false;
 
-   var       $auto_message_on_action = false;
-   protected $displaylist            = false;
-
-   static $rightname                 = 'bookmark_public';
+   static $rightname               = 'bookmark_public';
 
    const WIDTH  = 750;
    const SEARCH = 1; //SEARCH SYSTEM bookmark
@@ -312,7 +310,7 @@ class Bookmark extends CommonDBTM {
          //TRANS: %1$s is the Itemtype name and $2$d the ID of the item
          printf(__('%1$s - ID %2$d'), $this->getTypeName(1), $ID);
       } else {
-         _e('New item');
+         echo __('New item');
       }
       echo "</th></tr>";
 
@@ -330,9 +328,9 @@ class Bookmark extends CommonDBTM {
                                            $this->fields["is_recursive"]);
       } else {
          if ($this->fields["is_private"]) {
-            _e('Private');
+            echo __('Private');
          } else {
-            _e('Public');
+            echo __('Public');
          }
       }
       echo "</td></tr>";
@@ -342,7 +340,7 @@ class Bookmark extends CommonDBTM {
          echo "<td class='tab_bg_2 top' colspan='2'>";
          echo "<input type='hidden' name='users_id' value='".$this->fields['users_id']."'>";
          echo "<div class='center'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</div></td></tr>";
 
       } else {
@@ -560,7 +558,7 @@ class Bookmark extends CommonDBTM {
          if ($result = $DB->query($query)) {
             if ($DB->numrows($result) > 0) {
                // already exists delete it
-               $deleteID = $DB->result($result,0,0);
+               $deleteID = $DB->result($result, 0, 0);
                $dd->delete(array('id' => $deleteID));
             }
          }
@@ -769,7 +767,7 @@ class Bookmark extends CommonDBTM {
          }
       } else {
          echo "<tr class='tab_bg_1'><td colspan='$colspan'>";
-         _e('You have not recorded any bookmarks yet');
+         echo __('You have not recorded any bookmarks yet');
          echo "</td></tr></table>";
       }
       Html::closeForm();
@@ -798,7 +796,7 @@ class Bookmark extends CommonDBTM {
 
       if (in_array($ID, $personalorder)) {
          $pos = array_search($ID, $personalorder);
-         switch($action) {
+         switch ($action) {
             case 'up' :
                if (isset($personalorder[$pos-1])) {
                   $personalorder[$pos] = $personalorder[$pos-1];
@@ -830,7 +828,7 @@ class Bookmark extends CommonDBTM {
     *
     * @return true if all ok
    **/
-   function moveBookmark($items= array(), $ref_ID, $action='after') {
+   function moveBookmark(array $items, $ref_ID, $action='after') {
       global $DB;
 
       if (count($items)) {
@@ -883,8 +881,7 @@ class Bookmark extends CommonDBTM {
    static function showSaveButton($type, $itemtype=0) {
       global $CFG_GLPI;
 
-
-      echo " <a href='#' onClick=\"".Html::jsGetElementbyID('bookmarksave').".dialog('open');\">";
+      echo " <a href='#' onClick=\"".Html::jsGetElementbyID('bookmarksave').".dialog('open'); return false;\">";
       echo "<img src='".$CFG_GLPI["root_doc"]."/pics/bookmark_record.png'
              title=\"".__s('Save as bookmark')."\" alt=\"".__s('Save as bookmark')."\"
              class='calendrier pointer'>";
@@ -899,4 +896,3 @@ class Bookmark extends CommonDBTM {
 
 
 }
-?>

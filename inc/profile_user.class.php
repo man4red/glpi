@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -45,15 +44,15 @@ if (!defined('GLPI_ROOT')) {
 class Profile_User extends CommonDBRelation {
 
    // From CommonDBTM
-   var $auto_message_on_action = false;
+   public $auto_message_on_action               = false;
 
    // From CommonDBRelation
-   static public $itemtype_1          = 'User';
-   static public $items_id_1          = 'users_id';
+   static public $itemtype_1                    = 'User';
+   static public $items_id_1                    = 'users_id';
 
-   static public $itemtype_2          = 'Profile';
-   static public $items_id_2          = 'profiles_id';
-   static public $checkItem_2_Rights  = self::DONT_CHECK_ITEM_RIGHTS;
+   static public $itemtype_2                    = 'Profile';
+   static public $items_id_2                    = 'profiles_id';
+   static public $checkItem_2_Rights            = self::DONT_CHECK_ITEM_RIGHTS;
 
    // Specific log system
    static public $logs_for_item_2               = false;
@@ -88,7 +87,7 @@ class Profile_User extends CommonDBRelation {
    function canCreateItem() {
 
       $user = new User();
-      return $user->can($this->fields['users_id'],READ)
+      return $user->can($this->fields['users_id'], READ)
              && Profile::currentUserHaveMoreRightThan(array($this->fields['profiles_id']
                                                                => $this->fields['profiles_id']))
              && Session::haveAccessToEntity($this->fields['entities_id']);
@@ -123,7 +122,7 @@ class Profile_User extends CommonDBRelation {
 
       $canedit = $user->canEdit($ID);
 
-      $strict_entities = self::getUserEntities($ID,false);
+      $strict_entities = self::getUserEntities($ID, false);
       if (!Session::haveAccessToOneOfEntities($strict_entities)
           && !Session::isViewAllEntities()) {
          $canedit = false;
@@ -145,9 +144,9 @@ class Profile_User extends CommonDBRelation {
          echo "</td><td class='center'>".self::getTypeName(1)."</td><td>";
          Profile::dropdownUnder(array('value' => Profile::getDefault()));
          echo "</td><td>".__('Recursive')."</td><td>";
-         Dropdown::showYesNo("is_recursive",0);
+         Dropdown::showYesNo("is_recursive", 0);
          echo "</td><td class='center'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</td></tr>";
 
          echo "</table>";
@@ -246,8 +245,8 @@ class Profile_User extends CommonDBRelation {
                }
                $entname = sprintf(__('%1$s%2$s'), $entname, ")</span>");
             }
-             echo "<td>".$entname."</td>";
-         echo "</tr>";
+            echo "<td>".$entname."</td>";
+            echo "</tr>";
          }
          echo $header_begin.$header_bottom.$header_end;
          echo "</table>";
@@ -272,8 +271,6 @@ class Profile_User extends CommonDBRelation {
     * @param $entity Entity object
    **/
    static function showForEntity(Entity $entity) {
-      global $DB;
-
 
       $ID = $entity->getField('id');
       if (!$entity->can($ID, READ)) {
@@ -305,7 +302,7 @@ class Profile_User extends CommonDBRelation {
          echo "</td><td class='tab_bg_2 center'>".__('Recursive')."</td><td>";
          Dropdown::showYesNo("is_recursive", 0);
          echo "</td><td class='tab_bg_2 center'>";
-         echo "<input type='submit' name='add' value=\""._sx('button','Add')."\" class='submit'>";
+         echo "<input type='submit' name='add' value=\""._sx('button', 'Add')."\" class='submit'>";
          echo "</td></tr>";
          echo "</table>";
          Html::closeForm();
@@ -339,7 +336,6 @@ class Profile_User extends CommonDBRelation {
       echo "<th class='noHover' colspan='$headerspan'>";
       printf(__('%1$s (%2$s)'), _n('User', 'Users', Session::getPluralNumber()), __('D=Dynamic, R=Recursive'));
       echo "</th></tr></thead>";
-
 
       if ($nb) {
          Session::initNavigateListItems('User',
@@ -381,7 +377,7 @@ class Profile_User extends CommonDBRelation {
                $i = 0;
 
                while ($data2 = $DB->fetch_assoc($result2)) {
-                  Session::addToNavigateListItems('User',$data2["id"]);
+                  Session::addToNavigateListItems('User', $data2["id"]);
 
                   if (($i%$nb_per_line) == 0) {
                      if ($i  !=0) {
@@ -843,48 +839,68 @@ class Profile_User extends CommonDBRelation {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                       = array();
-      $tab['common']             = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[2]['table']           = $this->getTable();
-      $tab[2]['field']           = 'id';
-      $tab[2]['name']            = __('ID');
-      $tab[2]['massiveaction']   = false;
-      $tab[2]['datatype']        = 'number';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'id',
+         'name'               => __('ID'),
+         'massiveaction'      => false,
+         'datatype'           => 'number'
+      ];
 
-      $tab[3]['table']           = $this->getTable();
-      $tab[3]['field']           = 'is_dynamic';
-      $tab[3]['name']            = __('Dynamic');
-      $tab[3]['datatype']        = 'bool';
-      $tab[3]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'is_dynamic',
+         'name'               => __('Dynamic'),
+         'datatype'           => 'bool',
+         'massiveaction'      => false
+      ];
 
-      $tab[4]['table']           = 'glpi_profiles';
-      $tab[4]['field']           = 'name';
-      $tab[4]['name']            = self::getTypeName(1);
-      $tab[4]['datatype']        = 'dropdown';
-      $tab[4]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => 'glpi_profiles',
+         'field'              => 'name',
+         'name'               => self::getTypeName(1),
+         'datatype'           => 'dropdown',
+         'massiveaction'      => false
+      ];
 
-      $tab[5]['table']           = 'glpi_users';
-      $tab[5]['field']           = 'name';
-      $tab[5]['name']            = __('User');
-      $tab[5]['massiveaction']   = false;
-      $tab[5]['datatype']        = 'dropdown';
-      $tab[5]['right']           = 'all';
+      $tab[] = [
+         'id'                 => '5',
+         'table'              => 'glpi_users',
+         'field'              => 'name',
+         'name'               => __('User'),
+         'massiveaction'      => false,
+         'datatype'           => 'dropdown',
+         'right'              => 'all'
+      ];
 
+      $tab[] = [
+         'id'                 => '80',
+         'table'              => 'glpi_entities',
+         'field'              => 'completename',
+         'name'               => __('Entity'),
+         'massiveaction'      => true,
+         'datatype'           => 'dropdown'
+      ];
 
-      $tab[80]['table']          = 'glpi_entities';
-      $tab[80]['field']          = 'completename';
-      $tab[80]['name']           = __('Entity');
-      $tab[80]['massiveaction']  = true;
-      $tab[80]['datatype']       = 'dropdown';
-
-      $tab[86]['table']          = $this->getTable();
-      $tab[86]['field']          = 'is_recursive';
-      $tab[86]['name']           = __('Child entities');
-      $tab[86]['datatype']       = 'bool';
-      $tab[86]['massiveaction']   = false;
+      $tab[] = [
+         'id'                 => '86',
+         'table'              => $this->getTable(),
+         'field'              => 'is_recursive',
+         'name'               => __('Child entities'),
+         'datatype'           => 'bool',
+         'massiveaction'      => false
+      ];
 
       return $tab;
    }
@@ -919,16 +935,23 @@ class Profile_User extends CommonDBRelation {
 
 
    function getTabNameForItem(CommonGLPI $item, $withtemplate=0) {
+      global $DB;
 
       if (!$withtemplate) {
          $nb = 0;
+         $query_nb = "SELECT COUNT(*) as cpt
+                      FROM `".$this->getTable()."`
+                      LEFT JOIN glpi_users
+                        ON (`glpi_users`.`id` = `glpi_profiles_users`.`users_id`)
+                      WHERE `glpi_users`.`is_deleted` = '0' ";
          switch ($item->getType()) {
             case 'Entity' :
                if (Session::haveRight('user', READ)) {
                   if ($_SESSION['glpishow_count_on_tabs']) {
-                     // Keep this ? (only approx. as count deleted users)
-                     $nb = countElementsInTable($this->getTable(),
-                                                "entities_id = '".$item->getID()."'");
+                     $query_nb.= "AND `glpi_profiles_users`.`entities_id` = '".$item->getID()."'";
+                     $result_nb = $DB->query($query_nb);
+                     $data_nb   = $DB->fetch_assoc($result_nb);
+                     $nb        = $data_nb['cpt'];
                   }
                   return self::createTabEntry(User::getTypeName(Session::getPluralNumber()), $nb);
                }
@@ -937,14 +960,15 @@ class Profile_User extends CommonDBRelation {
             case 'Profile' :
                if (Session::haveRight('user', READ)) {
                   if ($_SESSION['glpishow_count_on_tabs']) {
-                     // Keep this ? (only approx. as count deleted users)
-                     $nb = countElementsInTable($this->getTable(),
-                                                "profiles_id = '".$item->getID()."'".
-                                                 getEntitiesRestrictRequest('AND',
-                                                                            'glpi_profiles_users',
-                                                                            'entities_id',
-                                                                            $_SESSION['glpiactiveentities'],
-                                                                            true));
+                     $query_nb.= "AND `glpi_profiles_users`.`profiles_id` = '".$item->getID()."'".
+                                       getEntitiesRestrictRequest('AND',
+                                                                  'glpi_profiles_users',
+                                                                  'entities_id',
+                                                                  $_SESSION['glpiactiveentities'],
+                                                                  true);
+                     $result_nb = $DB->query($query_nb);
+                     $data_nb   = $DB->fetch_assoc($result_nb);
+                     $nb        = $data_nb['cpt'];
                   }
                   return self::createTabEntry(User::getTypeName(Session::getPluralNumber()), $nb);
                }
@@ -953,9 +977,9 @@ class Profile_User extends CommonDBRelation {
             case 'User' :
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable($this->getTable(),
-                                             "users_id = '".$item->getID()."'");
+                                             ['users_id' => $item->getID()]);
                }
-               return self::createTabEntry(_n('Authorization','Authorizations',
+               return self::createTabEntry(_n('Authorization', 'Authorizations',
                                            Session::getPluralNumber()), $nb);
          }
       }
@@ -1035,4 +1059,3 @@ class Profile_User extends CommonDBRelation {
    }
 
 }
-?>

@@ -1,38 +1,37 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
-* @brief 
+* @brief
 */
 
 /**
@@ -363,25 +362,25 @@ function update031to04() {
       $DB->queryOrDie($query, "23");
    }
 
-   if (!FieldExists("glpi_networking","firmware", false)) {
+   if (!FieldExists("glpi_networking", "firmware", false)) {
       $query = "ALTER TABLE `glpi_networking`
                 ADD `firmware` INT(11)";
       $DB->queryOrDie($query, "24");
    }
 
-   if (!FieldExists("glpi_tracking","realtime", false)) {
+   if (!FieldExists("glpi_tracking", "realtime", false)) {
       $query = "ALTER TABLE `glpi_tracking`
                 ADD `realtime` FLOAT NOT NULL";
       $DB->queryOrDie($query, "25");
    }
 
-   if (!FieldExists("glpi_printers","flags_usb", false)) {
+   if (!FieldExists("glpi_printers", "flags_usb", false)) {
       $query = "ALTER TABLE `glpi_printers`
                 ADD `flags_usb` TINYINT DEFAULT '0' NOT NULL AFTER `flags_par`";
       $DB->queryOrDie($query, "26");
    }
 
-   if (!FieldExists("glpi_licenses","expire", false)) {
+   if (!FieldExists("glpi_licenses", "expire", false)) {
       $query = "ALTER TABLE `glpi_licenses`
                 ADD `expire` date default NULL";
       $DB->queryOrDie($query, "27");
@@ -462,7 +461,7 @@ function update031to04() {
       $DB->queryOrDie($query, "47");
    }
 
-   if (!FieldExists("glpi_networking_ports","netpoint", false)) {
+   if (!FieldExists("glpi_networking_ports", "netpoint", false)) {
       $query = "ALTER TABLE `glpi_networking_ports`
                 ADD `netpoint` INT default NULL";
       $DB->queryOrDie($query, "27");
@@ -554,7 +553,7 @@ function update031to04() {
       $DB->queryOrDie($query, "40");
    }
 
-   if (!FieldExists("glpi_config","ldap_condition", false)) {
+   if (!FieldExists("glpi_config", "ldap_condition", false)) {
       $query = "ALTER TABLE `glpi_config`
                 ADD `ldap_condition` VARCHAR(255) NOT NULL DEFAULT ''";
       $DB->queryOrDie($query, "48");
@@ -576,17 +575,16 @@ function update031to04() {
       }
    }
 
-   if (!FieldExists("glpi_users","password_md5", false)) {
+   if (!FieldExists("glpi_users", "password_md5", false)) {
       $query = "ALTER TABLE `glpi_users`
                 ADD `password_md5` VARCHAR(80) NOT NULL AFTER `password`";
       $DB->queryOrDie($query, "glpi_users.Password_md5");
    }
 
-   if (!FieldExists("glpi_config","permit_helpdesk", false)) {
+   if (!FieldExists("glpi_config", "permit_helpdesk", false)) {
       $query = "ALTER TABLE `glpi_config`
                 ADD `permit_helpdesk` VARCHAR(200) NOT NULL";
       $DB->queryOrDie($query, "glpi_config_permit_helpdesk");
    }
 
 }
-?>

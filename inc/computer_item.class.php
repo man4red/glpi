@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -78,9 +77,9 @@ class Computer_Item extends CommonDBRelation{
    static function countForItem(CommonDBTM $item) {
 
       return countElementsInTable('glpi_computers_items',
-                                  "`itemtype` = '".$item->getType()."'
-                                      AND `items_id` ='".$item->getField('id')."'
-                                      AND `is_deleted` = '0'");
+                                  ['itemtype'   => $item->getType(),
+                                   'items_id'   => $item->getField('id'),
+                                   'is_deleted' => 0 ]);
    }
 
 
@@ -94,8 +93,8 @@ class Computer_Item extends CommonDBRelation{
    static function countForComputer(Computer $comp) {
 
       return countElementsInTable('glpi_computers_items',
-                                  "`computers_id` ='".$comp->getField('id')."'
-                                      AND `is_deleted`='0'");
+                                  ['computers_id' => $comp->getField('id'),
+                                   'is_deleted'   => 0 ]);
    }
 
 
@@ -112,9 +111,9 @@ class Computer_Item extends CommonDBRelation{
    static function countForAll(Computer $comp, CommonDBTM $item) {
 
       return countElementsInTable('glpi_computers_items',
-                                  "`computers_id` ='".$comp->getField('id')."'
-                                   AND `itemtype` = '".$item->getType()."'
-                                   AND `items_id` ='".$item->getField('id')."'");
+                                  ['computers_id' => $comp->getField('id'),
+                                   'itemtype'     => $item->getType(),
+                                   'items_id'     => $item->getField('id')]);
    }
 
 
@@ -146,7 +145,7 @@ class Computer_Item extends CommonDBRelation{
          return false;
       }
 
-      if (!$item->getField('is_global') ) {
+      if (!$item->getField('is_global')) {
          // Autoupdate some fields - should be in post_addItem (here to avoid more DB access)
          $updates = array();
 
@@ -335,7 +334,7 @@ class Computer_Item extends CommonDBRelation{
          if ($DB->numrows($result) > 0) {
             $ok = true;
             while ($data = $DB->fetch_assoc($result)) {
-               if ($this->can($data["id"],UPDATE)) {
+               if ($this->can($data["id"], UPDATE)) {
                   $ok &= $this->delete($data);
                }
             }
@@ -774,7 +773,7 @@ class Computer_Item extends CommonDBRelation{
                   if ($_SESSION['glpishow_count_on_tabs']) {
                      $nb = self::countForItem($item);
                   }
-                  return self::createTabEntry(_n('Connection','Connections', Session::getPluralNumber()),
+                  return self::createTabEntry(_n('Connection', 'Connections', Session::getPluralNumber()),
                                               $nb);
                }
                break;
@@ -787,7 +786,7 @@ class Computer_Item extends CommonDBRelation{
                   if ($_SESSION['glpishow_count_on_tabs']) {
                      $nb = self::countForComputer($item);
                   }
-                  return self::createTabEntry(_n('Connection','Connections', Session::getPluralNumber()),
+                  return self::createTabEntry(_n('Connection', 'Connections', Session::getPluralNumber()),
                                               $nb);
                }
                break;
@@ -871,4 +870,3 @@ class Computer_Item extends CommonDBRelation{
    }
 
 }
-?>

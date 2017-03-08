@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
- 
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -37,11 +36,11 @@
 */
 
 // Ensure current directory when run from crontab
-chdir(dirname($_SERVER["SCRIPT_FILENAME"]));
+chdir(__DIR__);
 
 if (isset($_SERVER['argv'])) {
-   for ($i=1 ; $i<$_SERVER['argc'] ; $i++) {
-      $it = explode("=",$_SERVER['argv'][$i], 2);
+   for ($i=1; $i<$_SERVER['argc']; $i++) {
+      $it = explode("=", $_SERVER['argv'][$i], 2);
       $it[0] = preg_replace('/^--/', '', $it[0]);
 
       $_GET[$it[0]] = (isset($it[1]) ? $it[1] : true);
@@ -94,7 +93,7 @@ function syncEntity ($pid, $data, $server, $prof, $verb, $mail) {
    }
 
    $entity = new Entity();
-   if ($entity->getFromDB($id=$data['id'])) {
+   if ($entity->getFromDB($id = $data['id'])) {
       $tps = microtime(true);
       if ($verb) {
          echo "  $pid: Synchonizing entity '".$entity->getField('completename')."' ($id, mail=$mail)\n";
@@ -221,7 +220,7 @@ function syncEntity ($pid, $data, $server, $prof, $verb, $mail) {
 
 include ('../inc/includes.php');
 
-ini_set('display_errors',1);
+ini_set('display_errors', 1);
 restore_error_handler();
 
 if (isset($_GET['verbose'])) {
@@ -306,7 +305,7 @@ foreach ($rows as $row) {
       if ($verb) {
          echo "+ $pid: started, ".count($pids)." running\n";
       }
-   } else  {
+   } else {
       syncEntity(posix_getpid(), $row, $server, $prof, $verb, $mail);
       exit(0);
    }
@@ -328,9 +327,8 @@ while (count($pids) > 0) {
 $tps = microtime(true)-$tps;
 if ($nbproc == 1) {
    printf("%d users synchronized in %s\n", $nb,
-          Html::clean(Html::timestampToString(round($tps,0),true)));
+          Html::clean(Html::timestampToString(round($tps, 0), true)));
 } else {
    printf("%d entities synchronized in %s\n", $nb,
-          Html::clean(Html::timestampToString(round($tps,0),true)));
+          Html::clean(Html::timestampToString(round($tps, 0), true)));
 }
-?>

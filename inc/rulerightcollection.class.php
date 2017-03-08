@@ -1,41 +1,40 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
 * @brief
 */
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -50,11 +49,11 @@ class RuleRightCollection extends RuleCollection {
 
    // Specific ones
    /// Array containing results : entity + right
-   var $rules_entity_rights = array();
+   public $rules_entity_rights = array();
    /// Array containing results : only entity
-   var $rules_entity = array();
+   public $rules_entity        = array();
    /// Array containing results : only right
-   var $rules_rights = array();
+   public $rules_rights        = array();
 
 
    function getTitle() {
@@ -121,7 +120,7 @@ class RuleRightCollection extends RuleCollection {
                $this->displayActionByName("profile", $val[1]);
             }
             if (isset($val[2])) {
-               $this->displayActionByName("is_recursive",$val[2]);
+               $this->displayActionByName("is_recursive", $val[2]);
             }
          }
       }
@@ -236,7 +235,7 @@ class RuleRightCollection extends RuleCollection {
             //Get all the ldap fields
             $fields = $this->getFieldsForQuery();
             foreach ($fields as $field) {
-               switch(Toolbox::strtoupper($field)) {
+               switch (Toolbox::strtoupper($field)) {
                   case "LDAP_SERVER" :
                      $rule_parameters["LDAP_SERVER"] = $params["ldap_server"];
                      break;
@@ -301,4 +300,3 @@ class RuleRightCollection extends RuleCollection {
    }
 
 }
-?>

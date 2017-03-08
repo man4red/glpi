@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /// Hidden fields for ticket template class
@@ -91,7 +90,7 @@ class TicketTemplateHiddenField extends CommonDBChild {
          $nb = 0;
          if ($_SESSION['glpishow_count_on_tabs']) {
             $nb = countElementsInTable($this->getTable(),
-                                       "`tickettemplates_id` = '".$item->getID()."'");
+                                       ['tickettemplates_id' => $item->getID()]);
          }
          return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
       }
@@ -124,7 +123,7 @@ class TicketTemplateHiddenField extends CommonDBChild {
          if ($result = $DB->query($query)) {
             if ($DB->numrows($result)) {
                $a = new self();
-               $a->delete(array('id'=>$DB->result($result,0,0)));
+               $a->delete(array('id'=>$DB->result($result, 0, 0)));
             }
          }
       }
@@ -151,7 +150,7 @@ class TicketTemplateHiddenField extends CommonDBChild {
       $result = $DB->query($sql);
 
       $tt             = new TicketTemplate();
-      $allowed_fields = $tt->getAllowedFields($withtypeandcategory, true);
+      $allowed_fields = $tt->getAllowedFields($withtypeandcategory);
       $fields         = array();
 
       while ($rule = $DB->fetch_assoc($result)) {
@@ -160,6 +159,20 @@ class TicketTemplateHiddenField extends CommonDBChild {
          }
       }
       return $fields;
+   }
+
+
+   /**
+    * Return fields who doesn't need to be used for this part of template
+    *
+    * @since 9.2
+    *
+    * @return array the excluded fields (keys and values are equals)
+    */
+   static function getExcludedFields() {
+      return [
+         175 => 175, // ticket's tasks (template)
+      ];
    }
 
 
@@ -186,7 +199,8 @@ class TicketTemplateHiddenField extends CommonDBChild {
       $used    = $ttm->getHiddenFields($ID);
 
       $canedit = $tt->canEdit($ID);
-      $fields  = $tt->getAllowedFieldsNames(false, isset($used['itemtype']));
+      $fields  = $tt->getAllowedFieldsNames(false);
+      $fields  = array_diff_key($fields, self::getExcludedFields());
       $rand    = mt_rand();
 
       $query = "SELECT `glpi_tickettemplatehiddenfields`.*
@@ -274,4 +288,3 @@ class TicketTemplateHiddenField extends CommonDBChild {
    }
 
 }
-?>

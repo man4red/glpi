@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 
@@ -79,7 +78,7 @@ class TicketTemplatePredefinedField extends CommonDBChild {
    function getRawName() {
 
       $tt     = new TicketTemplate();
-      $fields = $tt->getAllowedFieldsNames(true);
+      $fields = $tt->getAllowedFieldsNames(true, true);
 
       if (isset($fields[$this->fields["num"]])) {
          return $fields[$this->fields["num"]];
@@ -122,7 +121,7 @@ class TicketTemplatePredefinedField extends CommonDBChild {
          if ($result = $DB->query($query)) {
             if ($DB->numrows($result)) {
                $a = new self();
-               $a->delete(array('id'=>$DB->result($result,0,0)));
+               $a->delete(array('id'=>$DB->result($result, 0, 0)));
             }
          }
       }
@@ -137,7 +136,7 @@ class TicketTemplatePredefinedField extends CommonDBChild {
          $nb = 0;
          if ($_SESSION['glpishow_count_on_tabs']) {
             $nb = countElementsInTable($this->getTable(),
-                                       "`tickettemplates_id` = '".$item->getID()."'");
+                                       ['tickettemplates_id' => $item->getID()]);
          }
          return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
       }
@@ -178,7 +177,12 @@ class TicketTemplatePredefinedField extends CommonDBChild {
       while ($rule = $DB->fetch_assoc($result)) {
          if (isset($allowed_fields[$rule['num']])) {
             if (in_array($rule['num'], $multiple)) {
-               $fields[$allowed_fields[$rule['num']]][] = $rule['value'];
+               if ($allowed_fields[$rule['num']] == 'items_id') {
+                  $item_itemtype = explode("_", $rule['value']);
+                  $fields[$allowed_fields[$rule['num']]][$item_itemtype[0]][$item_itemtype[1]] = $item_itemtype[1];
+               } else {
+                  $fields[$allowed_fields[$rule['num']]][] = $rule['value'];
+               }
             } else {
                $fields[$allowed_fields[$rule['num']]] = $rule['value'];
             }
@@ -194,9 +198,25 @@ class TicketTemplatePredefinedField extends CommonDBChild {
    static function getMultiplePredefinedValues() {
 
       $ticket = new Ticket();
-      $fields = array($ticket->getSearchOptionIDByField('field', 'name', 'glpi_documents'));
+      $fields = array($ticket->getSearchOptionIDByField('field', 'name', 'glpi_documents'),
+                      $ticket->getSearchOptionIDByField('field', 'items_id', 'glpi_items_tickets'),
+                      $ticket->getSearchOptionIDByField('field', 'name', 'glpi_tasktemplates'),
+                     );
 
       return $fields;
+   }
+
+   /**
+    * Return fields who doesn't need to be used for this part of template
+    *
+    * @since 9.2
+    *
+    * @return array the excluded fields (keys and values are equals)
+    */
+   static function getExcludedFields() {
+      return [
+         -2 => -2, // validation request
+      ];
    }
 
 
@@ -221,26 +241,17 @@ class TicketTemplatePredefinedField extends CommonDBChild {
 
       $canedit       = $tt->canEdit($ID);
 
-      $ttp           = new self();
-      $used_fields   = $ttp->getPredefinedFields($ID, true);
-
-      $itemtype_used = '';
-      if (isset($used_fields['itemtype'])) {
-         $itemtype_used = $used_fields['itemtype'];
-      }
-
-      $fields        = $tt->getAllowedFieldsNames(true, isset($used_fields['itemtype']));
+      $fields        = $tt->getAllowedFieldsNames(true, true);
+      $fields        = array_diff_key($fields, self::getExcludedFields());
       $searchOption  = Search::getOptions('Ticket');
       $ticket        = new Ticket();
       $rand          = mt_rand();
-
 
       $query = "SELECT `glpi_tickettemplatepredefinedfields`.*
                 FROM `glpi_tickettemplatepredefinedfields`
                 WHERE (`tickettemplates_id` = '$ID')
                 ORDER BY 'id'";
 
-      $display_datas   = array('itemtype'       => $itemtype_used);
       $display_options = array('relative_dates' => true,
                                'comments'       => true,
                                'html'           => true);
@@ -250,7 +261,7 @@ class TicketTemplatePredefinedField extends CommonDBChild {
          if ($numrows = $DB->numrows($result)) {
             while ($data = $DB->fetch_assoc($result)) {
                $predeffields[$data['id']] = $data;
-               $used[$data['num']]        = $data['num'];
+               $used[$data['num']] = $data['num'];
             }
          }
          if ($canedit) {
@@ -265,8 +276,6 @@ class TicketTemplatePredefinedField extends CommonDBChild {
             $display_fields[-1] = Dropdown::EMPTY_VALUE;
             $display_fields    += $fields;
 
-            // Force validation request as used
-            $used[-2] = -2;
             // Unset multiple items
             $multiple = self::getMultiplePredefinedValues();
             foreach ($multiple as $val) {
@@ -280,7 +289,6 @@ class TicketTemplatePredefinedField extends CommonDBChild {
             echo "</td><td class='top'>";
             $paramsmassaction = array('id_field'         => '__VALUE__',
                                       'itemtype'         => 'Ticket',
-                                      'additionalvalues' => array('itemtype' => $itemtype_used),
                                       'inline'           => true,
                                       'submitname'       => _sx('button', 'Add'),
                                       'options'          => array('relative_dates'     => 1,
@@ -351,7 +359,6 @@ class TicketTemplatePredefinedField extends CommonDBChild {
             echo "<tr><th colspan='3'>".__('No item found')."</th></tr>";
          }
 
-
          echo "</table>";
          if ($canedit && $numrows) {
             $massiveactionparams['ontop'] = false;
@@ -364,4 +371,3 @@ class TicketTemplatePredefinedField extends CommonDBChild {
    }
 
 }
-?>

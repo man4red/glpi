@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -36,7 +35,7 @@
 */
 
 if (!defined('GLPI_ROOT')) {
-   die("Sorry. You can't access directly to this file");
+   die("Sorry. You can't access this file directly");
 }
 
 /**
@@ -125,7 +124,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
       Ajax::createIframeModalWindow("tags".$rand,
                                     $CFG_GLPI['root_doc']."/front/notification.tags.php?sub_type=".
                                        $template->getField('itemtype'));
-      echo "<a class='vsubmit' href='#' onClick=\"".Html::jsGetElementbyID("tags".$rand).".dialog('open');\">".__('Show list of available tags')."</a>";
+      echo "<a class='vsubmit' href='#' onClick=\"".Html::jsGetElementbyID("tags".$rand).".dialog('open'); return false;\">".__('Show list of available tags')."</a>";
       echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'>";
@@ -145,19 +144,19 @@ class NotificationTemplateTranslation extends CommonDBChild {
 
       echo "<tr class='tab_bg_1'><td>" . __('Subject') . "</td>";
       echo "<td colspan='3'>";
-      Html::autocompletionTextField($this,'subject', array('size' => 100));
+      Html::autocompletionTextField($this, 'subject', array('size' => 100));
       echo "</td></tr>";
 
       echo "<tr class='tab_bg_1'><td>";
-      _e('Email text body');
+      echo __('Email text body');
       echo "<br>".__('(leave the field empty for a generation from HTML)');
       echo "</td><td colspan='3'>";
       echo "<textarea cols='100' rows='15' name='content_text' >".$this->fields["content_text"];
       echo "</textarea></td></tr>";
 
       echo "<tr class='tab_bg_1'>";
-      echo "<td>" ;
-      _e('Email HTML body');
+      echo "<td>";
+      echo __('Email HTML body');
       echo "</td><td colspan='3'>";
       echo "<textarea cols='100' rows='15' name='content_html'>".$this->fields["content_html"];
       echo "</textarea>";
@@ -213,7 +212,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
                             array('notificationtemplates_id' => $nID)) as $data) {
 
          if ($this->getFromDB($data['id'])) {
-            Session::addToNavigateListItems('NotificationTemplateTranslation',$data['id']);
+            Session::addToNavigateListItems('NotificationTemplateTranslation', $data['id']);
             echo "<tr class='tab_bg_1'>";
             if ($canedit) {
                echo "<td class='center'>";
@@ -228,7 +227,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
                echo $CFG_GLPI['languages'][$data['language']][0];
 
             } else {
-               _e('Default translation');
+               echo __('Default translation');
             }
 
             echo "</a></td></tr>";
@@ -275,35 +274,50 @@ class NotificationTemplateTranslation extends CommonDBChild {
    }
 
 
-   function getSearchOptions() {
+   function getSearchOptionsNew() {
+      $tab = [];
 
-      $tab                     = array();
-      $tab['common']           = __('Characteristics');
+      $tab[] = [
+         'id'                 => 'common',
+         'name'               => __('Characteristics')
+      ];
 
-      $tab[1]['table']         = $this->getTable();
-      $tab[1]['field']         = 'language';
-      $tab[1]['name']          = __('Language');
-      $tab[1]['datatype']      = 'language';
-      $tab[1]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '1',
+         'table'              => $this->getTable(),
+         'field'              => 'language',
+         'name'               => __('Language'),
+         'datatype'           => 'language',
+         'massiveaction'      => false
+      ];
 
-      $tab[2]['table']         = $this->getTable();
-      $tab[2]['field']         = 'subject';
-      $tab[2]['name']          = __('Subject');
-      $tab[2]['massiveaction'] = false;
-      $tab[2]['datatype']      = 'string';
+      $tab[] = [
+         'id'                 => '2',
+         'table'              => $this->getTable(),
+         'field'              => 'subject',
+         'name'               => __('Subject'),
+         'massiveaction'      => false,
+         'datatype'           => 'string'
+      ];
 
-      $tab[3]['table']         = $this->getTable();
-      $tab[3]['field']         = 'content_html';
-      $tab[3]['name']          = __('Email HTML body');
-      $tab[3]['datatype']      = 'text';
-      $tab[3]['htmltext']      = 'true';
-      $tab[3]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '3',
+         'table'              => $this->getTable(),
+         'field'              => 'content_html',
+         'name'               => __('Email HTML body'),
+         'datatype'           => 'text',
+         'htmltext'           => 'true',
+         'massiveaction'      => false
+      ];
 
-      $tab[4]['table']         = $this->getTable();
-      $tab[4]['field']         = 'content_text';
-      $tab[4]['name']          = __('Email text body');
-      $tab[4]['datatype']      = 'text';
-      $tab[4]['massiveaction'] = false;
+      $tab[] = [
+         'id'                 => '4',
+         'table'              => $this->getTable(),
+         'field'              => 'content_text',
+         'name'               => __('Email text body'),
+         'datatype'           => 'text',
+         'massiveaction'      => false
+      ];
 
       return $tab;
    }
@@ -349,7 +363,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
          foreach ($infos as $key => $val) {
             $infos[$key]['type'] = $tag_type;
          }
-         $tags = array_merge($tags,$infos);
+         $tags = array_merge($tags, $infos);
       }
       ksort($tags);
       foreach ($tags as $tag => $values) {
@@ -357,7 +371,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
          if ($values['events'] == NotificationTarget::TAG_FOR_ALL_EVENTS) {
             $event = __('All');
          } else {
-            $event = implode(', ',$values['events']);
+            $event = implode(', ', $values['events']);
          }
 
          $action = '';
@@ -369,7 +383,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
          }
 
          if (!empty($values['allowed_values'])) {
-            $allowed_values = implode(',',$values['allowed_values']);
+            $allowed_values = implode(',', $values['allowed_values']);
          } else {
             $allowed_values = '';
          }
@@ -398,7 +412,7 @@ class NotificationTemplateTranslation extends CommonDBChild {
             case 'NotificationTemplate' :
                if ($_SESSION['glpishow_count_on_tabs']) {
                   $nb = countElementsInTable($this->getTable(),
-                                             "notificationtemplates_id = '".$item->getID()."'");
+                                             ['notificationtemplates_id' => $item->getID()]);
                }
                return self::createTabEntry(self::getTypeName(Session::getPluralNumber()), $nb);
          }
@@ -498,4 +512,3 @@ class NotificationTemplateTranslation extends CommonDBChild {
       echo "</table></div>";
    }
 }
-?>

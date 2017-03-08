@@ -1,34 +1,33 @@
 <?php
-/*
- * @version $Id$
- -------------------------------------------------------------------------
- GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2015 Teclib'.
-
- http://glpi-project.org
-
- based on GLPI - Gestionnaire Libre de Parc Informatique
- Copyright (C) 2003-2014 by the INDEPNET Development Team.
-
- -------------------------------------------------------------------------
-
- LICENSE
-
- This file is part of GLPI.
-
- GLPI is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- GLPI is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with GLPI. If not, see <http://www.gnu.org/licenses/>.
- --------------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2015-2017 Teclib' and contributors.
+ *
+ * http://glpi-project.org
+ *
+ * based on GLPI - Gestionnaire Libre de Parc Informatique
+ * Copyright (C) 2003-2014 by the INDEPNET Development Team.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of GLPI.
+ *
+ * GLPI is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GLPI. If not, see <http://www.gnu.org/licenses/>.
+ * ---------------------------------------------------------------------
  */
 
 /** @file
@@ -45,65 +44,65 @@ include_once (GLPI_CONFIG_DIR . "/config_db.php");
 Config::detectRootDoc();
 
 // Old itemtype for compatibility
-define("GENERAL_TYPE",         0);
-define("COMPUTER_TYPE",        1);
-define("NETWORKING_TYPE",      2);
-define("PRINTER_TYPE",         3);
-define("MONITOR_TYPE",         4);
-define("PERIPHERAL_TYPE",      5);
-define("SOFTWARE_TYPE",        6);
-define("CONTACT_TYPE",         7);
-define("ENTERPRISE_TYPE",      8);
-define("INFOCOM_TYPE",         9);
-define("CONTRACT_TYPE",       10);
-define("CARTRIDGEITEM_TYPE",  11);
-define("TYPEDOC_TYPE",        12);
-define("DOCUMENT_TYPE",       13);
-define("KNOWBASE_TYPE",       14);
-define("USER_TYPE",           15);
-define("TRACKING_TYPE",       16);
+define("GENERAL_TYPE", 0);
+define("COMPUTER_TYPE", 1);
+define("NETWORKING_TYPE", 2);
+define("PRINTER_TYPE", 3);
+define("MONITOR_TYPE", 4);
+define("PERIPHERAL_TYPE", 5);
+define("SOFTWARE_TYPE", 6);
+define("CONTACT_TYPE", 7);
+define("ENTERPRISE_TYPE", 8);
+define("INFOCOM_TYPE", 9);
+define("CONTRACT_TYPE", 10);
+define("CARTRIDGEITEM_TYPE", 11);
+define("TYPEDOC_TYPE", 12);
+define("DOCUMENT_TYPE", 13);
+define("KNOWBASE_TYPE", 14);
+define("USER_TYPE", 15);
+define("TRACKING_TYPE", 16);
 define("CONSUMABLEITEM_TYPE", 17);
-define("CONSUMABLE_TYPE",     18);
-define("CARTRIDGE_TYPE",      19);
-define("SOFTWARELICENSE_TYPE",20);
-define("LINK_TYPE",           21);
-define("STATE_TYPE",          22);
-define("PHONE_TYPE",          23);
-define("DEVICE_TYPE",         24);
-define("REMINDER_TYPE",       25);
-define("STAT_TYPE",           26);
-define("GROUP_TYPE",          27);
-define("ENTITY_TYPE",         28);
-define("RESERVATION_TYPE",    29);
-define("AUTHMAIL_TYPE",       30);
-define("AUTHLDAP_TYPE",       31);
-define("OCSNG_TYPE",          32);
-define("REGISTRY_TYPE",       33);
-define("PROFILE_TYPE",        34);
-define("MAILGATE_TYPE",       35);
-define("RULE_TYPE",           36);
-define("TRANSFER_TYPE",       37);
-define("BOOKMARK_TYPE",       38);
-define("SOFTWAREVERSION_TYPE",39);
-define("PLUGIN_TYPE",         40);
-define("COMPUTERDISK_TYPE",   41);
-define("NETWORKING_PORT_TYPE",42);
-define("FOLLOWUP_TYPE",       43);
-define("BUDGET_TYPE",         44);
+define("CONSUMABLE_TYPE", 18);
+define("CARTRIDGE_TYPE", 19);
+define("SOFTWARELICENSE_TYPE", 20);
+define("LINK_TYPE", 21);
+define("STATE_TYPE", 22);
+define("PHONE_TYPE", 23);
+define("DEVICE_TYPE", 24);
+define("REMINDER_TYPE", 25);
+define("STAT_TYPE", 26);
+define("GROUP_TYPE", 27);
+define("ENTITY_TYPE", 28);
+define("RESERVATION_TYPE", 29);
+define("AUTHMAIL_TYPE", 30);
+define("AUTHLDAP_TYPE", 31);
+define("OCSNG_TYPE", 32);
+define("REGISTRY_TYPE", 33);
+define("PROFILE_TYPE", 34);
+define("MAILGATE_TYPE", 35);
+define("RULE_TYPE", 36);
+define("TRANSFER_TYPE", 37);
+define("BOOKMARK_TYPE", 38);
+define("SOFTWAREVERSION_TYPE", 39);
+define("PLUGIN_TYPE", 40);
+define("COMPUTERDISK_TYPE", 41);
+define("NETWORKING_PORT_TYPE", 42);
+define("FOLLOWUP_TYPE", 43);
+define("BUDGET_TYPE", 44);
 
 // Old devicetype for compatibility
-define("MOBOARD_DEVICE",   1);
+define("MOBOARD_DEVICE", 1);
 define("PROCESSOR_DEVICE", 2);
-define("RAM_DEVICE",       3);
-define("HDD_DEVICE",       4);
-define("NETWORK_DEVICE",   5);
-define("DRIVE_DEVICE",     6);
-define("CONTROL_DEVICE",   7);
-define("GFX_DEVICE",       8);
-define("SND_DEVICE",       9);
-define("PCI_DEVICE",      10);
-define("CASE_DEVICE",     11);
-define("POWER_DEVICE",    12);
+define("RAM_DEVICE", 3);
+define("HDD_DEVICE", 4);
+define("NETWORK_DEVICE", 5);
+define("DRIVE_DEVICE", 6);
+define("CONTROL_DEVICE", 7);
+define("GFX_DEVICE", 8);
+define("SND_DEVICE", 9);
+define("PCI_DEVICE", 10);
+define("CASE_DEVICE", 11);
+define("POWER_DEVICE", 12);
 
 // Use default session dir if not writable
 if (is_writable(GLPI_SESSION_DIR)) {
@@ -165,9 +164,9 @@ function update_importDropdown ($table, $name) {
              FROM `".$table."`
              WHERE `name` = '".addslashes($name)."'";
 
-   if ($result = $DB->query($query) ) {
+   if ($result = $DB->query($query)) {
       if ($DB->numrows($result) > 0) {
-         return $DB->result($result,0,"ID");
+         return $DB->result($result, 0, "ID");
       }
    }
    $query = "INSERT INTO `".$table."`
@@ -217,7 +216,7 @@ function display_new_locations() {
    $FROM_ALL   = "";
    $ORDER_ALL  = "";
 
-   for ($i=1 ; $i<=$MAX_LEVEL ; $i++) {
+   for ($i=1; $i<=$MAX_LEVEL; $i++) {
       $SELECT_ALL .= " , location$i.`name` AS NAME$i
                        , location$i.`parentID` AS PARENT$i ";
       $FROM_ALL   .= " LEFT JOIN `glpi_dropdown_locations_new` AS location$i
@@ -237,14 +236,14 @@ function display_new_locations() {
    $data_old = array();
    echo "<table><tr>";
 
-   for ($i=0 ; $i<=$MAX_LEVEL ; $i++) {
+   for ($i=0; $i<=$MAX_LEVEL; $i++) {
       echo "<th>$i</th><th>&nbsp;</th>";
    }
    echo "</tr>";
 
    while ($data = $DB->fetch_assoc($result)) {
       echo "<tr class=tab_bg_1>";
-      for ($i=0 ; $i<=$MAX_LEVEL ; $i++) {
+      for ($i=0; $i<=$MAX_LEVEL; $i++) {
 
          if (!isset($data_old["NAME$i"])
              || ($data_old["PARENT$i"] != $data["PARENT$i"])
@@ -335,7 +334,7 @@ function location_create_new($split_char, $add_first) {
 
       $up_ID = $root_ID;
 
-      for ($i=0 ; $i<count($splitter)-1 ; $i++) {
+      for ($i=0; $i<count($splitter)-1; $i++) {
          // Entree existe deja ??
          $query_search = "SELECT `ID`
                           FROM `glpi_dropdown_locations_new`
@@ -344,7 +343,7 @@ function location_create_new($split_char, $add_first) {
          $result_search = $DB->query($query_search);
 
          if ($DB->numrows($result_search)==1) { // Found
-            $up_ID = $DB->result($result_search,0,"ID");
+            $up_ID = $DB->result($result_search, 0, "ID");
          } else { // Not FOUND -> INSERT
             $query_insert = "INSERT INTO `glpi_dropdown_locations_new`
                              VALUES ('$new_ID', '".addslashes($splitter[$i])."', '$up_ID', '')";
@@ -414,7 +413,7 @@ function showLocationUpdateForm() {
             "<input type='text' name='car_sep' value='".$_POST['car_sep']."'></p>";
       echo "<p>".__('Root location').'&nbsp;'.
             "<input type='text' name='root' value='".$_POST['root']."'></p>";
-      echo "<input type='submit' class='submit' name='new_location' value=\""._sx('button','Post')."\">";
+      echo "<input type='submit' class='submit' name='new_location' value=\""._sx('button', 'Post')."\">";
       echo "<input type='hidden' name='from_update' value='from_update'>";
       Html::closeForm();
       echo "</div>";
@@ -430,7 +429,7 @@ function showLocationUpdateForm() {
       echo "<div class='center'>";
       echo "<form action='".$CFG_GLPI["root_doc"]."/install/update.php' method='post'>";
       echo "<input type='submit' class='submit' name='validate_location' value=\"".
-             _sx('button','Post')."\">";
+             _sx('button', 'Post')."\">";
       echo "<input type='hidden' name='from_update' value='from_update'>";
       echo "</div>";
       Html::closeForm();
@@ -447,7 +446,7 @@ function showLocationUpdateForm() {
 }
 
 
-//test la connection a la base de donn�.
+//test la connection a la base de donn???.
 function test_connect() {
    global $DB;
 
@@ -563,25 +562,25 @@ function updateDbUpTo031() {
    // Save if problem with session during update
    $glpilanguage = $_SESSION["glpilanguage"];
 
-   // < 0.78
    if (TableExists("glpi_config")) {
+      // < 0.78
       // Get current version
       // Use language from session, even if sometime not reliable
       $query = "SELECT `version`, 'language'
                 FROM `glpi_config`";
       $result = $DB->queryOrDie($query, "get current version");
 
-      $current_version = trim($DB->result($result,0,0));
-      $glpilanguage    = trim($DB->result($result,0,1));
-   // < 0.85
+      $current_version = trim($DB->result($result, 0, 0));
+      $glpilanguage    = trim($DB->result($result, 0, 1));
    } else if (FieldExists('glpi_configs', 'version')) {
+      // < 0.85
       // Get current version and language
       $query = "SELECT `version`, `language`
                 FROM `glpi_configs`";
       $result = $DB->queryOrDie($query, "get current version");
 
-      $current_version = trim($DB->result($result,0,0));
-      $glpilanguage    = trim($DB->result($result,0,1));
+      $current_version = trim($DB->result($result, 0, 0));
+      $glpilanguage    = trim($DB->result($result, 0, 1));
    } else {
       $configurationValues = Config::getConfigurationValues('core', array('version', 'language'));
 
@@ -589,47 +588,45 @@ function updateDbUpTo031() {
       $glpilanguage    = $configurationValues['language'];
    }
 
-
-
    // To prevent problem of execution time
    ini_set("max_execution_time", "0");
 
-   $migration = new Migration($current_version);
+   $migration = new Migration(GLPI_VERSION);
 
    switch ($current_version) {
       case "0.31" :
-         include("update_031_04.php");
+         include_once("update_031_04.php");
          update031to04();
 
       case "0.4" :
       case "0.41" :
-         include("update_04_042.php");
+         include_once("update_04_042.php");
          update04to042();
 
       case "0.42" :
          showLocationUpdateForm();
-         include("update_042_05.php");
+         include_once("update_042_05.php");
          update042to05();
 
       case "0.5" :
-         include("update_05_051.php");
+         include_once("update_05_051.php");
          update05to051();
 
       case "0.51" :
       case "0.51a" :
-         include("update_051_06.php");
+         include_once("update_051_06.php");
          update051to06();
 
       case "0.6" :
-         include("update_06_065.php");
+         include_once("update_06_065.php");
          update06to065();
 
       case "0.65" :
-         include("update_065_068.php");
+         include_once("update_065_068.php");
          update065to068();
 
       case "0.68" :
-         include("update_068_0681.php");
+         include_once("update_068_0681.php");
          update068to0681();
 
       case "0.68.1" :
@@ -645,71 +642,71 @@ function updateDbUpTo031() {
             exit();
          }
       case "0.68.3x": // Special version for replay upgrade process from here
-         include("update_0681_07.php");
+         include_once("update_0681_07.php");
          update0681to07();
 
       case "0.7" :
       case "0.70.1" :
       case "0.70.2" :
-         include("update_07_071.php");
+         include_once("update_07_071.php");
          update07to071();
 
       case "0.71" :
       case "0.71.1" :
-         include("update_071_0712.php");
+         include_once("update_071_0712.php");
          update071to0712();
 
       case "0.71.2" :
-         include("update_0712_0713.php");
+         include_once("update_0712_0713.php");
          update0712to0713();
 
       case "0.71.3" :
       case "0.71.4" :
       case "0.71.5" :
       case "0.71.6" :
-         include("update_0713_072.php");
+         include_once("update_0713_072.php");
          update0713to072();
 
       case "0.72" :
-         include("update_072_0721.php");
+         include_once("update_072_0721.php");
          update072to0721();
 
       case "0.72.1" :
-         include("update_0721_0722.php");
+         include_once("update_0721_0722.php");
          update0721to0722();
 
       case "0.72.2" :
       case "0.72.21" :
-         include("update_0722_0723.php");
+         include_once("update_0722_0723.php");
          update0722to0723();
 
       case "0.72.3" :
       case "0.72.4" :
-         include("update_0723_078.php");
+         include_once("update_0723_078.php");
          update0723to078();
 
       case "0.78" :
-         include("update_078_0781.php");
+         include_once("update_078_0781.php");
          update078to0781();
 
       case "0.78.1" :
-         include("update_0781_0782.php");
+         include_once("update_0781_0782.php");
          update0781to0782();
 
       case "0.78.2":
       case "0.78.3":
       case "0.78.4":
       case "0.78.5":
-         include("update_0782_080.php");
+         include_once("update_0782_080.php");
          update0782to080();
 
       case "0.80" :
-         include("update_080_0801.php");
+         include_once("update_080_0801.php");
          update080to0801();
 
       case "0.80.1" :
       case "0.80.2" :
-         include("update_0801_0803.php");
+         include_once("update_0801_0803.php");
          update0801to0803();
 
       case "0.80.3" :
@@ -718,16 +715,16 @@ function updateDbUpTo031() {
       case "0.80.6" :
       case "0.80.61" :
       case "0.80.7" :
-         include("update_0803_083.php");
+         include_once("update_0803_083.php");
          update0803to083();
 
       case "0.83" :
-         include("update_083_0831.php");
+         include_once("update_083_0831.php");
          update083to0831();
 
       case "0.83.1" :
       case "0.83.2" :
-         include("update_0831_0833.php");
+         include_once("update_0831_0833.php");
          update0831to0833();
 
       case "0.83.3" :
@@ -739,77 +736,95 @@ function updateDbUpTo031() {
       case "0.83.8" :
       case "0.83.9" :
       case "0.83.91" :
-         include("update_0831_084.php");
+         include_once("update_0831_084.php");
          update0831to084();
 
       case "0.84" :
-         include("update_084_0841.php");
+         include_once("update_084_0841.php");
          update084to0841();
 
       case "0.84.1" :
       case "0.84.2" :
-         include("update_0841_0843.php");
+         include_once("update_0841_0843.php");
          update0841to0843();
 
       case "0.84.3" :
-         include("update_0843_0844.php");
+         include_once("update_0843_0844.php");
          update0843to0844();
 
       case "0.84.4" :
       case "0.84.5" :
-         include("update_0845_0846.php");
+         include_once("update_0845_0846.php");
          update0845to0846();
 
       case "0.84.6" :
       case "0.84.7" :
       case "0.84.8" :
       case "0.84.9" :
-         include("update_084_085.php");
+         include_once("update_084_085.php");
          update084to085();
 
       case "0.85" :
       case "0.85.1" :
       case "0.85.2" :
-         include("update_085_0853.php");
+         include_once("update_085_0853.php");
          update085to0853();
 
       case "0.85.3" :
       case "0.85.4" :
-         include("update_0853_0855.php");
+         include_once("update_0853_0855.php");
          update0853to0855();
 
       case "0.85.5" :
-         include("update_0855_090.php");
+         include_once("update_0855_090.php");
          update0855to090();
 
       case "0.90" :
-         include("update_090_0901.php");
+         include_once("update_090_0901.php");
          update090to0901();
 
       case "0.90.1" :
-         include("update_0901_091.php");
-         update0901to091();
+      case "0.90.2" :
+      case "0.90.3" :
+      case "0.90.4" :
+         include("update_0901_0905.php");
+         update0901to0905();
 
-      case "0.91" :
+      case "0.90.5" :
+         include_once("update_0905_91.php");
+         update0905to91();
+
+      case "9.1" :
+      case "0.91":
+         include_once("update_91_911.php");
+         update91to911();
+
+      case "9.1.1":
+      case "9.1.2":
+         include_once("update_91_92.php");
+         update91to92();
+         break;
+
+      case GLPI_VERSION:
          break;
 
       default :
-         include("update_031_04.php");
+         include_once("update_031_04.php");
          update031to04();
-         include("update_04_042.php");
+         include_once("update_04_042.php");
          update04to042();
          showLocationUpdateForm();
-         include("update_042_05.php");
+         include_once("update_042_05.php");
          update042to05();
-         include("update_05_051.php");
+         include_once("update_05_051.php");
          update05to051();
-         include("update_051_06.php");
+         include_once("update_051_06.php");
          update051to06();
-         include("update_06_065.php");
+         include_once("update_06_065.php");
          update06to065();
-         include("update_065_068.php");
+         include_once("update_065_068.php");
          update065to068();
-         include("update_068_0681.php");
+         include_once("update_068_0681.php");
          update068to0681();
          // Force update content
          $query = "UPDATE `glpi_config`
@@ -821,13 +836,19 @@ function updateDbUpTo031() {
    }
 
    // Update version number and default langage and new version_founded ---- LEAVE AT THE END
-   Config::setConfigurationValues('core', array('version'             => '0.91',
+   Config::setConfigurationValues('core', array('version'             => GLPI_VERSION,
                                                 'language'            => $glpilanguage,
                                                 'founded_new_version' => ''));
 
    // Update process desactivate all plugins
    $plugin = new Plugin();
    $plugin->unactivateAll();
+
+   if (defined('GLPI_SYSTEM_CRON')) {
+      // Downstream packages may provide a good system cron
+      $query = "UPDATE `glpi_crontasks` SET `mode`=2 WHERE `name`!='watcher' AND (`allowmode` & 2)";
+      $DB->queryOrDie($query);
+   }
 
    DBmysql::optimize_tables($migration);
 
@@ -877,16 +898,12 @@ Session::loadLanguage();
 // Send UTF8 Headers
 header("Content-Type: text/html; charset=UTF-8");
 
-echo "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'
-       'http://www.w3.org/TR/html4/loose.dtd'>";
-echo "<html>";
+echo "<!DOCTYPE html>";
+echo "<html lang='fr'>";
 echo "<head>";
-echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
+echo "<meta charset='utf-8'>";
 echo "<meta http-equiv='Content-Script-Type' content='text/javascript'>";
 echo "<meta http-equiv='Content-Style-Type' content='text/css'>";
-echo "<meta http-equiv='Content-Language' content='fr'>";
-echo "<meta name='generator' content=''>";
-echo "<meta name='DC.Language' content='fr' scheme='RFC1766'>";
 echo "<title>Setup GLPI</title>";
 // CSS
 echo "<link rel='stylesheet' href='../css/style_install.css' type='text/css' media='screen' >";
@@ -912,7 +929,7 @@ if (empty($_POST["continuer"]) && empty($_POST["from_update"])) {
 
    } else {
       echo "<div class='center'>";
-      echo "<h3><span class='red'>".sprintf(__('Caution! You will update the GLPI database named: %s'),$DB->dbdefault) ."</h3>";
+      echo "<h3><span class='red'>".sprintf(__('Caution! You will update the GLPI database named: %s'), $DB->dbdefault) ."</h3>";
 
       echo "<form action='update.php' method='post'>";
       echo "<input type='submit' class='submit' name='continuer' value=\"".__('Continue')."\">";
@@ -920,8 +937,8 @@ if (empty($_POST["continuer"]) && empty($_POST["from_update"])) {
       echo "</div>";
    }
 
-// Step 2
 } else {
+   // Step 2
    if (test_connect()) {
       echo "<h3>".__('Database connection successful')."</h3>";
       if (!isset($_POST["update_location"])) {
@@ -934,7 +951,7 @@ if (empty($_POST["continuer"]) && empty($_POST["from_update"])) {
 
          // Find 2 tables to manage databases before 0.78
          if (!TableExists($config_table)) {
-            include("update_to_031.php");
+            include_once("update_to_031.php");
             updateDbTo031();
             $tab = updateDbUpTo031();
 
@@ -981,4 +998,3 @@ if (empty($_POST["continuer"]) && empty($_POST["from_update"])) {
 }
 
 echo "</div></div></body></html>";
-?>
